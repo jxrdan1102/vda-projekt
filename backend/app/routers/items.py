@@ -1,29 +1,63 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
+from http.client import HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.future import select
-from app.database import get_db
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.database.database import get_db
 from app.models.item import Item
-from app.schemas.item import ItemCreate
-from app.schemas.item import ItemResponse
+from app.schemas.item import ItemCreate, ItemUpdate
 
+router = APIRouter(prefix="/items", tags=["items"])
 
-router = APIRouter()
-
-@router.get("/items", tags=["Items"])
+@router.get('')
 async def get_items(db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Item))
     items = result.scalars().all()
     return items
 
-@router.post("/items", tags=["Items"])
-async def create_item(item: ItemCreate, db: AsyncSession = Depends(get_db)):
-    try:
-        db_item = Item(name=item.name, description=item.description)
-        db.add(db_item)  # ✅ Erst hinzufügen
-        await db.commit()
-        await db.refresh(db_item)  # ✅ Danach refreshen
+@router.get('/{id}')
+async def get_item(id: int, db: AsyncSession = Depends(get_db)):
+    db_item = await db.execute(select(Item).where(Item.id == id))
+    db_item.scalar_one_or_none()
 
-        return {"id": db_item.id, "name": db_item.name, "description": db_item.description}
-    except Exception as e:
-        print(f"Error creating item: {e}")
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+    if db_item is None:
+        raise HTTPException(status_code=404, detail="Item not found")
+
+    return db_item
+
+
+@router.post('/')
+async def create_item(item: ItemCreate, db: AsyncSession = Depends(get_db)):
+    db_item = Item(name=item.name, description=item.description)
+    db.add(db_item)
+    await db.commit()
+    await db.refresh(db_item)
+    return db_item
+
+@router.put('/{id}')
+async def update_item(id: int, item: ItemUpdate, db: AsyncSession = Depends(get_db)):
+    # Item aus der Datenbank holen
+    result = await db.execute(select(Item).where(Item.id == id))
+    db_item = result.scalar_one_or_none()
+
+    if db_item is None:
+        raise HTTPException(status_code=404, detail="Item not found")
+
+    # Nur die übergebenen Felder aktualisieren
+    update_data = item.model_dump(exclude_unset=True)  # Nur vorhandene Werte nehmen
+    for key, value in update_data.items():
+        setattr(db_item, key, value)  # Dynamische Feldaktualisierung
+
+    await db.commit()
+    await db.refresh(db_item)
+
+    return db_item
+
+@router.delete('/{id}')
+async def delete_item(id: int, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Item).where(Item.id == id))
+    db_item = result.scalar_one_or_none()
+    if db_item is None:
+        raise HTTPException(status_code=404, detail="Item not found")
+    await db.delete(db_item)
+    await db.commit()
+    return {"message": f"Item with id {id} has been deleted"}

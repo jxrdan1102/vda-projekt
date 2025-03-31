@@ -6,10 +6,11 @@ class ItemCreate(BaseModel):
     description: str
 
     class Config:
-        orm_mode = True  # Wichtig für die Konvertierung von SQLAlchemy-Objekten
+        orm_mode = True
 
-class ItemResponse(ItemCreate):
-    id: int
+class ItemUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
 
     class Config:
-        orm_mode = True  # Ermöglicht FastAPI die Konvertierung von SQLAlchemy-Objekten
+        orm_mode = True
