@@ -1,6 +1,9 @@
 from fastapi import APIRouter, HTTPException
 from app.services.component_service.component_factory import ComponentFactory
 from app.schemas.component import Komponente
+
+from app.services.component_service.EverythinForComponents.TMU_Modell import TMU_Modell
+
 router = APIRouter(prefix="/components", tags=["items"])
 
 
@@ -10,18 +13,19 @@ def get_components():
 
     return [Komponente(**k.__dict__) for k in components]
 
-@router.get("/komponente-a")
+@router.get("/modell-a")
 def get_komponente_a():
     # Holen der Komponenteninstanz
-    komponenta_instance = ComponentFactory.get_component('type_a')
+    komponenta_instances = ComponentFactory.get_component("TK_AbweichungPoissonKoeffizientMO_EN")
 
-    if not komponenta_instance:
+   # print("geschafft!!!!!!!!!!!!!!!!!!!!")
+    komponenta_instance = TMU_Modell()
+
+    if not komponenta_instances:
         raise HTTPException(status_code=404, detail="Komponente A nicht gefunden")
 
     # Holen der benötigten Konstanten
-    const_needed = komponenta_instance.get_const_needed()
-    edit_fields = komponenta_instance.get_fields_edit()
-    unsicherheitsbeitrag = komponenta_instance.unsicherheitsbeitrag()
+    const_needed = komponenta_instance.MUPruefverfahren_U()
 
 
-    return {"const_needed": const_needed , "edit_fields": edit_fields , "unsicherheitsbeitrag": unsicherheitsbeitrag}
+    return {" Messunsicherheit: ": const_needed}
