@@ -2,16 +2,52 @@ from enum import Enum
 
 from app.services.component_service.EverythinForComponents.TMU_ConstList import TKompConstants
 
+class TMU_Verteilung(Enum):
+    Verteilung_Undefiniert = 1
+    V_Rechteck = 2
+    V_Normal = 3
+    V_Dreieck = 4
+    V3D_Rechteck = 5
+    V3D_Normal = 6
+    V3d_Dreieck = 7
+    V3D_Arcsin = 8
+    V3D_AnzahlMP = 9
+    V3D_Stdabw = 10
+
+class TMU_KennwertArt(Enum):
+    KennwertArt_Undefiniert = 1
+    K_HalbWeite = 2
+    K_Spannweite = 3
+    K_Standardabweichung = 4
+    M3D_MethodeA = 5
+    M3D_MethodeB = 6
+    M3D_MethodeAnzahlPunkte = 7
+
+class TMU_Freiheitsgrad(Enum):
+    Freiheitsgrad_Undefiniert = 1
+    FG_unbegrenzt = 2
+    FG_N_Minus1 = 3
 
 class TMuKompRec:
     def __init__(self, TermL0, TermL1, Verteilung, KennwertArt, Freiheitsgrad, FreiN_minus_1, Flags):
-        self.TermL0 = TermL0
-        self.TermL1 = TermL1
-        self.Verteilung = Verteilung
-        self.KennwertArt = KennwertArt
-        self.Freiheitsgrad = Freiheitsgrad
-        self.FreiN_minus_1 = FreiN_minus_1
-        self.Flags = Flags
+        self.TermL0: float = TermL0
+        self.TermL1: float = TermL1
+        self.Verteilung: TMU_Verteilung = Verteilung
+        self.KennwertArt: TMU_KennwertArt = KennwertArt
+        self.Freiheitsgrad:TMU_Freiheitsgrad = Freiheitsgrad
+        self.FreiN_minus_1: int = FreiN_minus_1
+        self.Flags: int = Flags
+
+    def to_dict(self):
+        return {
+            'TermL0': self.TermL0,
+            'TermL1': self.TermL1,
+            'Verteilung': self.Verteilung,
+            'KennwertArt': self.KennwertArt,
+            'Freiheitsgrad': self.Freiheitsgrad,
+            'FreiN_minus_1': self.FreiN_minus_1,
+            'Flags': self.Flags
+        }
 
 class TAuswertungsArchiv:
     def __init__(self, STDU, AVAL, BVAL, ASUL0, ASUL1, SensC1, SensC2, FreiEff, UNSBL0, UNSBL1, UnsB, VARIANZ):

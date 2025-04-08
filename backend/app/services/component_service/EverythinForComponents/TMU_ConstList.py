@@ -103,23 +103,33 @@ class TKompConstants(Enum):
     TC_KTMG_Gemessene_Geradheit = 100
     TC_KTMG_Sektor_Kreis = 101
 
+    def add_by_value(self, value: int):
+        try:
+            konst = TKompConstants(value)  # Enum-Zugriff über den Wert (int)
+            return konst
+        except ValueError:
+            print(f"Ungültiger Wert: {value} ist kein gültiger TKompConstants-Eintrag")
+
+    def add_by_name(self, name: str):
+        try:
+            konst = TKompConstants[name]  # Enum-Zugriff über den Namen (string)
+            return konst
+        except KeyError:
+            print(f"Ungültiger Name: {name} ist kein gültiger TKompConstants-Eintrag")
+
 
 class TMU_ConstList:
     def __init__(self):
         """ Initialisiert eine leere Liste von Konstantenwerten. """
-        self.const_list = []  
-        # Alternativ könnte dies auch ein Dictionary sein, wenn du eine Schlüssel-Wert-Beziehung brauchst
+        self.const_list: list[tuple[TKompConstants, float]] = []
 
     def get_const_val(self, const_id: TKompConstants) -> float:
-        """ Gibt den Wert der Konstanten zurück, die mit der gegebenen ConstID verknüpft ist. """
-        # Hier gehen wir davon aus, dass 'const_list' eine Liste von Tupeln oder Objekten ist,
-        # in denen der erste Wert die ConstID und der zweite der Wert der Konstante ist.
-
         for const in self.const_list:
-            if const[0] == const_id:  # Vergleiche mit der ConstID
-                return const[1]  # Rückgabe des zugehörigen Wertes
-        return 0.0  # Standardwert, falls keine passende Konstante gefunden wird
+            if const[0] == const_id:
+                return const[1]
+        return 0.0
 
     def add_const(self, const_id: TKompConstants, value: float):
-        """ Fügt eine Konstante zur Liste hinzu. """
+        if not isinstance(const_id, TKompConstants):
+            raise ValueError(f"{const_id} ist kein gültiger Eintrag von TKompConstants.")
         self.const_list.append((const_id, value))

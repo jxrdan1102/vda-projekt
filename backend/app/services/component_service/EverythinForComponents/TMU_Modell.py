@@ -3,7 +3,7 @@ from abc import ABC
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Optional, List, Union
+from typing import Optional, List, Union, Set
 
 from app.services.component_service.EverythinForComponents import TMU_Atom
 
@@ -12,6 +12,8 @@ from app.services.component_service.EverythinForComponents.TMU_ConstList import 
 from app.services.component_service.component_factory import ComponentFactory
 
 from app.services.component_service.component_abstract import TMU_Komponente
+
+from app.services.component_service.EverythinForComponents.TMU_ConstList import TKompConstants
 
 TMU_AufgabeModell = ("aPruefprozess", "aKalibrierprozess", "a3D_Pruefprozess", "aUnbekannt")
 
@@ -66,8 +68,10 @@ from datetime import datetime
 
 # Assuming the other classes like TMU_ConstList, TMU_Atom, TMU_Winkel, etc., are defined elsewhere in Python
 
-class TMU_Modell:
-    def __init__(self, owner: Optional[object] = None):
+class TMU_Modell(List[TMU_Komponente]):
+    def __init__(self, aufgabe: str, modell_id: int, owner: Optional[object] = None):
+        super().__init__()
+        self.mit_berechnung_toleranzfaktor = False
         self.owner = owner
         self.const_list = TMU_ConstList()  # Assuming you have this class defined elsewhere
         self.aufgabe = ""
@@ -80,10 +84,6 @@ class TMU_Modell:
         self.i_geometrie_mo = 0
         self.i_bezug1 = 0
         self.i_bezug2 = 0
-        self.items = [ComponentFactory.get_component('type_a'),ComponentFactory.get_component('type_b'),ComponentFactory.get_component('TK_Kalibrierung_EN'), ComponentFactory.get_component('TK_AufloesungME'),ComponentFactory.get_component('TK_Wiederholpraezision'), ComponentFactory.get_component('TK_NichtZentrischeAntastung'), ComponentFactory.get_component('TK_AbweichungPoissonKoeffizientMO_EN'), ComponentFactory.get_component('TK_AbweichungElastizitaetsModul_MO_EN'), ComponentFactory.get_component('TK_TempDifferenz_MO_ME'), ComponentFactory.get_component('TK_AbweichungMittlereTemp_MO_ME')]
-        #self.winkel = TMU_Winkel()  # Assuming you have a class for Winkel (Angle)
-        self.const_needed = set()  # Use a set to store constants (converted from TKompConstantSet)
-        self.mit_berechnung_toleranzfaktor = False
         self.read_only = False
         self.modell_desc = ""
         self.methode = 0
@@ -95,9 +95,15 @@ class TMU_Modell:
         self.archiv = False
         self.formel_anteil = ""
         self.formel_beschreibung = ""
+        self.const_needed: List[TKompConstants] = []
+        #self.extend([ComponentFactory.get_component('type_a'),ComponentFactory.get_component('type_b'),ComponentFactory.get_component('TK_Kalibrierung_EN'), ComponentFactory.get_component('TK_AufloesungME'),ComponentFactory.get_component('TK_Wiederholpraezision'), ComponentFactory.get_component('TK_NichtZentrischeAntastung'), ComponentFactory.get_component('TK_AbweichungPoissonKoeffizientMO_EN'), ComponentFactory.get_component('TK_AbweichungElastizitaetsModul_MO_EN'), ComponentFactory.get_component('TK_TempDifferenz_MO_ME'), ComponentFactory.get_component('TK_AbweichungMittlereTemp_MO_ME')])
+
+    def addComponent(self, component_id: int):
+        self.append(ComponentFactory.get_component(self, component_id))
+
 
     def SetBerechnungToleranzfaktor(self, ja: bool):
-        self.mitBerechnungToleranzFaktor = ja
+        self.mit_berechnung_toleranzfaktor = ja
 
     def Clear(self):
         self.Constlist.clear()
@@ -187,148 +193,148 @@ class TMU_Modell:
             1075: "TK_Anzahl_Verschiebungen_MO",
             1076: "TK_Kalibrierung_Rechwinkligkeit",
             1077: "TK_Ermittelte_Rechwinkligkeit",
-        1078: "TK_Rh_Kalibrierung_Einstellnormal_EN",
-        1079: "TK_Rh_Drift_Richtiger_Wert_vom_EN",
-        1080: "TK_Rh_Unterschied_Kalibrierort_EN",
-        1081: "TK_Rh_Wiederholpraezision_Antastung_MO",
-        1082: "TK_Rh_Topografie_MO",
-        1083: "TK_Rh_Fuehrungsabweichung",
-        1084: "TK_Rh_Drift_Fuehrungsabweichung",
-        1085: "TK_Rh_Grundrauschen",
-        1086: "TK_Rh_Drift_Grundrauschen",
-        1087: "TK_Rh_Verformung_MO",
-        1088: "TK_Rh_Abweichung_Tastspitzenradius_vom_Nennwert",
-        1089: "TK_Rh_Messunsicherheit_Kalibrierung_Tastspitzenradius",
-        1090: "TK_Rh_Unbekannte_systematische_Abweichung",
-        1091: "TK_Rh_Kalibrierung_Einstellnormal_EN_TG",
-        1092: "TK_Rh_Drift_Richtiger_Wert_von_EN_TG",
-        1093: "TK_Rh_Kalibrierort_Kalibrierung_EN_TG",
-        1094: "TK_Rh_Wiederholpraezision_Antastung_TG",
-        1095: "TK_Rh_Fuehrungsabweichung_TG",
-        1096: "TK_Rh_Grundrauschen_TG",
-        1097: "TK_Rh_Verformung_EN_TG",
-        1098: "TK_Rh_Abweichung_Tastspitzenradius_Nennwert",
-        1099: "TK_Rh_Messunsicherheit_Kalibrierung_Tastspitzenradius_TG",
-        1100: "TK_Fm_Streuung_Anzeige_ME_in_jedem_Profilpunkt",
-        1101: "TK_Fm_Homogenitaet_MO",
-        1102: "TK_Fm_Reinigung_MO",
-        1103: "TK_Fm_Dynamische_Eingenschaften_ME",
-        1104: "TK_Fm_Rauschen_ME",
-        1105: "TK_Fm_Streuung_Empfindlichkeit_ME",
-        1106: "TK_Fm_Unsicherheit_Vergroesserungsnormal",
-        1107: "TK_Fm_Streuung_Spindel_ME",
-        1108: "TK_Fm_Linearitaet_ME",
-        1109: "TK_Fm_Hysterese_ME",
-        1110: "TK_Fm_Exzentrizitaet_MO_Aus",
-        1111: "TK_Fm_Exzentrizitaet_MO_Inn",
-        1112: "TK_Fm_Nivellierung_Zylinderachse_MO_Rund",
-        1113: "TK_Fm_Nivellierung_Zylinderachse_MO_Gerade",
-        1114: "TK_Fm_Deformation_MO",
-        1115: "TK_Fm_Fuehrungsabweichung_ME",
-        1116: "TK_Fm_Temperatur",
-        1117: "TK_Fm_Drift_Empfindlichkeit_ME",
-        1118: "TK_Fm_Messabweichung_Kalibrierung_ME_Tastsystem",
-        1119: "TK_Fm_Kalibrierung_ME_Tastsystem",
-        1121: "TK_KTMG_Abstand_system",
-        1122: "TK_KTMG_Abstand_zufall",
-        1123: "TK_KTMG_Winkel_system",
-        1124: "TK_KTMG_Winkel_zufall",
-        1125: "TK_KTMG_Winkel_plastVerform",
-        1126: "TK_KTMG_Geradheit_system",
-        1127: "TK_KTMG_Geradheit_zufall",
-        1128: "TK_KTMG_Radius_system",
-        1129: "TK_KTMG_Radius_zufall",
-        1130: "TK_KTMG_Winkel_Tastspitzenradius",
-        1301: "TK_3d_Dw",
-        1302: "TK_3d_deltaDT",
-        1303: "TK_3d_deltaDC",
-        1304: "TK_3d_DeltaLkmg",
-        1305: "TK_3d_Delta_LalphaM",
-        1306: "TK_3d_Delta_LalphaW",
-        1307: "TK_3d_Delta_L_tM",
-        1308: "TK_3d_Delta_L_tW",
-        1377: "TK_3d_Delta_L_t",
-        1366: "TK_3d_DKegel_alpha",
-        1367: "TK_3d_DKegel_LS",
-        1309: "TK_3d_Fw",
-        1310: "TK_3d_DeltaFT",
-        1311: "TK_3d_DeltaFkmg",
-        1369: "TK_3dForm_A1",
-        1370: "TK_3dForm_A2",
-        1312: "TK_3dA_X1",
-        1313: "TK_3dA_W1",
-        1314: "TK_3dA_DeltaXT1",
-        1315: "TK_3dA_DeltaRT1",
-        1316: "TK_3dA_X2",
-        1317: "TK_3dA_W2",
-        1318: "TK_3dA_DeltaXT2",
-        1319: "TK_3dA_DeltaRT2",
-        1320: "TK_3dA_DeltaDT",
-        1321: "TK_3dA_DeltaDC",
-        1322: "TK_3dA_DeltaLKMG",
-        1323: "TK_3dA_LalphaM",
-        1324: "TK_3dA_LalphaW",
-        1325: "TK_3dA_LtM",
-        1326: "TK_3dA_LtW",
-        1368: "TK_3dA_DeltaXTR",
-        1327: "TK_3d_Ri_WE",
-        1328: "TK_3d_Ri_DeltaXE1",
-        1329: "TK_3d_Ri_DeltaXE2",
-        1330: "TK_3d_Ri_DeltaXET1",
-        1331: "TK_3d_Ri_DeltaXET2",
-        1332: "TK_3d_Ri_WB",
-        1333: "TK_3d_Ri_DeltaXB1",
-        1334: "TK_3d_Ri_DeltaXB2",
-        1335: "TK_3d_Ri_DeltaXBT1",
-        1336: "TK_3d_Ri_DeltaXBT2",
-        1337: "TK_3d_Ri_DeltaEA",
-        1338: "TK_3d_Ri_DeltaEKMG",
-        1371: "TK_3d_Ri_XTER",
-        1372: "TK_3d_Ri_XTBR",
-        1376: "TK_3d_Ri_Aj",
-        1339: "TK_3d_Sym_XE1",
-        1340: "TK_3d_Sym_WE1",
-        1341: "TK_3d_Sym_XE2",
-        1342: "TK_3d_Sym_WE2",
-        1343: "TK_3d_Sym_DeltaXTE",
-        1344: "TK_3d_Sym_XB1",
-        1345: "TK_3d_Sym_WB1",
-        1346: "TK_3d_Sym_XB2",
-        1347: "TK_3d_Sym_WB2",
-        1348: "TK_3d_Sym_DeltaXTB",
-        1349: "TK_3d_Sym_DeltaLkmg",
-        1373: "TK_3d_Sym_DeltaXTR",
-        1350: "TK_3d_Koax_XE",
-        1351: "TK_3d_Koax_WE",
-        1352: "TK_3d_Koax_DeltaXTE",
-        1353: "TK_3d_Koax_XB1",
-        1354: "TK_3d_Koax_WB1",
-        1355: "TK_3d_Koax_XB2",
-        1356: "TK_3d_Koax_DeltaXTB",
-        1357: "TK_3d_Koax_DeltaEKMG",
-        1374: "TK_3d_Koax_DeltaXTR",
-        1358: "TK_3d_KoaxGA_XE1",
-        1359: "TK_3d_KoaxGA_WE",
-        1360: "TK_3d_KoaxGA_XE2",
-        1361: "TK_3d_KoaxGA_DeltaXTE",
-        1362: "TK_3d_KoaxGA_XB1",
-        1363: "TK_3d_KoaxGA_XB2",
-        1364: "TK_3d_KoaxGA_DeltaXTB",
-        1365: "TK_3d_KoaxGA_DeltaLkmg",
-        1375: "TK_3d_KoaxGA_DeltaXTR",
-        1378: "TK_3d_ResKMG",
-        1379: "TK_3d_Wi_WE",
-        1380: "TK_3d_Wi_WB",
-        1381: "TK_3d_Wi_DeltaEKMG",
-        1391: "TK_3d_PktPkt_dPgeo",
-        1392: "TK_3d_PktPkt_dPyKMG",
-        1393: "TK_3d_PktPkt_dPZuf",
-        1394: "TK_3d_PktPkt_dTaster",
-        1395: "TK_3d_PktPkt_dAbwTemp",
-        1396: "TK_3d_PktPkt_AbwTempAusd",
-        1397: "TK_3d_PktPkt_dFormAbwBE",
-        1398: "TK_3d_PktPkt_dFormAbwTE",
-        1399: "TK_3d_PktPkt_dWinkelSektor",
+            1078: "TK_Rh_Kalibrierung_Einstellnormal_EN",
+            1079: "TK_Rh_Drift_Richtiger_Wert_vom_EN",
+            1080: "TK_Rh_Unterschied_Kalibrierort_EN",
+            1081: "TK_Rh_Wiederholpraezision_Antastung_MO",
+            1082: "TK_Rh_Topografie_MO",
+            1083: "TK_Rh_Fuehrungsabweichung",
+            1084: "TK_Rh_Drift_Fuehrungsabweichung",
+            1085: "TK_Rh_Grundrauschen",
+            1086: "TK_Rh_Drift_Grundrauschen",
+            1087: "TK_Rh_Verformung_MO",
+            1088: "TK_Rh_Abweichung_Tastspitzenradius_vom_Nennwert",
+            1089: "TK_Rh_Messunsicherheit_Kalibrierung_Tastspitzenradius",
+            1090: "TK_Rh_Unbekannte_systematische_Abweichung",
+            1091: "TK_Rh_Kalibrierung_Einstellnormal_EN_TG",
+            1092: "TK_Rh_Drift_Richtiger_Wert_von_EN_TG",
+            1093: "TK_Rh_Kalibrierort_Kalibrierung_EN_TG",
+            1094: "TK_Rh_Wiederholpraezision_Antastung_TG",
+            1095: "TK_Rh_Fuehrungsabweichung_TG",
+            1096: "TK_Rh_Grundrauschen_TG",
+            1097: "TK_Rh_Verformung_EN_TG",
+            1098: "TK_Rh_Abweichung_Tastspitzenradius_Nennwert",
+            1099: "TK_Rh_Messunsicherheit_Kalibrierung_Tastspitzenradius_TG",
+            1100: "TK_Fm_Streuung_Anzeige_ME_in_jedem_Profilpunkt",
+            1101: "TK_Fm_Homogenitaet_MO",
+            1102: "TK_Fm_Reinigung_MO",
+            1103: "TK_Fm_Dynamische_Eingenschaften_ME",
+            1104: "TK_Fm_Rauschen_ME",
+            1105: "TK_Fm_Streuung_Empfindlichkeit_ME",
+            1106: "TK_Fm_Unsicherheit_Vergroesserungsnormal",
+            1107: "TK_Fm_Streuung_Spindel_ME",
+            1108: "TK_Fm_Linearitaet_ME",
+            1109: "TK_Fm_Hysterese_ME",
+            1110: "TK_Fm_Exzentrizitaet_MO_Aus",
+            1111: "TK_Fm_Exzentrizitaet_MO_Inn",
+            1112: "TK_Fm_Nivellierung_Zylinderachse_MO_Rund",
+            1113: "TK_Fm_Nivellierung_Zylinderachse_MO_Gerade",
+            1114: "TK_Fm_Deformation_MO",
+            1115: "TK_Fm_Fuehrungsabweichung_ME",
+            1116: "TK_Fm_Temperatur",
+            1117: "TK_Fm_Drift_Empfindlichkeit_ME",
+            1118: "TK_Fm_Messabweichung_Kalibrierung_ME_Tastsystem",
+            1119: "TK_Fm_Kalibrierung_ME_Tastsystem",
+            1121: "TK_KTMG_Abstand_system",
+            1122: "TK_KTMG_Abstand_zufall",
+            1123: "TK_KTMG_Winkel_system",
+            1124: "TK_KTMG_Winkel_zufall",
+            1125: "TK_KTMG_Winkel_plastVerform",
+            1126: "TK_KTMG_Geradheit_system",
+            1127: "TK_KTMG_Geradheit_zufall",
+            1128: "TK_KTMG_Radius_system",
+            1129: "TK_KTMG_Radius_zufall",
+            1130: "TK_KTMG_Winkel_Tastspitzenradius",
+            1301: "TK_3d_Dw",
+            1302: "TK_3d_deltaDT",
+            1303: "TK_3d_deltaDC",
+            1304: "TK_3d_DeltaLkmg",
+            1305: "TK_3d_Delta_LalphaM",
+            1306: "TK_3d_Delta_LalphaW",
+            1307: "TK_3d_Delta_L_tM",
+            1308: "TK_3d_Delta_L_tW",
+            1377: "TK_3d_Delta_L_t",
+            1366: "TK_3d_DKegel_alpha",
+            1367: "TK_3d_DKegel_LS",
+            1309: "TK_3d_Fw",
+            1310: "TK_3d_DeltaFT",
+            1311: "TK_3d_DeltaFkmg",
+            1369: "TK_3dForm_A1",
+            1370: "TK_3dForm_A2",
+            1312: "TK_3dA_X1",
+            1313: "TK_3dA_W1",
+            1314: "TK_3dA_DeltaXT1",
+            1315: "TK_3dA_DeltaRT1",
+            1316: "TK_3dA_X2",
+            1317: "TK_3dA_W2",
+            1318: "TK_3dA_DeltaXT2",
+            1319: "TK_3dA_DeltaRT2",
+            1320: "TK_3dA_DeltaDT",
+            1321: "TK_3dA_DeltaDC",
+            1322: "TK_3dA_DeltaLKMG",
+            1323: "TK_3dA_LalphaM",
+            1324: "TK_3dA_LalphaW",
+            1325: "TK_3dA_LtM",
+            1326: "TK_3dA_LtW",
+            1368: "TK_3dA_DeltaXTR",
+            1327: "TK_3d_Ri_WE",
+            1328: "TK_3d_Ri_DeltaXE1",
+            1329: "TK_3d_Ri_DeltaXE2",
+            1330: "TK_3d_Ri_DeltaXET1",
+            1331: "TK_3d_Ri_DeltaXET2",
+            1332: "TK_3d_Ri_WB",
+            1333: "TK_3d_Ri_DeltaXB1",
+            1334: "TK_3d_Ri_DeltaXB2",
+            1335: "TK_3d_Ri_DeltaXBT1",
+            1336: "TK_3d_Ri_DeltaXBT2",
+            1337: "TK_3d_Ri_DeltaEA",
+            1338: "TK_3d_Ri_DeltaEKMG",
+            1371: "TK_3d_Ri_XTER",
+            1372: "TK_3d_Ri_XTBR",
+            1376: "TK_3d_Ri_Aj",
+            1339: "TK_3d_Sym_XE1",
+            1340: "TK_3d_Sym_WE1",
+            1341: "TK_3d_Sym_XE2",
+            1342: "TK_3d_Sym_WE2",
+            1343: "TK_3d_Sym_DeltaXTE",
+            1344: "TK_3d_Sym_XB1",
+            1345: "TK_3d_Sym_WB1",
+            1346: "TK_3d_Sym_XB2",
+            1347: "TK_3d_Sym_WB2",
+            1348: "TK_3d_Sym_DeltaXTB",
+            1349: "TK_3d_Sym_DeltaLkmg",
+            1373: "TK_3d_Sym_DeltaXTR",
+            1350: "TK_3d_Koax_XE",
+            1351: "TK_3d_Koax_WE",
+            1352: "TK_3d_Koax_DeltaXTE",
+            1353: "TK_3d_Koax_XB1",
+            1354: "TK_3d_Koax_WB1",
+            1355: "TK_3d_Koax_XB2",
+            1356: "TK_3d_Koax_DeltaXTB",
+            1357: "TK_3d_Koax_DeltaEKMG",
+            1374: "TK_3d_Koax_DeltaXTR",
+            1358: "TK_3d_KoaxGA_XE1",
+            1359: "TK_3d_KoaxGA_WE",
+            1360: "TK_3d_KoaxGA_XE2",
+            1361: "TK_3d_KoaxGA_DeltaXTE",
+            1362: "TK_3d_KoaxGA_XB1",
+            1363: "TK_3d_KoaxGA_XB2",
+            1364: "TK_3d_KoaxGA_DeltaXTB",
+            1365: "TK_3d_KoaxGA_DeltaLkmg",
+            1375: "TK_3d_KoaxGA_DeltaXTR",
+            1378: "TK_3d_ResKMG",
+            1379: "TK_3d_Wi_WE",
+            1380: "TK_3d_Wi_WB",
+            1381: "TK_3d_Wi_DeltaEKMG",
+            1391: "TK_3d_PktPkt_dPgeo",
+            1392: "TK_3d_PktPkt_dPyKMG",
+            1393: "TK_3d_PktPkt_dPZuf",
+            1394: "TK_3d_PktPkt_dTaster",
+            1395: "TK_3d_PktPkt_dAbwTemp",
+            1396: "TK_3d_PktPkt_AbwTempAusd",
+            1397: "TK_3d_PktPkt_dFormAbwBE",
+            1398: "TK_3d_PktPkt_dFormAbwTE",
+            1399: "TK_3d_PktPkt_dWinkelSektor",
         }
 
         # Create the component if ID is recognized, else return a message
@@ -366,8 +372,8 @@ class TMU_Modell:
                 'TC_3d_KMG_LT'
             })
 
-        for item in self.Items:
-            ConstNeeded.update(item.ConstNeeded)
+        for komponente in self:
+            ConstNeeded.update(komponente.ConstNeeded)
 
         # Stammdaten
         AddToList('TC_Messbereich', 'mm')
@@ -501,8 +507,8 @@ class TMU_Modell:
         atom = None
         idx = 0
         while atom is None and idx < self.count:
-            if isinstance(self.items[idx], TMU_Atom) and self.items[idx].id == ACompID:
-                atom = self.items[idx]
+            if isinstance(self[idx], TMU_Atom) and self[idx].id == ACompID:
+                atom = self[idx]
             else:
                 idx += 1
         return atom
@@ -546,7 +552,7 @@ class TMU_Modell:
     def SummeDerVarianzen(self):
         v = 0
         valid = False
-        for item in self.items:
+        for item in self:
             if isinstance(item, TMU_Komponente) and item.varianz() != MU_NAN:
                 print("meine varianz:",item, item.varianz(),"meine unsicherheit:",item.unsicherheitsbeitrag())
                 v += item.varianz()
@@ -565,7 +571,7 @@ class TMU_Modell:
         if self.AufgabeModell == "a3D_Pruefprozess":
             SummeEFG = 0
             U = self.StandardUnsicherheit_Uy()
-            for item in self.items:
+            for item in self:
                 if isinstance(item, TMU_Komponente):
                     vi = item.EffektiverFreiheitsgrad
                     if vi != MU_NAN:
@@ -579,7 +585,7 @@ class TMU_Modell:
         else:
             print("Hier bin iCh wieder")
             SummeUB = 0
-            for item in self.items:
+            for item in self:
                 if isinstance(item, TMU_Komponente):
                     ubi = item.UnsicherheitsBeitrag
                     vi = item.EffektiverFreiheitsgrad

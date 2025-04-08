@@ -5,23 +5,23 @@ from app.services.component_service.EverythinForComponents.TMU_ConstList import 
 
 class ComponentFactory:
     COMPONENTS = {
-        "type_a": k.KomponenteA,
-        "type_b": k.TK_KalibrierungME,
-        "TK_Kalibrierung_EN": k.TK_Kalibrierung_EN,
-        "TK_AufloesungME": k.TK_AufloesungME,
-        "TK_Wiederholpraezision": k.TK_Wiederholpraezision,
-        "TK_NichtZentrischeAntastung": k.TK_NichtZentrischeAntastung,
-        "TK_AbweichungPoissonKoeffizientMO_EN": k.TK_AbweichungPoissonKoeffizientMO_EN,
-        "TK_AbweichungElastizitaetsModul_MO_EN": k.TK_AbweichungElastizitaetsModul_MO_EN,
-        "TK_TempDifferenz_MO_ME": k.TK_TempDifferenz_MO_ME,
-        "TK_AbweichungMittlereTemp_MO_ME": k.TK_AbweichungMittlereTemp_MO_ME
+        1042: k.KomponenteA,
+        1001: k.TK_KalibrierungME,
+        1027: k.TK_Kalibrierung_EN,
+        1003: k.TK_AufloesungME,
+        1040: k.TK_Wiederholpraezision,
+        1041: k.TK_NichtZentrischeAntastung,
+        1043: k.TK_AbweichungPoissonKoeffizientMO_EN,
+        1044: k.TK_AbweichungElastizitaetsModul_MO_EN,
+        1009: k.TK_TempDifferenz_MO_ME,
+        1010: k.TK_AbweichungMittlereTemp_MO_ME
     }
 
     @staticmethod
-    def get_component(type_name: str):
+    def get_component(modell: 'TMU_Modell' ,type_name: str):
         component_class = ComponentFactory.COMPONENTS.get(type_name)
-        return component_class(None, TMU_ConstList) if component_class else None
+        return component_class(modell, TMU_ConstList) if component_class else None
 
     @staticmethod
     def get_all_components():
-        return [component_class() for component_class in ComponentFactory.COMPONENTS.values()]
+        return [component_class(None, TMU_ConstList) for component_class in ComponentFactory.COMPONENTS.values()]

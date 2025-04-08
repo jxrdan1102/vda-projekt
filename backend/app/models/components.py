@@ -1,0 +1,23 @@
+from sqlalchemy import Column, Integer, String, ForeignKey, Float
+from app.database.database import Base
+from sqlalchemy.orm import relationship
+
+
+class Component(Base):
+    __tablename__ = 'mod_components'
+
+    id = Column(Integer, primary_key=True)
+    fk_modell = Column(Integer, ForeignKey("modells.id"),index=True)
+    lfdnr = Column(Integer)
+    kompid = Column(Integer)
+    modltxtid = Column(Integer)
+    terml0 = Column(Float)
+    terml1 = Column(Float)
+    wertart = Column(Integer)
+    freigrad = Column(Integer)
+    frei_n_1 = Column(Integer)
+    verteilung = Column(Integer)
+    kflags = Column(Integer)
+
+    modell = relationship("Modell", back_populates="components")
+    anakomp = relationship("ANAKOMP", back_populates="komponente")

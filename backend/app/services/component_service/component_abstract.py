@@ -13,40 +13,69 @@ from app.services.component_service.EverythinForComponents.TMuKompRec import TAu
 
 from app.services.component_service.EverythinForComponents.TMuKompRec import TMuKompRec
 
+from app.services.component_service.EverythinForComponents.TMU_ConstList import TKompConstants
+
+from app.services.component_service.EverythinForComponents.TMuKompRec import TMU_Verteilung, TMU_Freiheitsgrad, \
+    TMU_KennwertArt
+
 MU_NAN = math.nan
 
 class TMU_Komponente(TMU_Atom):
 
-    def __init__(self, AModell: int, AnID: int, AConstList: TMU_ConstList, AFormel: str):
+    def __init__(self, AModell: 'TMU_Modell', AnID: int, AConstList: TMU_ConstList, AFormel: str):
         super().__init__( AnID, "Komponente")
+        self.data = TMuKompRec(MU_NAN,MU_NAN,"Verteilung_Undefiniert","KennwertArt_Undefiniert","Freiheitsgrad_Undefiniert",0,1)
         self.modell: object = AModell
         self.const_list: object = AConstList
         self.formel: str = AFormel
         self.modl_txt_id: int = 0
         self.komp_txt_id: int = 0
         self.arch_data: Optional[TAuswertungsArchiv] = None
+        self.ConstNeeded: List[TKompConstants]= [TKompConstants["TC_Messwert"]]
+        print(self.ConstNeeded)
         self.freikat_text: str = ""
         self.c1_val: float = 1
         self.c2_val: float = 1
-        self.const_needed: Optional[TKompConstantSet] = None
         self.fields_to_edit: Optional[TKompEditFieldsSet] = None
         self.position: int = 0
         self.einheit_ergebnis: str = ""
-
+        self.clear()
     def asciiformel(self) -> str:
         return self.formel
 
+    def addConstNeededToModell(self):
+        self.modell.const_needed += self.ConstNeeded
+
+    def setData(self, verteilung: Optional[int] = None, terml0: Optional[float] = None,
+                terml1: Optional[float] = None, kennwertart: Optional[int] = None,
+                flags: Optional[int] = None, freiheitsgrad: Optional[int] = None,
+                freinminus1: Optional[int] = None) -> None:
+        # Wenn ein Wert übergeben wird, wird er gesetzt, ansonsten bleibt der alte Wert
+        if verteilung is not None:
+            self.data.Verteilung = TMU_Verteilung(verteilung)
+        if terml0 is not None:
+            self.data.TermL0 = terml0
+        if terml1 is not None:
+            self.data.TermL1 = terml1
+        if kennwertart is not None:
+            self.data.KennwertArt = TMU_KennwertArt(kennwertart)
+        if flags is not None:
+            self.data.Flags = flags
+        if freiheitsgrad is not None:
+            self.data.Freiheitsgrad = TMU_Freiheitsgrad(freiheitsgrad)
+        if freinminus1 is not None:
+            self.data.FreiN_minus_1 = freinminus1
+
     def clear(self):
-        # Initialize or reset data attributes
-        self.data = {
-            'TermL0': MU_NAN,
-            'TermL1': MU_NAN,
-            'Verteilung': 'Verteilung_Undefiniert',
-            'KennwertArt': 'KennwertArt_Undefiniert',
-            'Freiheitsgrad': 'Freiheitsgrad_Undefiniert',
-            'FreiN_minus_1': 0,
-            'Flags': 1,  # MU_USECOMP Vorbelgung: Komponente wird benötigt und zwar ein Mal.
-        }
+        self.setData(
+            verteilung=TMU_Verteilung(1),
+            terml0=0,
+            terml1=0,
+            kennwertart=TMU_KennwertArt(1),
+            flags=1,
+            freiheitsgrad=TMU_Freiheitsgrad(1),
+            freinminus1=0
+        )
 
     def is_valid(self):
         data = self.data
@@ -64,30 +93,31 @@ class TMU_Komponente(TMU_Atom):
     def std_unsicherheit(self, l: float) -> float:
         print("hilf mir",l)
         if l != MU_NAN:
-            print("hilf mir nochmal",self.data.Verteilung)
+            print("hilf mir nochmal",self.data.Verteilung.name)
             # Check distribution and return appropriate uncertainty
-            if self.data.Verteilung == 'V_Rechteck':
-                if self.data.KennwertArt == 'K_HalbWeite':
+            if self.data.Verteilung.name == 'V_Rechteck':
+                if self.data.KennwertArt.name == 'K_HalbWeite':
                     return l / math.sqrt(3)
-                elif self.data.KennwertArt == 'K_Spannweite':
+                elif self.data.KennwertArt.name == 'K_Spannweite':
                     print("wurzel",l / (2 * math.sqrt(3)))
                     return l / (2 * math.sqrt(3))
-                elif self.data.KennwertArt == 'K_Standardabweichung':
+                elif self.data.KennwertArt.name == 'K_Standardabweichung':
                     return l
-            elif self.data.Verteilung == 'V_Normal':
-                if self.data.KennwertArt == 'K_HalbWeite':
+            elif self.data.Verteilung.name == 'V_Normal':
+                if self.data.KennwertArt.name == 'K_HalbWeite':
                     return l / 2
-                elif self.data.KennwertArt == 'K_Spannweite':
+                elif self.data.KennwertArt.name == 'K_Spannweite':
                     return l / 4
-                elif self.data.KennwertArt == 'K_Standardabweichung':
+                elif self.data.KennwertArt.name == 'K_Standardabweichung':
                     return l
-            elif self.data.Verteilung == 'V_Dreieck':
-                if self.data.KennwertArt == 'K_HalbWeite':
+            elif self.data.Verteilung.name == 'V_Dreieck':
+                if self.data.KennwertArt.name == 'K_HalbWeite':
                     return l / math.sqrt(6)
-                elif self.data.KennwertArt == 'K_Spannweite':
+                elif self.data.KennwertArt.name == 'K_Spannweite':
                     return l / (2 * math.sqrt(6))
-                elif self.data.KennwertArt == 'K_Standardabweichung':
+                elif self.data.KennwertArt.name == 'K_Standardabweichung':
                     return l
+        print("problem std_unsicherheit", self.data.Verteilung.name)
         return MU_NAN
 
     def a_val(self) -> float:
@@ -110,10 +140,10 @@ class TMU_Komponente(TMU_Atom):
         return self.c2_val
 
     def effektiver_freiheitsgrad(self) -> float:
-        if self.data.Freiheitsgrad == 'FG_unbegrenzt':
+        if self.data.Freiheitsgrad.name == 'FG_unbegrenzt':
             self.EffektiverFreiheitsgrad = 1000
             return 1000
-        elif self.data.Freiheitsgrad == 'FG_N_Minus1':
+        elif self.data.Freiheitsgrad.name == 'FG_N_Minus1':
             if self.data.FreiN_minus_1 > 0:
                 self.EffektiverFreiheitsgrad = self.data.FreiN_minus_1
                 return self.data.FreiN_minus_1
