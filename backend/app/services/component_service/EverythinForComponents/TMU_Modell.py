@@ -14,9 +14,16 @@ from app.services.component_service.component_factory import ComponentFactory
 from app.services.component_service.component_abstract import TMU_Komponente
 
 from app.services.component_service.EverythinForComponents.TMU_ConstList import TKompConstants
+from pydantic import BaseModel
+from sqlalchemy.orm.instrumentation import instance_state
 
-TMU_AufgabeModell = ("aPruefprozess", "aKalibrierprozess", "a3D_Pruefprozess", "aUnbekannt")
 
+# Definiere Enum für die zulässigen Prozess-Typen
+class TMU_AufgabeModell(Enum):
+    aPruefprozess = 'aPruefprozess'
+    aKalibrierprozess = 'aKalibrierprozess'
+    a3D_Pruefprozess = 'a3D_Pruefprozess'
+    aUnbekannt = 'aUnbekannt'
 # Konstanten
 MU_NAN = float('nan')
 
@@ -67,36 +74,67 @@ from datetime import datetime
 
 
 # Assuming the other classes like TMU_ConstList, TMU_Atom, TMU_Winkel, etc., are defined elsewhere in Python
+class TMU_ModellSchema(BaseModel):
+    aufgabe: int
+    modell_id: int
+    mit_berechnung_toleranzfaktor: bool = False
+    const_list: Optional['TMU_ConstList'] = TMU_ConstList()  # Angenommen, du hast eine Klasse TMU_ConstList, die du hier als Option mitgeben kannst
+    modell_name: str = ""
+    AufgabeModell: Optional[TMU_AufgabeModell] = None  # Kannst du nach Bedarf definieren
+    i_aufgabe: int = 0
+    i_geometrie_me: int = 0
+    i_geometrie_en: int = 0
+    i_geometrie_mo: int = 0
+    i_bezug1: int = 0
+    i_bezug2: int = 0
+    read_only: bool = False
+    modell_desc: str = ""
+    methode: int = 0
+    gegenstand: int = 0
+    mess_einsatz: int = 0
+    einstellmass: int = 0
+    modell_created: datetime = datetime.now()
+    modell_modified: datetime = datetime.now()
+    archiv: bool = False
+    formel_anteil: str = ""
+    formel_beschreibung: str = ""
+    const_needed: Set[TKompConstants] = set()  # Liste von TKompConstants
+
+    class Config:
+        orm_mode = True
+        arbitrary_types_allowed = True
+        json_encoders = {
+            TMU_ConstList: lambda v: v.to_serializable()
+        }
 
 class TMU_Modell(List[TMU_Komponente]):
-    def __init__(self, aufgabe: str, modell_id: int, owner: Optional[object] = None):
+    def __init__(self, schema: TMU_ModellSchema):
         super().__init__()
-        self.mit_berechnung_toleranzfaktor = False
-        self.owner = owner
-        self.const_list = TMU_ConstList()  # Assuming you have this class defined elsewhere
-        self.aufgabe = ""
-        self.modell_name = ""
-        self.modell_id = 0
-        self.AufgabeModell = TMU_AufgabeModell  # Would be a TMU_AufgabeModell instance
-        self.i_aufgabe = 0
-        self.i_geometrie_me = 0
-        self.i_geometrie_en = 0
-        self.i_geometrie_mo = 0
-        self.i_bezug1 = 0
-        self.i_bezug2 = 0
-        self.read_only = False
-        self.modell_desc = ""
-        self.methode = 0
-        self.gegenstand = 0
-        self.mess_einsatz = 0
-        self.einstellmass = 0
-        self.modell_created = datetime.now()
-        self.modell_modified = datetime.now()
-        self.archiv = False
-        self.formel_anteil = ""
-        self.formel_beschreibung = ""
-        self.const_needed: List[TKompConstants] = []
-        #self.extend([ComponentFactory.get_component('type_a'),ComponentFactory.get_component('type_b'),ComponentFactory.get_component('TK_Kalibrierung_EN'), ComponentFactory.get_component('TK_AufloesungME'),ComponentFactory.get_component('TK_Wiederholpraezision'), ComponentFactory.get_component('TK_NichtZentrischeAntastung'), ComponentFactory.get_component('TK_AbweichungPoissonKoeffizientMO_EN'), ComponentFactory.get_component('TK_AbweichungElastizitaetsModul_MO_EN'), ComponentFactory.get_component('TK_TempDifferenz_MO_ME'), ComponentFactory.get_component('TK_AbweichungMittlereTemp_MO_ME')])
+        self.mit_berechnung_toleranzfaktor = schema.mit_berechnung_toleranzfaktor
+        self.aufgabe = schema.aufgabe
+        self.modell_name = schema.modell_name
+        self.modell_id = schema.modell_id
+        self.AufgabeModell = schema.AufgabeModell
+        self.i_aufgabe = schema.i_aufgabe
+        self.i_geometrie_me = schema.i_geometrie_me
+        self.i_geometrie_en = schema.i_geometrie_en
+        self.i_geometrie_mo = schema.i_geometrie_mo
+        self.i_bezug1 = schema.i_bezug1
+        self.i_bezug2 = schema.i_bezug2
+        self.read_only = schema.read_only
+        self.modell_desc = schema.modell_desc
+        self.methode = schema.methode
+        self.gegenstand = schema.gegenstand
+        self.mess_einsatz = schema.mess_einsatz
+        self.einstellmass = schema.einstellmass
+        self.modell_created = schema.modell_created
+        self.modell_modified = schema.modell_modified
+        self.archiv = schema.archiv
+        self.formel_anteil = schema.formel_anteil
+        self.formel_beschreibung = schema.formel_beschreibung
+        self.const_needed = schema.const_needed
+        self.const_list = schema.const_list
+
 
     def addComponent(self, component_id: int):
         self.append(ComponentFactory.get_component(self, component_id))
@@ -567,7 +605,6 @@ class TMU_Modell(List[TMU_Komponente]):
     def V_eff(self):
         result = MU_NAN
         valid = False
-        print(self.AufgabeModell)
         if self.AufgabeModell == "a3D_Pruefprozess":
             SummeEFG = 0
             U = self.StandardUnsicherheit_Uy()
@@ -583,7 +620,7 @@ class TMU_Modell(List[TMU_Komponente]):
             else:
                 result = power(U, 4) / SummeEFG
         else:
-            print("Hier bin iCh wieder")
+            print("Hier bin iCh wieder", self)
             SummeUB = 0
             for item in self:
                 if isinstance(item, TMU_Komponente):

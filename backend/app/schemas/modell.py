@@ -5,6 +5,12 @@ from pydantic import BaseModel
 
 from app.schemas.component import ComponentRefCreate
 
+from app.services.component_service.EverythinForComponents.TMU_ConstList import TMU_ConstList
+
+from app.services.component_service.EverythinForComponents.TMU_ConstList import TKompConstants
+
+from app.services.component_service.EverythinForComponents.TMU_ConstList import TMU_ConstListResponse
+
 
 class ModellCreate(BaseModel):
     name: str
@@ -45,4 +51,11 @@ class ModellNameDescription(BaseModel):
 class ModellIDResponse(BaseModel):
     name: str
     description: Optional[str]
-    constants: Set[str]
+    constants: Set[TKompConstants]
+    constantsValue: Optional[TMU_ConstListResponse] = None
+
+    class Config:
+        orm_mode = True
+        json_encoders = {
+            TKompConstants: lambda v: v.name
+        }

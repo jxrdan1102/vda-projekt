@@ -17,6 +17,10 @@ from app.schemas.modell import ModellNameDescription
 
 from app.schemas.modell import ModellIDResponse
 
+from app.services.component_service.EverythinForComponents.TMU_Modell import TMU_ModellSchema
+
+from app.services.component_service.EverythinForComponents.TMU_ConstList import TMU_ConstListResponse
+
 router = APIRouter(prefix="/modells", tags=["modells"])
 
 
@@ -39,19 +43,22 @@ async def get_modell_by_id(id: int, db: AsyncSession = Depends(get_db)):
     comp_result = await db.execute(select(Component.kompid).filter(Component.fk_modell == id))
     component_ids = comp_result.scalars().all()  # Liste der Komponenten-IDs
 
-    tmu_modell = TMU_Modell(
+    tmu_modell_schema = TMU_ModellSchema(
         aufgabe=modell.aufgabe,
         modell_id=modell.id)
+    tmu_modell = TMU_Modell(tmu_modell_schema)
     for component_id in component_ids:
         tmu_modell.addComponent(component_id)
 
     #constants = tmu_modell.getConstantNeededList()
     constants = tmu_modell.const_needed
-    constants_names = [c.name for c in constants]
+    constantsValue = tmu_modell.const_list
+    #constants_names = [c.name for c in constants]
     return ModellIDResponse(
         name=modell.name,
         description=modell.description,
-        constants=sorted(constants_names)
+        constants=constants,
+        constantsValue=TMU_ConstListResponse.from_internal(constantsValue)
     )
 
 @router.get("/{id}/berechnung")
@@ -66,11 +73,12 @@ async def calculate_uncertainty(id : int ,db: AsyncSession = Depends(get_db)):
     component_ids = comp_result.scalars().all()  # Liste der Komponenten-IDs
 
 
-    tmu_modell = TMU_Modell(
+    tmu_modell_schema = TMU_ModellSchema(
         aufgabe=modell.aufgabe,
         modell_id=modell.id)
+    tmu_modell = TMU_Modell(tmu_modell_schema)
     for component_id in component_ids:
-        tmu_modell.append(ComponentFactory.get_component(component_id))
+        tmu_modell.addComponent(component_id)
 
     return tmu_modell.MUPruefverfahren_U()
 

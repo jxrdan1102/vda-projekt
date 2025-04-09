@@ -19,6 +19,8 @@ from app.schemas.anakonst import Anakonst
 from app.models.ANAMU import ANAKONST
 from app.schemas.anakonst import AnakonstUpdate
 
+from app.routers.components import update_model
+
 router = APIRouter(prefix="/anamu", tags=["anamu"])
 
 
@@ -77,24 +79,16 @@ async def create_anamu(anamu: AnamuCreate, db: AsyncSession = Depends(get_db)):
 
     return db_anamu
 
+
 @router.put("/component/{id}")
-async def update_anakomp(id: int,anakomp: AnakompUpdate, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(ANAKOMP).where(ANAKOMP.id == id))
-    db_anakomp = result.scalar_one_or_none()
+async def update_anakomp(id: int, anakomp: AnakompUpdate, db: AsyncSession = Depends(get_db)):
+    # Model-Daten extrahieren
+    update_data = anakomp.model_dump(exclude_unset=True)
 
-    if db_anakomp is None:
-        raise HTTPException(status_code=404, detail="Item not found")
+    # Allgemeine Update-Funktion aufrufen
+    updated_anakomp = await update_model(db, ANAKOMP, id, update_data)
 
-    # Nur die übergebenen Felder aktualisieren
-    update_data = anakomp.model_dump(exclude_unset=True)  # Nur vorhandene Werte nehmen
-    for key, value in update_data.items():
-        setattr(db_anakomp, key, value)  # Dynamische Feldaktualisierung
-
-    await db.commit()
-    await db.refresh(db_anakomp)
-
-    return db_anakomp
-
+    return updated_anakomp
 
 @router.put("/constant/{id}")
 async def update_anakonst(id: int,anakonst: AnakonstUpdate, db: AsyncSession = Depends(get_db)):

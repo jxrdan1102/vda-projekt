@@ -1,3 +1,5 @@
+from typing import TypeVar, Type
+
 from fastapi import APIRouter, HTTPException, Depends
 from app.services.component_service.component_factory import ComponentFactory
 
@@ -21,35 +23,54 @@ router = APIRouter(prefix="/components", tags=["components"])
 def get_components():
     components = ComponentFactory.get_all_components()
 
-    return [ComponentBack(**k.data.to_dict()) for k in components]
+    return [ComponentBack(data=k.data,ConstNeeded=k.ConstNeeded) for k in components]
 
-@router.put("/{id}")
-async def update_component(id: int, component: ComponentRefUpdate, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Component).where(Component.id == id))
-    db_component = result.scalar_one_or_none()
 
-    if db_component is None:
+T = TypeVar('T')  # Typ-Variable für alle Modelle
+
+async def update_model(
+    db: AsyncSession,
+    model_class: Type[T],  # Die Klasse des Modells, z.B. Component, ANAKOMP
+    model_id: int,
+    update_data: dict
+) -> T:
+    """
+    Allgemeine Update-Funktion für Modelle.
+    """
+    # Hole die Modellinstanz aus der DB
+    result = await db.execute(select(model_class).where(model_class.id == model_id))
+    db_instance = result.scalar_one_or_none()
+
+    if db_instance is None:
         raise HTTPException(status_code=404, detail="Item not found")
 
     # Nur die übergebenen Felder aktualisieren
-    update_data = component.model_dump(exclude_unset=True)  # Nur vorhandene Werte nehmen
     for key, value in update_data.items():
-        setattr(db_component, key, value)  # Dynamische Feldaktualisierung
+        setattr(db_instance, key, value)  # Dynamische Feldaktualisierung
 
     await db.commit()
-    await db.refresh(db_component)
+    await db.refresh(db_instance)
 
-    return db_component
-
-@router.get("/modell-a")
-def get_komponente_a():
-
-    komponenta_instance = ComponentFactory.get_component(1042)
-
-    if not komponenta_instance:
-        raise HTTPException(status_code=404, detail="Komponente A nicht gefunden")
-
-    const_needed = komponenta_instance.unsicherheitsbeitrag()
+    return db_instance
 
 
-    return {" Erweiterte Messunsicherheit: ": const_needed}
+@router.put("/{id}")
+async def update_component(id: int, component: ComponentRefUpdate, db: AsyncSession = Depends(get_db)):
+    # Model-Daten extrahieren
+    update_data = component.model_dump(exclude_unset=True)
+
+    # Allgemeine Update-Funktion aufrufen
+    updated_component = await update_model(db, Component, id, update_data)
+
+    return updated_component
+
+@router.get("/{id}")
+async def get_component_db(id: int, db: AsyncSession = Depends(get_db)):
+
+    result = await db.execute(select(Component).filter(Component.id == id))
+    component = result.scalar_one_or_none()
+
+    if not component:
+        return {"error": "Modell nicht gefunden"}
+
+    return component

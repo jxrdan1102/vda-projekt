@@ -17,7 +17,6 @@ class Anakomp(BaseModel):
         orm_mode = True
 
 class AnakompUpdate(BaseModel):
-    id: int
     fk_anamu: Optional[int] = None
     fk_mod_components: Optional[int] = None
     remark: Optional[str] = None

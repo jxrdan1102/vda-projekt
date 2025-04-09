@@ -1,7 +1,13 @@
 from enum import Enum
+from typing import Union
 
 from app.services.component_service.EverythinForComponents.TMU_ConstList import TKompConstants
+from pydantic import BaseModel, validator, root_validator
 
+
+# Enum-Klassen mit den angegebenen Werten
+
+# Enum-Klassen
 class TMU_Verteilung(Enum):
     Verteilung_Undefiniert = 1
     V_Rechteck = 2
@@ -14,6 +20,15 @@ class TMU_Verteilung(Enum):
     V3D_AnzahlMP = 9
     V3D_Stdabw = 10
 
+    @classmethod
+    def _get_value(cls, value: Union[int, str]):
+        if isinstance(value, int):
+            return cls(value)
+        elif isinstance(value, str):
+            return cls[value]
+        raise ValueError(f"Invalid value: {value}, expected integer or string")
+
+
 class TMU_KennwertArt(Enum):
     KennwertArt_Undefiniert = 1
     K_HalbWeite = 2
@@ -23,31 +38,61 @@ class TMU_KennwertArt(Enum):
     M3D_MethodeB = 6
     M3D_MethodeAnzahlPunkte = 7
 
+    @classmethod
+    def _get_value(cls, value: Union[int, str]):
+        if isinstance(value, int):
+            return cls(value)
+        elif isinstance(value, str):
+            return cls[value]
+        raise ValueError(f"Invalid value: {value}, expected integer or string")
+
+
 class TMU_Freiheitsgrad(Enum):
     Freiheitsgrad_Undefiniert = 1
     FG_unbegrenzt = 2
     FG_N_Minus1 = 3
 
-class TMuKompRec:
-    def __init__(self, TermL0, TermL1, Verteilung, KennwertArt, Freiheitsgrad, FreiN_minus_1, Flags):
-        self.TermL0: float = TermL0
-        self.TermL1: float = TermL1
-        self.Verteilung: TMU_Verteilung = Verteilung
-        self.KennwertArt: TMU_KennwertArt = KennwertArt
-        self.Freiheitsgrad:TMU_Freiheitsgrad = Freiheitsgrad
-        self.FreiN_minus_1: int = FreiN_minus_1
-        self.Flags: int = Flags
+    @classmethod
+    def _get_value(cls, value: Union[int, str]):
+        if isinstance(value, int):
+            return cls(value)
+        elif isinstance(value, str):
+            return cls[value]
+        raise ValueError(f"Invalid value: {value}, expected integer or string")
 
-    def to_dict(self):
-        return {
-            'TermL0': self.TermL0,
-            'TermL1': self.TermL1,
-            'Verteilung': self.Verteilung,
-            'KennwertArt': self.KennwertArt,
-            'Freiheitsgrad': self.Freiheitsgrad,
-            'FreiN_minus_1': self.FreiN_minus_1,
-            'Flags': self.Flags
+
+# Model mit Enums und Serialisierung
+class TMuKompRec(BaseModel):
+    TermL0: float
+    TermL1: float
+    Verteilung: TMU_Verteilung
+    KennwertArt: TMU_KennwertArt
+    Freiheitsgrad: TMU_Freiheitsgrad
+    FreiN_minus_1: int
+    Flags: int
+
+    @root_validator(pre=True)
+    def parse_enums(cls, values):
+        values['Verteilung'] = TMU_Verteilung._get_value(values.get('Verteilung'))
+        values['KennwertArt'] = TMU_KennwertArt._get_value(values.get('KennwertArt'))
+        values['Freiheitsgrad'] = TMU_Freiheitsgrad._get_value(values.get('Freiheitsgrad'))
+        return values
+
+    class Config:
+        json_encoders = {
+            TMU_Verteilung: lambda v: v.name,
+            TMU_KennwertArt: lambda v: v.name,
+            TMU_Freiheitsgrad: lambda v: v.name,
         }
+class TMuKompRecW:
+    def __init__(self):
+        self.TermL0:float
+        self.TermL1: float
+        self.Verteilung: Union[int, str]
+        self.KennwertArt: Union[int, str]
+        self.Freiheitsgrad: Union[int, str]
+        self.FreiN_minus_1: int
+        self.Flags: int
 
 class TAuswertungsArchiv:
     def __init__(self, STDU, AVAL, BVAL, ASUL0, ASUL1, SensC1, SensC2, FreiEff, UNSBL0, UNSBL1, UnsB, VARIANZ):

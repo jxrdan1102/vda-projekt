@@ -1,5 +1,13 @@
-from typing import Optional
+from typing import Optional, List, Set
 from pydantic import BaseModel
+
+from app.services.component_service.EverythinForComponents.TMU_ConstList import TKompConstants
+
+from app.services.component_service.EverythinForComponents.TMuKompRec import TMuKompRec
+
+from app.services.component_service.EverythinForComponents.TMuKompRec import TMU_Verteilung, TMU_Freiheitsgrad, \
+    TMU_KennwertArt
+
 
 class ComponentRefCreate(BaseModel):
     #fk_modell: int muss glaub ich in Logik direkt nach Create von Modell übergeben werden
@@ -19,7 +27,7 @@ class ComponentRefCreate(BaseModel):
 
 class ComponentRefUpdate(BaseModel):
     lfdnr: Optional[int] = None
-    kompid: Optional[int] = None
+    kompid: int
     modltxtid: Optional[int] = None
     terml0: Optional[float] = None
     terml1: Optional[float] = None
@@ -33,24 +41,12 @@ class ComponentRefUpdate(BaseModel):
         orm_mode = True
 
 
-class TMuKompRec(BaseModel):
-    terml0: float
-    terml1: float
-    verteilung: int
-    kennwertart: int
-    freiheitsgrad: int
-    frei_n_minus_1: int
-    flags: int
-
-    class Config:
-        arbitrary_types_allowed = True
-
 
 class ComponentBack(BaseModel):
-    TermL0: float
-    TermL1: float
-    Verteilung: str
-    KennwertArt: str
-    Freiheitsgrad: str
-    FreiN_minus_1: int
-    Flags: int
+    ConstNeeded: Set[TKompConstants]
+    data: TMuKompRec
+
+    class Config:
+        json_encoders = {
+            TKompConstants: lambda v: v.name,
+        }

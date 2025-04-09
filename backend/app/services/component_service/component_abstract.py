@@ -24,7 +24,13 @@ class TMU_Komponente(TMU_Atom):
 
     def __init__(self, AModell: 'TMU_Modell', AnID: int, AConstList: TMU_ConstList, AFormel: str):
         super().__init__( AnID, "Komponente")
-        self.data = TMuKompRec(MU_NAN,MU_NAN,"Verteilung_Undefiniert","KennwertArt_Undefiniert","Freiheitsgrad_Undefiniert",0,1)
+        self.data = TMuKompRec(TermL0=MU_NAN,
+            TermL1=MU_NAN,
+            Verteilung="Verteilung_Undefiniert",  # String-Wert wird akzeptiert
+            KennwertArt="KennwertArt_Undefiniert",  # String-Wert wird akzeptiert
+            Freiheitsgrad="Freiheitsgrad_Undefiniert",  # String-Wert wird akzeptiert
+            FreiN_minus_1=0,
+            Flags=1)
         self.modell: object = AModell
         self.const_list: object = AConstList
         self.formel: str = AFormel
@@ -40,42 +46,27 @@ class TMU_Komponente(TMU_Atom):
         self.position: int = 0
         self.einheit_ergebnis: str = ""
         self.clear()
+
+
+
     def asciiformel(self) -> str:
         return self.formel
 
     def addConstNeededToModell(self):
-        self.modell.const_needed += self.ConstNeeded
-
-    def setData(self, verteilung: Optional[int] = None, terml0: Optional[float] = None,
-                terml1: Optional[float] = None, kennwertart: Optional[int] = None,
-                flags: Optional[int] = None, freiheitsgrad: Optional[int] = None,
-                freinminus1: Optional[int] = None) -> None:
-        # Wenn ein Wert übergeben wird, wird er gesetzt, ansonsten bleibt der alte Wert
-        if verteilung is not None:
-            self.data.Verteilung = TMU_Verteilung(verteilung)
-        if terml0 is not None:
-            self.data.TermL0 = terml0
-        if terml1 is not None:
-            self.data.TermL1 = terml1
-        if kennwertart is not None:
-            self.data.KennwertArt = TMU_KennwertArt(kennwertart)
-        if flags is not None:
-            self.data.Flags = flags
-        if freiheitsgrad is not None:
-            self.data.Freiheitsgrad = TMU_Freiheitsgrad(freiheitsgrad)
-        if freinminus1 is not None:
-            self.data.FreiN_minus_1 = freinminus1
+        if self.modell is not None:
+            for const in self.ConstNeeded:
+                print(const)
+                self.modell.const_needed.add(const)
+                self.modell.const_list.const_map[const] = None
 
     def clear(self):
-        self.setData(
-            verteilung=TMU_Verteilung(1),
-            terml0=0,
-            terml1=0,
-            kennwertart=TMU_KennwertArt(1),
-            flags=1,
-            freiheitsgrad=TMU_Freiheitsgrad(1),
-            freinminus1=0
-        )
+        self.data = TMuKompRec(TermL0=MU_NAN,
+                   TermL1=MU_NAN,
+                   Verteilung="Verteilung_Undefiniert",  # String-Wert wird akzeptiert
+                   KennwertArt="KennwertArt_Undefiniert",  # String-Wert wird akzeptiert
+                   Freiheitsgrad="Freiheitsgrad_Undefiniert",  # String-Wert wird akzeptiert
+                   FreiN_minus_1=0,
+                   Flags=1)
 
     def is_valid(self):
         data = self.data
@@ -97,6 +88,7 @@ class TMU_Komponente(TMU_Atom):
             # Check distribution and return appropriate uncertainty
             if self.data.Verteilung.name == 'V_Rechteck':
                 if self.data.KennwertArt.name == 'K_HalbWeite':
+                    print("1", l / math.sqrt(3))
                     return l / math.sqrt(3)
                 elif self.data.KennwertArt.name == 'K_Spannweite':
                     print("wurzel",l / (2 * math.sqrt(3)))

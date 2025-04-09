@@ -1,5 +1,5 @@
 import math
-
+from sys import flags
 
 #__all__ = ["KomponenteA", "TK_KalibrierungME", "TK_Kalibrierung_EN", "TK_AufloesungME","TK_Wiederholpraezision","TK_NichtZentrischeAntastung","TK_AbweichungPoissonKoeffizientMO_EN", "TK_AbweichungElastizitaetsModul_MO_EN", "TK_TempDifferenz_MO_ME", "TK_AbweichungMittlereTemp_MO_ME"]
 
@@ -10,6 +10,8 @@ from app.services.component_service.EverythinForComponents.TMuKompRec import TMu
 from app.services.component_service.EverythinForComponents.TMU_ConstList import TKompConstants
 
 MU_NAN = math.nan
+
+
 class KomponenteA(TMU_Komponente):
     def __init__(self, modell, const_list):
         super().__init__(modell, 12, const_list,"notthere")
@@ -17,8 +19,8 @@ class KomponenteA(TMU_Komponente):
         self.modell = modell
         self.const_list = const_list
         self.archiv = False
-        #self.data = TMuKompRec(0.15,0,'V_Rechteck','K_HalbWeite','FG_unbegrenzt',0,1)
-        self.setData(terml0 = 0.15,verteilung = 2,kennwertart = 2,freiheitsgrad=2)
+        self.data = TMuKompRec(TermL0 = 0.15, TermL1 = 0, Verteilung = 'V_Rechteck', KennwertArt = 'K_HalbWeite',Freiheitsgrad = 'FG_unbegrenzt',FreiN_minus_1 = 0, Flags = 1)
+        #self.setData(0.15,0,'V_Rechteck','K_HalbWeite','FG_unbegrenzt',0,1)
         self.UnsicherheitsBeitrag = self.unsicherheitsbeitrag()
         self.EffektiverFreiheitsgrad = self.effektiver_freiheitsgrad()
 
@@ -44,7 +46,10 @@ class KomponenteA(TMU_Komponente):
     def clear(self):
         # Diese Methode wird aufgerufen, um die Felder zurückzusetzen
         super().clear()
-        self.setData(verteilung = 2, kennwertart = 2, freiheitsgrad=2)
+        self.data.Verteilung = 2
+        self.data.KennwertArt = 2
+        self.data.Freiheitsgrad = 2
+
 
     def b_val(self):
         # Beispielmethode, die 0 zurückgibt
@@ -88,8 +93,8 @@ class TK_KalibrierungME(TMU_Komponente):
     def __init__(self, AModell, AConstList):
         # Der Konstruktor ruft den Konstruktor der Basisklasse auf und setzt die Werte
         super().__init__( AModell, 1001, AConstList, '&delta;I<sub>ME</sub>')
-        #self.data = TMuKompRec(0.035,0,'V_Normal','K_HalbWeite','FG_unbegrenzt',0,1)
-        self.setData(terml0 = 0.035,verteilung = 3,kennwertart = 2,freiheitsgrad=2)
+        self.data = TMuKompRec(TermL0= 0.035,TermL1=0,Verteilung = 'V_Normal',KennwertArt ='K_HalbWeite',Freiheitsgrad = 'FG_unbegrenzt',FreiN_minus_1 = 0, Flags=1)
+        #self.setData(terml0 = 0.035,verteilung = 3,kennwertart = 2,freiheitsgrad=2)
         self.UnsicherheitsBeitrag = self.unsicherheitsbeitrag()
         self.EffektiverFreiheitsgrad = self.effektiver_freiheitsgrad()
         self.id = 2
@@ -101,7 +106,9 @@ class TK_KalibrierungME(TMU_Komponente):
     def clear(self):
         # Diese Methode wird aufgerufen, um die Felder zurückzusetzen
         super().clear()
-        self.setData(verteilung = 3, kennwertart = 2, freiheitsgrad=2)
+        self.data.Verteilung = 3
+        self.data.KennwertArt = 2
+        self.data.Freiheitsgrad = 2
 
 
 class TK_Kalibrierung_EN(TMU_Komponente):
@@ -109,8 +116,8 @@ class TK_Kalibrierung_EN(TMU_Komponente):
         # Der Konstruktor ruft den Konstruktor der Basisklasse auf und setzt die Werte
         super().__init__( AModell, 1027, AConstList, '&delta;I<sub>ENK</sub>')
         self.ConstNeeded += [TKompConstants["TC_NennmassEN"]]  # Beispielhafte Konstante für TC_NennmassEN
-        #self.data = TMuKompRec(0.05,0.0000012,'V_Normal','K_HalbWeite','FG_unbegrenzt',0,1)
-        self.setData(terml0 = 0.05, terml1 = 0.0000012,verteilung = 3,kennwertart = 2,freiheitsgrad=2)
+        self.data = TMuKompRec(TermL0= 0.05,TermL1=0.0000012,Verteilung = 'V_Normal',KennwertArt ='K_HalbWeite',Freiheitsgrad = 'FG_unbegrenzt',FreiN_minus_1 =0,Flags=1)
+        #self.setData(terml0 = 0.05, terml1 = 0.0000012,verteilung = 3,kennwertart = 2,freiheitsgrad=2)
         self.id = 3
         self.UnsicherheitsBeitrag = self.unsicherheitsbeitrag()
         self.EffektiverFreiheitsgrad = self.effektiver_freiheitsgrad()
@@ -119,7 +126,9 @@ class TK_Kalibrierung_EN(TMU_Komponente):
     def clear(self):
         # Diese Methode wird aufgerufen, um die Felder zurückzusetzen
         super().clear()
-        self.setData(verteilung = 3, kennwertart = 2, freiheitsgrad=2)
+        self.data.Verteilung = 3
+        self.data.KennwertArt = 2
+        self.data.Freiheitsgrad = 2
 
 
     def unsicherheitsbeitrag_l1(self):
@@ -140,8 +149,8 @@ class TK_AufloesungME(TMU_Komponente):
     def __init__(self,  AModell, AConstList):
         # Der Konstruktor ruft den Konstruktor der Basisklasse auf und setzt die Werte
         super().__init__( AModell, 1003, AConstList, '&delta;I<sub>MEW</sub>')
- #       self.data = TMuKompRec(terml0 = 0.005, terml1 = 0,verteilung = 2,kennwertart = 3,freiheitsgrad = 2,0,1)
-        self.setData(terml0 = 0.005,verteilung = 2,kennwertart = 3,freiheitsgrad=2)
+        self.data = TMuKompRec(TermL0 = 0.005, TermL1 = 0,Verteilung = 2,KennwertArt = 3,Freiheitsgrad = 2,FreiN_minus_1 = 0,Flags = 1)
+        #self.setData(terml0 = 0.005,verteilung = 2,kennwertart = 3,freiheitsgrad=2)
         self.UnsicherheitsBeitrag = self.unsicherheitsbeitrag()
         self.EffektiverFreiheitsgrad = self.effektiver_freiheitsgrad()
         self.ConstNeeded += []
@@ -151,14 +160,16 @@ class TK_AufloesungME(TMU_Komponente):
     def clear(self):
         # Diese Methode wird aufgerufen, um die Felder zurückzusetzen
         super().clear()
-        self.setData(verteilung = 2, kennwertart = 2, freiheitsgrad=2)
+        self.data.Verteilung = 2
+        self.data.KennwertArt = 2
+        self.data.Freiheitsgrad = 2
 
 class TK_Wiederholpraezision(TMU_Komponente):
     def __init__(self,  AModell, AConstList):
         # Der Konstruktor ruft den Konstruktor der Basisklasse auf und setzt die Werte
         super().__init__( AModell, 1040, AConstList, '&delta;W')
-        #self.data = TMuKompRec(0.01,0,'V_Normal','K_Standardabweichung','FG_unbegrenzt',0,1)
-        self.setData(terml0 = 0.01,verteilung = 3,kennwertart = 4,freiheitsgrad=2)
+        self.data = TMuKompRec(TermL0= 0.01,TermL1= 0,Verteilung = 'V_Normal',KennwertArt ='K_Standardabweichung',Freiheitsgrad = 'FG_unbegrenzt',FreiN_minus_1 =0,Flags=1)
+        #self.setData(terml0 = 0.01,verteilung = 3,kennwertart = 4,freiheitsgrad=2)
 
         self.ConstNeeded += []
         self.UnsicherheitsBeitrag = self.unsicherheitsbeitrag()
@@ -169,7 +180,9 @@ class TK_Wiederholpraezision(TMU_Komponente):
     def clear(self):
         # Diese Methode wird aufgerufen, um die Felder zurückzusetzen
         super().clear()
-        self.setData(verteilung = 3, kennwertart = 4, freiheitsgrad=2)
+        self.data.Verteilung = 3
+        self.data.KennwertArt = 4
+        self.data.Freiheitsgrad = 2
 
 
 
@@ -177,8 +190,8 @@ class TK_NichtZentrischeAntastung(TMU_Komponente):
     def __init__(self, AModell, AConstList):
         # Der Konstruktor ruft den Konstruktor der Basisklasse auf und setzt die Werte
         super().__init__( AModell, 1041, AConstList, '&delta;I<sub>v</sub>')
-       # self.data = TMuKompRec(0,0,'V_Rechteck','K_HalbWeite','FG_unbegrenzt',0,1)
-        self.setData(verteilung = 2,kennwertart = 2,freiheitsgrad=2)
+        self.data = TMuKompRec(TermL0= 0,TermL1= 0,Verteilung = 'V_Rechteck',KennwertArt ='K_HalbWeite',Freiheitsgrad = 'FG_unbegrenzt',FreiN_minus_1 =0,Flags=1)
+        #self.setData(verteilung = 2,kennwertart = 2,freiheitsgrad=2)
 
         self.UnsicherheitsBeitrag = self.unsicherheitsbeitrag()
         self.EffektiverFreiheitsgrad = self.effektiver_freiheitsgrad()
@@ -195,7 +208,9 @@ class TK_NichtZentrischeAntastung(TMU_Komponente):
     def clear(self):
         # Diese Methode wird aufgerufen, um die Felder zurückzusetzen
         super().clear()
-        self.setData(verteilung = 2, kennwertart = 4, freiheitsgrad=2)
+        self.data.Verteilung = 2
+        self.data.KennwertArt = 4
+        self.data.Freiheitsgrad = 2
 
 
     def a_val(self):
@@ -218,8 +233,8 @@ class TK_NichtZentrischeAntastung(TMU_Komponente):
 class TK_AbweichungPoissonKoeffizientMO_EN(TMU_Komponente):
     def __init__(self, AModell, AConstList):
         super().__init__( AModell, 1043, AConstList, '&delta;V')
-        #self.data = TMuKompRec(0,0,'V_Rechteck','K_Spannweite','FG_unbegrenzt',0,1)
-        self.setData(verteilung = 2,kennwertart = 3,freiheitsgrad=2)
+        self.data = TMuKompRec(TermL0= 0,TermL1= 0,Verteilung = 'V_Rechteck',KennwertArt ='K_Spannweite',Freiheitsgrad = 'FG_unbegrenzt',FreiN_minus_1 =0,Flags=1)
+        #self.setData(verteilung = 2,kennwertart = 3,freiheitsgrad=2)
 
         self.UnsicherheitsBeitrag = self.unsicherheitsbeitrag()
         self.EffektiverFreiheitsgrad = self.effektiver_freiheitsgrad()
@@ -239,7 +254,9 @@ class TK_AbweichungPoissonKoeffizientMO_EN(TMU_Komponente):
     def clear(self):
         # Diese Methode wird aufgerufen, um die Felder zurückzusetzen
         super().clear()
-        self.setData(verteilung = 2, kennwertart = 4, freiheitsgrad=2)
+        self.data.Verteilung = 2
+        self.data.KennwertArt = 4
+        self.data.Freiheitsgrad = 2
 
 
     def a_Val(self):
@@ -290,8 +307,8 @@ class TK_AbweichungPoissonKoeffizientMO_EN(TMU_Komponente):
 class TK_AbweichungElastizitaetsModul_MO_EN(TMU_Komponente):
     def __init__(self, AModell, AConstList):
         super().__init__( AModell, 1044, AConstList, '&delta;E')
-        #self.data = TMuKompRec(0,0,'V_Rechteck','K_Spannweite','FG_unbegrenzt',0,1)
-        self.setData(verteilung = 2,kennwertart = 3,freiheitsgrad=2)
+        self.data = TMuKompRec(TermL0= 0,TermL1= 0,Verteilung = 'V_Rechteck',KennwertArt ='K_Spannweite',Freiheitsgrad = 'FG_unbegrenzt',FreiN_minus_1 =0,Flags=1)
+        #self.setData(verteilung = 2,kennwertart = 3,freiheitsgrad=2)
 
         self.UnsicherheitsBeitrag = self.unsicherheitsbeitrag()
         self.EffektiverFreiheitsgrad = self.effektiver_freiheitsgrad()
@@ -311,7 +328,9 @@ class TK_AbweichungElastizitaetsModul_MO_EN(TMU_Komponente):
     def clear(self):
         # Diese Methode wird aufgerufen, um die Felder zurückzusetzen
         super().clear()
-        self.setData(verteilung=2, kennwertart=4, freiheitsgrad=2)
+        self.data.Verteilung = 2
+        self.data.KennwertArt = 4
+        self.data.Freiheitsgrad = 2
 
     def a_val(self):
         # Berechnung von a_Val
@@ -356,7 +375,7 @@ class TK_AbweichungElastizitaetsModul_MO_EN(TMU_Komponente):
 class TK_TempDifferenz_MO_ME(TMU_Komponente):
     def __init__(self, AModell, AConstList):
         super().__init__( AModell, 1009, AConstList, '&delta;t')
-        #self.data = TMuKompRec(0,0,'V_Rechteck','K_Spannweite','FG_unbegrenzt',0,1)
+        self.data = TMuKompRec(TermL0= 0,TermL1= 0,Verteilung = 'V_Rechteck',KennwertArt ='K_Spannweite',Freiheitsgrad = 'FG_unbegrenzt',FreiN_minus_1 =0,Flags=1)
         self.UnsicherheitsBeitrag = self.unsicherheitsbeitrag()
         self.EffektiverFreiheitsgrad = self.effektiver_freiheitsgrad()
         self.id = 9
@@ -366,9 +385,6 @@ class TK_TempDifferenz_MO_ME(TMU_Komponente):
         ]
         self.FieldsToEdit = ["EF_Verteilung", "EF_Kennwertart", "EF_Freheitsgrad"]
 
-        self.data.TermL0 : 0  # Vorbelegung
-        self.data.TermL1 : -1  # Nicht benötigt, aber auch nicht NAN
-
         self.c1_val = 0  # Festlegung, c2 wird errechnet
         self.Einheit = "°C"
         self.addConstNeededToModell()
@@ -376,7 +392,9 @@ class TK_TempDifferenz_MO_ME(TMU_Komponente):
     def clear(self):
         # Diese Methode wird aufgerufen, um die Felder zurückzusetzen
         super().clear()
-        self.setData(verteilung=2, kennwertart=3, freiheitsgrad=2)
+        self.data.Verteilung = 2
+        self.data.KennwertArt = 3
+        self.data.Freiheitsgrad = 2
 
 
     def b_val(self):
@@ -403,7 +421,7 @@ class TK_AbweichungMittlereTemp_MO_ME(TMU_Komponente):
     def __init__(self, AModell, AConstList):
         # Aufruf des Konstruktors der Basisklasse
         super().__init__( AModell, 1010,AConstList,"notthere")
-        #self.data = TMuKompRec(0,0,'V_Rechteck','K_HalbWeite','FG_unbegrenzt',0,1)
+        self.data = TMuKompRec(TermL0= 0,TermL1= 0,Verteilung = 'V_Rechteck',KennwertArt ='K_HalbWeite',Freiheitsgrad = 'FG_unbegrenzt',FreiN_minus_1 =0,Flags=1)
         self.UnsicherheitsBeitrag = self.unsicherheitsbeitrag()
         self.EffektiverFreiheitsgrad = self.effektiver_freiheitsgrad()
         self.id = 10
@@ -417,7 +435,9 @@ class TK_AbweichungMittlereTemp_MO_ME(TMU_Komponente):
     def clear(self):
         # Diese Methode wird aufgerufen, um die Felder zurückzusetzen
         super().clear()
-        self.setData(verteilung=2, kennwertart=2, freiheitsgrad=2)
+        self.data.Verteilung = 2
+        self.data.KennwertArt = 2
+        self.data.Freiheitsgrad = 2
 
     def b_val(self):
         # Berechnet den Temperaturunterschied b_Val

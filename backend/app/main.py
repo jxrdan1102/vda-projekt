@@ -3,7 +3,12 @@ import csv
 from fastapi import FastAPI
 from app.routers import items, components, modells, ana_mu
 from app.database.database import create_tables
+import json
 from pypxlib import Table
+
+from app.services.component_service.EverythinForComponents.TMU_ConstList import TMU_ConstList
+
+from app.services.component_service.EverythinForComponents.TMU_ConstList import TKompConstants
 
 app = FastAPI()
 app.include_router(items.router)
@@ -23,6 +28,7 @@ with open(csv_file, mode="w+", newline="", encoding="utf-8") as f:
 
     for row in table:
         writer.writerow([getattr(row, field) for field in fieldnames])  # Werte als Liste speichern
+
 
 
 @app.on_event("startup")

@@ -1,4 +1,8 @@
 from enum import Enum
+from typing import List, Set, Dict, Optional
+
+from pydantic import BaseModel
+
 
 class TKompConstants(Enum):
     TC_Messbereich = 1
@@ -120,16 +124,31 @@ class TKompConstants(Enum):
 
 class TMU_ConstList:
     def __init__(self):
-        """ Initialisiert eine leere Liste von Konstantenwerten. """
-        self.const_list: list[tuple[TKompConstants, float]] = []
+        self.const_map: dict[TKompConstants, float] = {}
+
+    def set_const_val(self, const_id: TKompConstants, value: float):
+        if const_id not in self.const_map:
+            raise KeyError(f"{const_id} ist nicht in ConstNeeded definiert.")
+        self.const_map[const_id] = value
 
     def get_const_val(self, const_id: TKompConstants) -> float:
-        for const in self.const_list:
-            if const[0] == const_id:
-                return const[1]
-        return 0.0
+        return self.const_map.get(const_id, 0.0)
 
-    def add_const(self, const_id: TKompConstants, value: float):
-        if not isinstance(const_id, TKompConstants):
-            raise ValueError(f"{const_id} ist kein gültiger Eintrag von TKompConstants.")
-        self.const_list.append((const_id, value))
+    def to_list(self) -> list[tuple[TKompConstants, float]]:
+        """Optional: falls du eine Liste von Tupeln brauchst."""
+        return list(self.const_map.items())
+
+    def init_from_needed_constants(self, needed_constants: Set[TKompConstants]):
+        for const in needed_constants:
+            if const not in self.const_map:
+                self.const_map[const] = None  # oder z. B. 0.0
+
+    def to_serializable(self):
+        return {k.name: v for k, v in self.const_map.items()}
+
+class TMU_ConstListResponse(BaseModel):
+    const_map: Dict[str, Optional[float]]
+
+    @classmethod
+    def from_internal(cls, tmu: TMU_ConstList):
+        return cls(const_map=tmu.to_serializable())
