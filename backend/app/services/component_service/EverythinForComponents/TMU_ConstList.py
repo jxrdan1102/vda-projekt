@@ -1,7 +1,8 @@
 from enum import Enum
-from typing import List, Set, Dict, Optional
+from typing import List, Set, Dict
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
+from pydantic_core import core_schema
 
 
 class TKompConstants(Enum):
@@ -122,33 +123,30 @@ class TKompConstants(Enum):
             print(f"Ungültiger Name: {name} ist kein gültiger TKompConstants-Eintrag")
 
 
-class TMU_ConstList:
-    def __init__(self):
-        self.const_map: dict[TKompConstants, float] = {}
 
-    def set_const_val(self, const_id: TKompConstants, value: float):
-        if const_id not in self.const_map:
-            raise KeyError(f"{const_id} ist nicht in ConstNeeded definiert.")
-        self.const_map[const_id] = value
+class TMU_ConstList(BaseModel):
+    const_map: Dict[TKompConstants, float] = {}
 
-    def get_const_val(self, const_id: TKompConstants) -> float:
-        return self.const_map.get(const_id, 0.0)
-
-    def to_list(self) -> list[tuple[TKompConstants, float]]:
-        """Optional: falls du eine Liste von Tupeln brauchst."""
-        return list(self.const_map.items())
-
-    def init_from_needed_constants(self, needed_constants: Set[TKompConstants]):
-        for const in needed_constants:
-            if const not in self.const_map:
-                self.const_map[const] = None  # oder z. B. 0.0
-
-    def to_serializable(self):
-        return {k.name: v for k, v in self.const_map.items()}
-
-class TMU_ConstListResponse(BaseModel):
-    const_map: Dict[str, Optional[float]]
-
+    @field_validator("const_map", mode="before")
     @classmethod
-    def from_internal(cls, tmu: TMU_ConstList):
-        return cls(const_map=tmu.to_serializable())
+    def parse_const_map(cls, v):
+        # Falls Keys als Strings ankommen
+        if isinstance(v, dict):
+            new_map = {}
+            for k, val in v.items():
+                if isinstance(k, str):
+                    try:
+                        enum_key = TKompConstants[k]
+                    except KeyError:
+                        raise ValueError(f"Ungültiger Schlüssel: {k}")
+                else:
+                    enum_key = k
+                new_map[enum_key] = float(val)
+            return new_map
+        raise ValueError("const_map muss ein Dictionary sein")
+
+    class Config:
+        use_enum_values = False
+        json_encoders = {
+            TKompConstants: lambda v: v.name
+        }

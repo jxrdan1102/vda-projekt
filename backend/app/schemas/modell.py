@@ -1,15 +1,13 @@
 from datetime import datetime
 from typing import Optional, List, Set
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.schemas.component import ComponentRefCreate
 
 from app.services.component_service.EverythinForComponents.TMU_ConstList import TMU_ConstList
 
 from app.services.component_service.EverythinForComponents.TMU_ConstList import TKompConstants
-
-from app.services.component_service.EverythinForComponents.TMU_ConstList import TMU_ConstListResponse
 
 
 class ModellCreate(BaseModel):
@@ -52,10 +50,11 @@ class ModellIDResponse(BaseModel):
     name: str
     description: Optional[str]
     constants: Set[TKompConstants]
-    constantsValue: Optional[TMU_ConstListResponse] = None
+    constantsValue: Optional[TMU_ConstList] = None
 
     class Config:
         orm_mode = True
+        arbitrary_types_allowed = True
         json_encoders = {
             TKompConstants: lambda v: v.name
         }

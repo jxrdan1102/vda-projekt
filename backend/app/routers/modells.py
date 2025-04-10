@@ -19,8 +19,6 @@ from app.schemas.modell import ModellIDResponse
 
 from app.services.component_service.EverythinForComponents.TMU_Modell import TMU_ModellSchema
 
-from app.services.component_service.EverythinForComponents.TMU_ConstList import TMU_ConstListResponse
-
 router = APIRouter(prefix="/modells", tags=["modells"])
 
 
@@ -58,7 +56,7 @@ async def get_modell_by_id(id: int, db: AsyncSession = Depends(get_db)):
         name=modell.name,
         description=modell.description,
         constants=constants,
-        constantsValue=TMU_ConstListResponse.from_internal(constantsValue)
+        constantsValue=constantsValue
     )
 
 @router.get("/{id}/berechnung")

@@ -78,7 +78,7 @@ class TMU_ModellSchema(BaseModel):
     aufgabe: int
     modell_id: int
     mit_berechnung_toleranzfaktor: bool = False
-    const_list: Optional['TMU_ConstList'] = TMU_ConstList()  # Angenommen, du hast eine Klasse TMU_ConstList, die du hier als Option mitgeben kannst
+    const_list: TMU_ConstList = TMU_ConstList()  # Angenommen, du hast eine Klasse TMU_ConstList, die du hier als Option mitgeben kannst
     modell_name: str = ""
     AufgabeModell: Optional[TMU_AufgabeModell] = None  # Kannst du nach Bedarf definieren
     i_aufgabe: int = 0
@@ -103,9 +103,7 @@ class TMU_ModellSchema(BaseModel):
     class Config:
         orm_mode = True
         arbitrary_types_allowed = True
-        json_encoders = {
-            TMU_ConstList: lambda v: v.to_serializable()
-        }
+
 
 class TMU_Modell(List[TMU_Komponente]):
     def __init__(self, schema: TMU_ModellSchema):
