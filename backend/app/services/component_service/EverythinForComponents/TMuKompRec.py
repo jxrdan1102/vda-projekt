@@ -9,16 +9,16 @@ from pydantic import BaseModel, validator, root_validator
 
 # Enum-Klassen
 class TMU_Verteilung(Enum):
-    Verteilung_Undefiniert = 1
-    V_Rechteck = 2
-    V_Normal = 3
-    V_Dreieck = 4
-    V3D_Rechteck = 5
-    V3D_Normal = 6
-    V3d_Dreieck = 7
-    V3D_Arcsin = 8
-    V3D_AnzahlMP = 9
-    V3D_Stdabw = 10
+    Verteilung_Undefiniert = 0
+    V_Rechteck = 1
+    V_Normal = 2
+    V_Dreieck = 3
+    V3D_Rechteck = 4
+    V3D_Normal = 5
+    V3d_Dreieck = 6
+    V3D_Arcsin = 7
+    V3D_AnzahlMP = 8
+    V3D_Stdabw = 9
 
     @classmethod
     def _get_value(cls, value: Union[int, str]):
@@ -30,13 +30,13 @@ class TMU_Verteilung(Enum):
 
 
 class TMU_KennwertArt(Enum):
-    KennwertArt_Undefiniert = 1
-    K_HalbWeite = 2
-    K_Spannweite = 3
-    K_Standardabweichung = 4
-    M3D_MethodeA = 5
-    M3D_MethodeB = 6
-    M3D_MethodeAnzahlPunkte = 7
+    KennwertArt_Undefiniert = 0
+    K_HalbWeite = 1
+    K_Spannweite = 2
+    K_Standardabweichung = 3
+    M3D_MethodeA = 4
+    M3D_MethodeB = 5
+    M3D_MethodeAnzahlPunkte = 6
 
     @classmethod
     def _get_value(cls, value: Union[int, str]):
@@ -48,9 +48,9 @@ class TMU_KennwertArt(Enum):
 
 
 class TMU_Freiheitsgrad(Enum):
-    Freiheitsgrad_Undefiniert = 1
-    FG_unbegrenzt = 2
-    FG_N_Minus1 = 3
+    Freiheitsgrad_Undefiniert = 0
+    FG_unbegrenzt = 1
+    FG_N_Minus1 = 2
 
     @classmethod
     def _get_value(cls, value: Union[int, str]):

@@ -1,109 +1,82 @@
 from typing import List
-
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import APIRouter, HTTPException, Depends
-
 from app.database.database import get_db
-
 from app.models import ANAMU
 from app.schemas.anamu import Anamu
-
 from app.schemas.anamu import AnamuCreate
-
 from app.models.ANAMU import ANAKOMP
 from app.schemas.anakomp import Anakomp,AnakompUpdate
-
 from app.schemas.anakonst import Anakonst
-
 from app.models.ANAMU import ANAKONST
 from app.schemas.anakonst import AnakonstUpdate
+from app.database.generic_methods import create_entity_with_children, generic_child_builder, update_model, get_all_generic
 
-from app.routers.components import update_model
+from app.database.generic_methods import get_by_foreign_key, get_by_id
+from app.models import Modell
+from app.schemas.anamu import AnamuBase
+
+from app.models import Component
+from app.services.component_service.EverythinForComponents.TMU_Modell import TMU_ModellSchema, TMU_Modell
+
+from app.schemas.anamu import AnamuModellidOnly
+from app.schemas.component import ComponentKompidOnly
+
+from app.schemas.modell import ModellBase
+
+from app.database.generic_methods import calc_uncertainty
 
 router = APIRouter(prefix="/anamu", tags=["anamu"])
 
-
-@router.get("",response_model=List[Anamu])
+@router.get("", response_model=List[Anamu])
 async def get_all_ana_mu(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(ANAMU))
-    anamu = result.scalars().all()
-    return anamu
+    return await get_all_generic(
+        ANAMU,  # Das ORM-Modell ANAMU
+        db,  # Die Datenbank-Sitzung
+        pydantic_model=Anamu  # Das Pydantic-Modell, das als Antwortmodell dient
+    )
 
 @router.post("")
 async def create_anamu(anamu: AnamuCreate, db: AsyncSession = Depends(get_db)):
-    db_anamu = ANAMU(fk_modell = anamu.fk_modell,
-                     name = anamu.name,
-                     aenderungszustand = anamu.aenderungszustand,
-                     identnr = anamu.identnr,
-                     partno = anamu.identnr,
-                     remark = anamu.remark,
-                     creation = anamu.creation,
-                     modify = anamu.modify,
-                     user = anamu.user,
-                     tolfaktor = anamu.tolfaktor,
-                     tsk_aufgabe = anamu.tsk_aufgabe,
-                     kmg_ident = anamu.kmg_ident
-                     )
-    db.add(db_anamu)
-    await db.commit()
-    await db.refresh(db_anamu)  # Holt die ID nach dem Commit
+    db_anamu = ANAMU(**anamu.model_dump(exclude={"anakomps", "anakonst"}))
 
-    # Komponenten mit der Modell-ID erstellen
-    db_anakomps = [
-        Anakomp(
-    fk_anamu = anakomp.fk_anamu,
-    fk_mod_components = anakomp.fk_mod_components,
-    remark = anakomp.fk_remark,
-    terml0 = anakomp.terml0,
-    terml1 = anakomp.terml1,
-    wertart = anakomp.wertart,
-    freigrad = anakomp.freigrad,
-    frei_n_1 = anakomp.frei_n_1,
-    verteilung = anakomp.verteilung,
-        )for anakomp in anamu.anakomps
-    ]
-    db.add_all(db_anakomps)
-    await db.commit()
+    await create_entity_with_children(
+        db=db,
+        entity=db_anamu,
+        child_data_list=anamu.anakomps,
+        child_builder=generic_child_builder(ANAKOMP, "fk_anamu")
+    )
 
-    db_anakonst = [
-        Anakonst(
-            fk_anamu = anakonst.fk_anamu,
-            constnum = anakonst.constnum,
-            constval = anakonst.constval,
-            remark = anakonst.remark,
-        ) for anakonst in anamu.anakonst
-    ]
-    db.add_all(db_anakomps)
-    await db.commit()
+    await create_entity_with_children(
+        db=db,
+        entity=db_anamu,
+        child_data_list=anamu.anakonst,
+        child_builder=generic_child_builder(ANAKONST, "fk_anamu")
+    )
 
     return db_anamu
 
-
 @router.put("/component/{id}")
 async def update_anakomp(id: int, anakomp: AnakompUpdate, db: AsyncSession = Depends(get_db)):
-    # Model-Daten extrahieren
     update_data = anakomp.model_dump(exclude_unset=True)
-
-    # Allgemeine Update-Funktion aufrufen
-    updated_anakomp = await update_model(db, ANAKOMP, id, update_data)
-
+    updated_anakomp = await update_model(db, ANAKOMP, id=id, update_data=update_data)
     return updated_anakomp
 
 @router.put("/constant/{id}")
-async def update_anakonst(id: int,anakonst: AnakonstUpdate, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(ANAKONST).where(ANAKONST.id == id))
-    db_anakonst = result.scalar_one_or_none()
+async def update_anakonst(id: int, anakonst: AnakonstUpdate, db: AsyncSession = Depends(get_db)):
+    update_data = anakonst.model_dump(exclude_unset=True)
+    updated_anakonst = await update_model(db, ANAKONST, id=id, update_data=update_data)
+    return updated_anakonst
 
-    if db_anakonst is None:
-        raise HTTPException(status_code=404, detail="Item not found")
+@router.get("/{id}")
+async def calculate_uncertainty(id: int, db: AsyncSession = Depends(get_db)):
+    ana_mu = await get_by_id(ANAMU, id, db, AnamuModellidOnly)
+    if not ana_mu:
+        return {"error": "ANAMU nicht gefunden"}
 
-    # Nur die übergebenen Felder aktualisieren
-    update_data = anakonst.model_dump(exclude_unset=True)  # Nur vorhandene Werte nehmen
-    for key, value in update_data.items():
-        setattr(db_anakonst, key, value)  # Dynamische Feldaktualisierung
+    result = await calc_uncertainty(id,ana_mu.fk_modell, db)
+    if result is None:
+        return {"error": "Modell nicht gefunden"}
 
-    await db.commit()
-    await db.refresh(db_anakonst)
-
-    return db_anakonst
+    return result

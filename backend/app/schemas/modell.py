@@ -10,6 +10,10 @@ from app.services.component_service.EverythinForComponents.TMU_ConstList import 
 from app.services.component_service.EverythinForComponents.TMU_ConstList import TKompConstants
 
 
+class ModellBase(BaseModel):
+    id: int
+    aufgabe: int
+
 class ModellCreate(BaseModel):
     name: str
     description: Optional[str] = None

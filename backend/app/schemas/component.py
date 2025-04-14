@@ -9,8 +9,7 @@ from app.services.component_service.EverythinForComponents.TMuKompRec import TMU
     TMU_KennwertArt
 
 
-class ComponentRefCreate(BaseModel):
-    #fk_modell: int muss glaub ich in Logik direkt nach Create von Modell übergeben werden
+class ComponentRefBase(BaseModel):
     lfdnr: Optional[int] = None
     kompid: Optional[int] = None
     modltxtid: Optional[int] = None
@@ -25,28 +24,30 @@ class ComponentRefCreate(BaseModel):
     class Config:
         orm_mode = True
 
-class ComponentRefUpdate(BaseModel):
-    lfdnr: Optional[int] = None
-    kompid: int
-    modltxtid: Optional[int] = None
-    terml0: Optional[float] = None
-    terml1: Optional[float] = None
-    wertart: Optional[int] = None
-    freigrad: Optional[int] = None
-    frei_n_1: Optional[int] = None
-    verteilung: Optional[int] = None
-    kflags: Optional[int] = None
+class ComponentGet(ComponentRefBase):
+    pass
 
-    class Config:
-        orm_mode = True
+class ComponentRefCreate(ComponentRefBase):
+    pass
 
-
+class ComponentRefUpdate(ComponentRefBase):
+    pass
 
 class ComponentBack(BaseModel):
-    ConstNeeded: Set[TKompConstants]
-    data: TMuKompRec
+    ConstNeeded: Set[str]
+    data: dict
 
     class Config:
         json_encoders = {
-            TKompConstants: lambda v: v.name,
+            str: lambda v: v.upper()
         }
+class ComponentKompidOnly(BaseModel):
+    kompid: int
+
+class ComponentData(BaseModel):
+    terml0: Optional[float] = None
+    terml1: Optional[float] = None
+    verteilung: Optional[int] = None
+    wertart: Optional[int] = None
+    freigrad: Optional[int] = None
+    frei_n_1: Optional[int] = None

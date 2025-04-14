@@ -47,7 +47,8 @@ class TMU_Komponente(TMU_Atom):
         self.einheit_ergebnis: str = ""
         self.clear()
 
-
+    def setData(self, data: TMuKompRec):
+        self.data = data
 
     def asciiformel(self) -> str:
         return self.formel
@@ -58,6 +59,7 @@ class TMU_Komponente(TMU_Atom):
                 print(const)
                 self.modell.const_needed.add(const)
                 self.modell.const_list.const_map[const] = None
+
 
     def clear(self):
         self.data = TMuKompRec(TermL0=MU_NAN,

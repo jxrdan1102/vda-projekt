@@ -133,6 +133,13 @@ class TMU_Modell(List[TMU_Komponente]):
         self.const_needed = schema.const_needed
         self.const_list = schema.const_list
 
+    @classmethod
+    def from_schema_params(cls, **kwargs):
+        # Erstellt das Schema aus den gegebenen Parametern
+        schema = TMU_ModellSchema(**kwargs)
+        # Erstellt dann das Modell
+        return cls(schema)
+
 
     def addComponent(self, component_id: int):
         self.append(ComponentFactory.get_component(self, component_id))
@@ -713,6 +720,8 @@ class TMU_Modell(List[TMU_Komponente]):
         k = self.Erweiterungsfaktor_k()
         uy = self.StandardUnsicherheit_Uy()
         print("Finale",uy,k)
+        for item in self:
+            print(item,item.unsicherheitsbeitrag())
         if k != MU_NAN and uy != MU_NAN:
             return k * uy
         return MU_NAN
