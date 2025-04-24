@@ -1,10 +1,10 @@
-from sqlalchemy import Column, Integer, String, DATETIME
 from app.database.database import Base
+from sqlalchemy import DATETIME, Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
 
 class Modell(Base):
-    __tablename__ = 'modells'
+    __tablename__ = "modells"
 
     id = Column(Integer, primary_key=True)
     name = Column(String(255), index=True)
@@ -29,7 +29,7 @@ class Modell(Base):
     formel = Column(String(512))
     formeldesc = Column(String(512))
 
+    fk_user_id = Column(Integer, ForeignKey("users.id"))  # 🔐 Ownership
+    owner = relationship("User", back_populates="modells")  # Optional für Zugriff von der anderen Seite
     components = relationship("Component", back_populates="modell")
     ana_mu = relationship("ANAMU", back_populates="modell")
-
-

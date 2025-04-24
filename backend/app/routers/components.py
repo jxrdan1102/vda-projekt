@@ -1,36 +1,35 @@
 from typing import List
 
-from fastapi import APIRouter, HTTPException, Depends
-from app.services.component_service.component_factory import ComponentFactory
-
-from app.services.component_service.EverythinForComponents.TMU_Modell import TMU_Modell
-
-from app.schemas.component import ComponentRefCreate
-
-from app.schemas.component import ComponentBack
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.database import get_db
-from app.schemas.component import ComponentRefUpdate
-
-from app.models import Component
-
 from app.database.generic_methods import get_by_id, update_model
-
-from app.schemas.component import ComponentGet
+from app.models import Component
+from app.schemas.component import (
+    ComponentBack,
+    ComponentGet,
+    ComponentRefCreate,
+    ComponentRefUpdate,
+)
+from app.services.component_service.component_factory import ComponentFactory
+from app.services.component_service.EverythinForComponents.TMU_Modell import TMU_Modell
 
 router = APIRouter(prefix="/components", tags=["components"])
 
-#Ist der Endpunkt sinnvoll?
+
+# Ist der Endpunkt sinnvoll?
 @router.get("", response_model=List[ComponentBack])
 def get_components():
     components = ComponentFactory.get_all_components()
 
-    return [ComponentBack(data=k.data,ConstNeeded=k.ConstNeeded) for k in components]
+    return [ComponentBack(data=k.data, ConstNeeded=k.ConstNeeded) for k in components]
 
 
 @router.put("/{id}")
-async def update_comp(id: int, comp_update: ComponentRefUpdate, db: AsyncSession = Depends(get_db)):
+async def update_comp(
+    id: int, comp_update: ComponentRefUpdate, db: AsyncSession = Depends(get_db)
+):
     update_data = comp_update.model_dump(exclude_unset=True)
     updated = await update_model(db, Component, id=id, update_data=update_data)
     return updated

@@ -1,13 +1,14 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Float
-from app.database.database import Base
+from sqlalchemy import Column, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
+
+from app.database.database import Base
 
 
 class Component(Base):
-    __tablename__ = 'mod_components'
+    __tablename__ = "mod_components"
 
     id = Column(Integer, primary_key=True)
-    fk_modell = Column(Integer, ForeignKey("modells.id"),index=True)
+    fk_modell = Column(Integer, ForeignKey("modells.id"), index=True)
     lfdnr = Column(Integer)
     kompid = Column(Integer)
     modltxtid = Column(Integer)

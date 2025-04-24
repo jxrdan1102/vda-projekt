@@ -1,8 +1,7 @@
 from enum import Enum
-from typing import List, Set, Dict
+from typing import Dict
 
 from pydantic import BaseModel, field_validator
-from pydantic_core import core_schema
 
 
 class TKompConstants(Enum):
@@ -117,11 +116,11 @@ class TKompConstants(Enum):
 
     def add_by_name(self, name: str):
         try:
-            konst = TKompConstants[name]  # Enum-Zugriff über den Namen (string)
+            # Enum-Zugriff über den Namen (string)
+            konst = TKompConstants[name]
             return konst
         except KeyError:
             print(f"Ungültiger Name: {name} ist kein gültiger TKompConstants-Eintrag")
-
 
 
 class TMU_ConstList(BaseModel):
@@ -147,6 +146,4 @@ class TMU_ConstList(BaseModel):
 
     class Config:
         use_enum_values = False
-        json_encoders = {
-            TKompConstants: lambda v: v.name
-        }
+        json_encoders = {TKompConstants: lambda v: v.name}

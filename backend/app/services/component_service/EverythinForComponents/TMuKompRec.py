@@ -1,11 +1,14 @@
 from enum import Enum
 from typing import Union
 
-from app.services.component_service.EverythinForComponents.TMU_ConstList import TKompConstants
-from pydantic import BaseModel, validator, root_validator
+from app.services.component_service.EverythinForComponents.TMU_ConstList import (
+    TKompConstants,
+)
+from pydantic import BaseModel, root_validator
 
 
 # Enum-Klassen mit den angegebenen Werten
+
 
 # Enum-Klassen
 class TMU_Verteilung(Enum):
@@ -73,9 +76,11 @@ class TMuKompRec(BaseModel):
 
     @root_validator(pre=True)
     def parse_enums(cls, values):
-        values['Verteilung'] = TMU_Verteilung._get_value(values.get('Verteilung'))
-        values['KennwertArt'] = TMU_KennwertArt._get_value(values.get('KennwertArt'))
-        values['Freiheitsgrad'] = TMU_Freiheitsgrad._get_value(values.get('Freiheitsgrad'))
+        values["Verteilung"] = TMU_Verteilung._get_value(values.get("Verteilung"))
+        values["KennwertArt"] = TMU_KennwertArt._get_value(values.get("KennwertArt"))
+        values["Freiheitsgrad"] = TMU_Freiheitsgrad._get_value(
+            values.get("Freiheitsgrad")
+        )
         return values
 
     class Config:
@@ -84,9 +89,11 @@ class TMuKompRec(BaseModel):
             TMU_KennwertArt: lambda v: v.name,
             TMU_Freiheitsgrad: lambda v: v.name,
         }
+
+
 class TMuKompRecW:
     def __init__(self):
-        self.TermL0:float
+        self.TermL0: float
         self.TermL1: float
         self.Verteilung: Union[int, str]
         self.KennwertArt: Union[int, str]
@@ -94,8 +101,23 @@ class TMuKompRecW:
         self.FreiN_minus_1: int
         self.Flags: int
 
+
 class TAuswertungsArchiv:
-    def __init__(self, STDU, AVAL, BVAL, ASUL0, ASUL1, SensC1, SensC2, FreiEff, UNSBL0, UNSBL1, UnsB, VARIANZ):
+    def __init__(
+        self,
+        STDU,
+        AVAL,
+        BVAL,
+        ASUL0,
+        ASUL1,
+        SensC1,
+        SensC2,
+        FreiEff,
+        UNSBL0,
+        UNSBL1,
+        UnsB,
+        VARIANZ,
+    ):
         self.STDU = STDU
         self.AVAL = AVAL
         self.BVAL = BVAL
@@ -109,11 +131,14 @@ class TAuswertungsArchiv:
         self.UnsB = UnsB
         self.VARIANZ = VARIANZ
 
+
 def MU_FloatToStr(f: float) -> str:
     return str(f)
 
+
 def MU_FloatToStrF(f: float, digits: int) -> str:
     return f"{f:.{digits}f}"
+
 
 def KomponentTitle(kompID: int) -> str:
     titles = {
@@ -126,6 +151,7 @@ def KomponentTitle(kompID: int) -> str:
     }
     return titles.get(kompID, "Unbekannt")
 
+
 def ConstTitle(ConstID: TKompConstants) -> str:
     titles = {
         TKompConstants.TC_Messbereich: "Messbereich",
@@ -137,6 +163,7 @@ def ConstTitle(ConstID: TKompConstants) -> str:
     }
     return titles.get(ConstID, "Unbekannt")
 
+
 class TKompEditFields(Enum):
     EF_Term0 = 1
     EF_Term1 = 2
@@ -145,6 +172,7 @@ class TKompEditFields(Enum):
     EF_Freheitsgrad = 5
     EF_MPAnzahl = 6
     EF_StreuungsParam = 7
+
 
 TKompEditFieldsSet = set(TKompEditFields)
 

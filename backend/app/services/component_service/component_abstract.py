@@ -1,43 +1,46 @@
 import math
-from abc import abstractmethod
-from typing import Optional, List
-from app.services.component_service.EverythinForComponents.TMU_Atom import TMU_Atom
+from typing import List, Optional
 
 from app.services.component_service.EverythinForComponents import TMU_ConstList
-
-from app.services.component_service.EverythinForComponents.TMuKompRec import TKompConstantSet
-
-from app.services.component_service.EverythinForComponents.TMuKompRec import TKompEditFieldsSet
-
-from app.services.component_service.EverythinForComponents.TMuKompRec import TAuswertungsArchiv
-
-from app.services.component_service.EverythinForComponents.TMuKompRec import TMuKompRec
-
-from app.services.component_service.EverythinForComponents.TMU_ConstList import TKompConstants
-
-from app.services.component_service.EverythinForComponents.TMuKompRec import TMU_Verteilung, TMU_Freiheitsgrad, \
-    TMU_KennwertArt
+from app.services.component_service.EverythinForComponents.TMU_Atom import TMU_Atom
+from app.services.component_service.EverythinForComponents.TMU_ConstList import (
+    TKompConstants,
+)
+from app.services.component_service.EverythinForComponents.TMuKompRec import (
+    TAuswertungsArchiv,
+    TKompConstantSet,
+    TKompEditFieldsSet,
+    TMU_Freiheitsgrad,
+    TMU_KennwertArt,
+    TMU_Verteilung,
+    TMuKompRec,
+)
 
 MU_NAN = math.nan
 
+
 class TMU_Komponente(TMU_Atom):
 
-    def __init__(self, AModell: 'TMU_Modell', AnID: int, AConstList: TMU_ConstList, AFormel: str):
-        super().__init__( AnID, "Komponente")
-        self.data = TMuKompRec(TermL0=MU_NAN,
+    def __init__(
+        self, AModell: "TMU_Modell", AnID: int, AConstList: TMU_ConstList, AFormel: str
+    ):
+        super().__init__(AnID, "Komponente")
+        self.data = TMuKompRec(
+            TermL0=MU_NAN,
             TermL1=MU_NAN,
             Verteilung="Verteilung_Undefiniert",  # String-Wert wird akzeptiert
             KennwertArt="KennwertArt_Undefiniert",  # String-Wert wird akzeptiert
             Freiheitsgrad="Freiheitsgrad_Undefiniert",  # String-Wert wird akzeptiert
             FreiN_minus_1=0,
-            Flags=1)
+            Flags=1,
+        )
         self.modell: object = AModell
         self.const_list: object = AConstList
         self.formel: str = AFormel
         self.modl_txt_id: int = 0
         self.komp_txt_id: int = 0
         self.arch_data: Optional[TAuswertungsArchiv] = None
-        self.ConstNeeded: List[TKompConstants]= [TKompConstants["TC_Messwert"]]
+        self.ConstNeeded: List[TKompConstants] = [TKompConstants["TC_Messwert"]]
         print(self.ConstNeeded)
         self.freikat_text: str = ""
         self.c1_val: float = 1
@@ -60,62 +63,73 @@ class TMU_Komponente(TMU_Atom):
                 self.modell.const_needed.add(const)
                 self.modell.const_list.const_map[const] = None
 
-
     def clear(self):
-        self.data = TMuKompRec(TermL0=MU_NAN,
-                   TermL1=MU_NAN,
-                   Verteilung="Verteilung_Undefiniert",  # String-Wert wird akzeptiert
-                   KennwertArt="KennwertArt_Undefiniert",  # String-Wert wird akzeptiert
-                   Freiheitsgrad="Freiheitsgrad_Undefiniert",  # String-Wert wird akzeptiert
-                   FreiN_minus_1=0,
-                   Flags=1)
+        self.data = TMuKompRec(
+            TermL0=MU_NAN,
+            TermL1=MU_NAN,
+            Verteilung="Verteilung_Undefiniert",  # String-Wert wird akzeptiert
+            KennwertArt="KennwertArt_Undefiniert",  # String-Wert wird akzeptiert
+            Freiheitsgrad="Freiheitsgrad_Undefiniert",  # String-Wert wird akzeptiert
+            FreiN_minus_1=0,
+            Flags=1,
+        )
 
     def is_valid(self):
         data = self.data
-        result = ((not 'EF_Term0' in self.FieldsToEdit) or (data['TermL0'] != MU_NAN)) and \
-                 ((not 'EF_Term1' in self.FieldsToEdit) or (data['TermL1'] != MU_NAN)) and \
-                 ((not 'EF_Verteilung' in self.FieldsToEdit) or (data['Verteilung'] != 'Verteilung_Undefiniert')) and \
-                 ((not 'EF_Kennwertart' in self.FieldsToEdit) or (data['KennwertArt'] != 'KennwertArt_Undefiniert')) and \
-                 ((not 'EF_Freheitsgrad' in self.FieldsToEdit) or (
-                             data['Freiheitsgrad'] != 'Freiheitsgrad_Undefiniert'))
+        result = (
+            (("EF_Term0" not in self.FieldsToEdit) or (data["TermL0"] != MU_NAN))
+            and (("EF_Term1" not in self.FieldsToEdit) or (data["TermL1"] != MU_NAN))
+            and (
+                ("EF_Verteilung" not in self.FieldsToEdit)
+                or (data["Verteilung"] != "Verteilung_Undefiniert")
+            )
+            and (
+                ("EF_Kennwertart" not in self.FieldsToEdit)
+                or (data["KennwertArt"] != "KennwertArt_Undefiniert")
+            )
+            and (
+                ("EF_Freheitsgrad" not in self.FieldsToEdit)
+                or (data["Freiheitsgrad"] != "Freiheitsgrad_Undefiniert")
+            )
+        )
 
-        if data['Freiheitsgrad'] == 'FG_N_Minus1':
-            result = result and (data['FreiN_minus_1'] > 0)
+        if data["Freiheitsgrad"] == "FG_N_Minus1":
+            result = result and (data["FreiN_minus_1"] > 0)
         return result
 
     def std_unsicherheit(self, l: float) -> float:
-        print("hilf mir",l)
+        print("hilf mir", l)
         if l != MU_NAN:
-            print("hilf mir nochmal",self.data.Verteilung.name)
+            print("hilf mir nochmal", self.data.Verteilung.name)
             # Check distribution and return appropriate uncertainty
-            if self.data.Verteilung.name == 'V_Rechteck':
-                if self.data.KennwertArt.name == 'K_HalbWeite':
+            if self.data.Verteilung.name == "V_Rechteck":
+                if self.data.KennwertArt.name == "K_HalbWeite":
                     print("1", l / math.sqrt(3))
                     return l / math.sqrt(3)
-                elif self.data.KennwertArt.name == 'K_Spannweite':
-                    print("wurzel",l / (2 * math.sqrt(3)))
+                elif self.data.KennwertArt.name == "K_Spannweite":
+                    print("wurzel", l / (2 * math.sqrt(3)))
                     return l / (2 * math.sqrt(3))
-                elif self.data.KennwertArt.name == 'K_Standardabweichung':
+                elif self.data.KennwertArt.name == "K_Standardabweichung":
                     return l
-            elif self.data.Verteilung.name == 'V_Normal':
-                if self.data.KennwertArt.name == 'K_HalbWeite':
+            elif self.data.Verteilung.name == "V_Normal":
+                if self.data.KennwertArt.name == "K_HalbWeite":
                     return l / 2
-                elif self.data.KennwertArt.name == 'K_Spannweite':
+                elif self.data.KennwertArt.name == "K_Spannweite":
                     return l / 4
-                elif self.data.KennwertArt.name == 'K_Standardabweichung':
+                elif self.data.KennwertArt.name == "K_Standardabweichung":
                     return l
-            elif self.data.Verteilung.name == 'V_Dreieck':
-                if self.data.KennwertArt.name == 'K_HalbWeite':
+            elif self.data.Verteilung.name == "V_Dreieck":
+                if self.data.KennwertArt.name == "K_HalbWeite":
                     return l / math.sqrt(6)
-                elif self.data.KennwertArt.name == 'K_Spannweite':
+                elif self.data.KennwertArt.name == "K_Spannweite":
                     return l / (2 * math.sqrt(6))
-                elif self.data.KennwertArt.name == 'K_Standardabweichung':
+                elif self.data.KennwertArt.name == "K_Standardabweichung":
                     return l
         print("problem std_unsicherheit", self.data.Verteilung.name)
         return MU_NAN
 
     def a_val(self) -> float:
-        print("Zeig mirs ",self.data.TermL0)
+        print("Zeig mirs ", self.data.TermL0)
         return self.data.TermL0
 
     def b_val(self) -> float:
@@ -134,10 +148,10 @@ class TMU_Komponente(TMU_Atom):
         return self.c2_val
 
     def effektiver_freiheitsgrad(self) -> float:
-        if self.data.Freiheitsgrad.name == 'FG_unbegrenzt':
+        if self.data.Freiheitsgrad.name == "FG_unbegrenzt":
             self.EffektiverFreiheitsgrad = 1000
             return 1000
-        elif self.data.Freiheitsgrad.name == 'FG_N_Minus1':
+        elif self.data.Freiheitsgrad.name == "FG_N_Minus1":
             if self.data.FreiN_minus_1 > 0:
                 self.EffektiverFreiheitsgrad = self.data.FreiN_minus_1
                 return self.data.FreiN_minus_1
@@ -147,7 +161,7 @@ class TMU_Komponente(TMU_Atom):
     def unsicherheitsbeitrag_l0(self) -> float:
         su = self.std_unsicherheit(self.a_val())
         c1 = self.sensititivty_c1()
-        print("fuck man", su,c1, self.a_val())
+        print("fuck man", su, c1, self.a_val())
         if su != MU_NAN and c1 != MU_NAN:
             return su * c1
         return MU_NAN
@@ -155,7 +169,7 @@ class TMU_Komponente(TMU_Atom):
     def unsicherheitsbeitrag_l1(self) -> float:
         su = self.std_unsicherheit(self.b_val())
         c2 = self.sensititivty_c2()
-        print("simma",su,c2)
+        print("simma", su, c2)
         l = 25 * 1000  # Messwert in mm Berechnung in µm
         if su != MU_NAN and c2 != MU_NAN and l != MU_NAN:
             return su * c2 * l
@@ -164,7 +178,7 @@ class TMU_Komponente(TMU_Atom):
     def unsicherheitsbeitrag(self) -> float:
         su0 = self.unsicherheitsbeitrag_l0()
         print("geht noch", su0)
-        print("bval",self.b_val())
+        print("bval", self.b_val())
         su1 = self.unsicherheitsbeitrag_l1()
         print("geht noch2", su1)
         if su0 != MU_NAN and su1 != MU_NAN:
@@ -175,24 +189,24 @@ class TMU_Komponente(TMU_Atom):
 
     def varianz(self) -> float:
         ub = self.unsicherheitsbeitrag()
-        print("componente = ",self,ub)
+        print("componente = ", self, ub)
         if not math.isnan(ub):
-            return ub ** 2
+            return ub**2
         return MU_NAN
 
     def prep_archiv(self):
         self.arch_data = {
-            'AVAL': self.a_val(),
-            'BVAL': self.b_val(),
-            'ASUL0': self.std_unsicherheit_l0(),
-            'ASUL1': self.std_unsicherheit_l1(),
-            'SensC1': self.sensititivty_c1(),
-            'SensC2': self.sensititivty_c2(),
-            'FreiEff': self.effektiver_freiheitsgrad(),
-            'UNSBL0': self.unsicherheitsbeitrag_l0(),
-            'UNSBL1': self.unsicherheitsbeitrag_l1(),
-            'UnsB': self.unsicherheitsbeitrag(),
-            'VARIANZ': self.varianz()
+            "AVAL": self.a_val(),
+            "BVAL": self.b_val(),
+            "ASUL0": self.std_unsicherheit_l0(),
+            "ASUL1": self.std_unsicherheit_l1(),
+            "SensC1": self.sensititivty_c1(),
+            "SensC2": self.sensititivty_c2(),
+            "FreiEff": self.effektiver_freiheitsgrad(),
+            "UNSBL0": self.unsicherheitsbeitrag_l0(),
+            "UNSBL1": self.unsicherheitsbeitrag_l1(),
+            "UnsB": self.unsicherheitsbeitrag(),
+            "VARIANZ": self.varianz(),
         }
 
     # Placeholder for database load and save functions (to be implemented)

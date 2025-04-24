@@ -1,20 +1,24 @@
 from http.client import HTTPException
+
 from fastapi import APIRouter, Depends
-from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+
 from app.database.database import get_db
 from app.models.item import Item
 from app.schemas.item import ItemCreate, ItemUpdate
 
 router = APIRouter(prefix="/items", tags=["items"])
 
-@router.get('')
+
+@router.get("")
 async def get_items(db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Item))
     items = result.scalars().all()
     return items
 
-@router.get('/{id}')
+
+@router.get("/{id}")
 async def get_item(id: int, db: AsyncSession = Depends(get_db)):
     db_item = await db.execute(select(Item).where(Item.id == id))
     db_item.scalar_one_or_none()
@@ -25,7 +29,7 @@ async def get_item(id: int, db: AsyncSession = Depends(get_db)):
     return db_item
 
 
-@router.post('/')
+@router.post("/")
 async def create_item(item: ItemCreate, db: AsyncSession = Depends(get_db)):
     db_item = Item(name=item.name, description=item.description)
     db.add(db_item)
@@ -33,7 +37,8 @@ async def create_item(item: ItemCreate, db: AsyncSession = Depends(get_db)):
     await db.refresh(db_item)
     return db_item
 
-@router.put('/{id}')
+
+@router.put("/{id}")
 async def update_item(id: int, item: ItemUpdate, db: AsyncSession = Depends(get_db)):
     # Item aus der Datenbank holen
     result = await db.execute(select(Item).where(Item.id == id))
@@ -43,7 +48,8 @@ async def update_item(id: int, item: ItemUpdate, db: AsyncSession = Depends(get_
         raise HTTPException(status_code=404, detail="Item not found")
 
     # Nur die übergebenen Felder aktualisieren
-    update_data = item.model_dump(exclude_unset=True)  # Nur vorhandene Werte nehmen
+    # Nur vorhandene Werte nehmen
+    update_data = item.model_dump(exclude_unset=True)
     for key, value in update_data.items():
         setattr(db_item, key, value)  # Dynamische Feldaktualisierung
 
@@ -52,7 +58,8 @@ async def update_item(id: int, item: ItemUpdate, db: AsyncSession = Depends(get_
 
     return db_item
 
-@router.delete('/{id}')
+
+@router.delete("/{id}")
 async def delete_item(id: int, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Item).where(Item.id == id))
     db_item = result.scalar_one_or_none()

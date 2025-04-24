@@ -1,5 +1,7 @@
-from pydantic import BaseModel
 from typing import Optional
+
+from pydantic import BaseModel
+
 
 class ItemCreate(BaseModel):
     name: str
@@ -7,6 +9,7 @@ class ItemCreate(BaseModel):
 
     class Config:
         orm_mode = True
+
 
 class ItemUpdate(BaseModel):
     name: Optional[str] = None

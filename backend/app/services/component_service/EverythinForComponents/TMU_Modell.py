@@ -1,35 +1,35 @@
 import math
-from abc import ABC
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Optional, List, Union, Set
+from typing import List, Optional, Set, Union
 
-from app.services.component_service.EverythinForComponents import TMU_Atom
-
-from app.services.component_service.EverythinForComponents.TMU_ConstList import TMU_ConstList
-
-from app.services.component_service.component_factory import ComponentFactory
-
+from app.services.component_service.EverythinForComponents.TMU_Atom import TMU_Atom
+from app.services.component_service.EverythinForComponents.TMU_ConstList import (
+    TKompConstants,
+    TMU_ConstList,
+)
 from app.services.component_service.component_abstract import TMU_Komponente
-
-from app.services.component_service.EverythinForComponents.TMU_ConstList import TKompConstants
+from app.services.component_service.component_factory import ComponentFactory
 from pydantic import BaseModel
-from sqlalchemy.orm.instrumentation import instance_state
 
 
 # Definiere Enum für die zulässigen Prozess-Typen
 class TMU_AufgabeModell(Enum):
-    aPruefprozess = 'aPruefprozess'
-    aKalibrierprozess = 'aKalibrierprozess'
-    a3D_Pruefprozess = 'a3D_Pruefprozess'
-    aUnbekannt = 'aUnbekannt'
+    aPruefprozess = "aPruefprozess"
+    aKalibrierprozess = "aKalibrierprozess"
+    a3D_Pruefprozess = "a3D_Pruefprozess"
+    aUnbekannt = "aUnbekannt"
+
+
 # Konstanten
-MU_NAN = float('nan')
+MU_NAN = float("nan")
+
 
 # Hilfsfunktionen, um die Berechnungen zu ermöglichen
 def power(value, exp):
     return value ** exp if not math.isnan(value) else MU_NAN
+
 
 @dataclass
 class TMU_Winkel:
@@ -47,7 +47,10 @@ class TMU_Winkel:
             if isinstance(value, tuple) and len(value) == 4:
                 self.data = value  # Speichert die 4 Bytes als Tuple
             else:
-                raise ValueError("Bei flag=False müssen genau 4 Byte-Werte übergeben werden.")
+                raise ValueError(
+                    "Bei flag=False müssen genau 4 Byte-Werte übergeben werden."
+                )
+
 
 class TMU_Geometry(Enum):
     Geometrie_undefiniert = 0
@@ -55,7 +58,6 @@ class TMU_Geometry(Enum):
     Kugel = 2
     Zylinder = 3
     HohlZylinder = 4  # Hohlzylinder wurde hinzugefügt
-
 
 
 class TMU_3DElement(Enum):
@@ -69,23 +71,24 @@ class TMU_3DElement(Enum):
     E3D_Kegel = 7
 
 
-from typing import List, Optional
-from datetime import datetime
-
-
-# Assuming the other classes like TMU_ConstList, TMU_Atom, TMU_Winkel, etc., are defined elsewhere in Python
+# Assuming the other classes like TMU_ConstList, TMU_Atom, TMU_Winkel,
+# etc., are defined elsewhere in Python
 class TMU_ModellSchema(BaseModel):
     aufgabe: int
     modell_id: int
     mit_berechnung_toleranzfaktor: bool = False
-    const_list: TMU_ConstList = TMU_ConstList()  # Angenommen, du hast eine Klasse TMU_ConstList, die du hier als Option mitgeben kannst
+    # Angenommen, du hast eine Klasse TMU_ConstList, die du hier als Option
+    # mitgeben kannst
+    const_list: TMU_ConstList = TMU_ConstList()
     modell_name: str = ""
-    AufgabeModell: Optional[TMU_AufgabeModell] = None  # Kannst du nach Bedarf definieren
+    AufgabeModell: Optional[TMU_AufgabeModell] = (
+        None  # Kannst du nach Bedarf definieren
+    )
     i_aufgabe: int = 0
     i_geometrie_me: int = 0
-    i_geometrie_en: int = 0
+    iGeometrie_EN: str = 0
     i_geometrie_mo: int = 0
-    i_bezug1: int = 0
+    iBezug1: int = 0
     i_bezug2: int = 0
     read_only: bool = False
     modell_desc: str = ""
@@ -108,6 +111,7 @@ class TMU_ModellSchema(BaseModel):
 class TMU_Modell(List[TMU_Komponente]):
     def __init__(self, schema: TMU_ModellSchema):
         super().__init__()
+        self.iGeometrie_EN = schema.iGeometrie_EN
         self.mit_berechnung_toleranzfaktor = schema.mit_berechnung_toleranzfaktor
         self.aufgabe = schema.aufgabe
         self.modell_name = schema.modell_name
@@ -115,9 +119,8 @@ class TMU_Modell(List[TMU_Komponente]):
         self.AufgabeModell = schema.AufgabeModell
         self.i_aufgabe = schema.i_aufgabe
         self.i_geometrie_me = schema.i_geometrie_me
-        self.i_geometrie_en = schema.i_geometrie_en
         self.i_geometrie_mo = schema.i_geometrie_mo
-        self.i_bezug1 = schema.i_bezug1
+        self.iBezug1 = schema.iBezug1
         self.i_bezug2 = schema.i_bezug2
         self.read_only = schema.read_only
         self.modell_desc = schema.modell_desc
@@ -140,10 +143,8 @@ class TMU_Modell(List[TMU_Komponente]):
         # Erstellt dann das Modell
         return cls(schema)
 
-
     def addComponent(self, component_id: int):
         self.append(ComponentFactory.get_component(self, component_id))
-
 
     def SetBerechnungToleranzfaktor(self, ja: bool):
         self.mit_berechnung_toleranzfaktor = ja
@@ -153,7 +154,7 @@ class TMU_Modell(List[TMU_Komponente]):
         self.iGeometrie_ME = 0  # Corresponds to ord(Flaeche)
         self.iGeometrie_MO = 0
         self.iGeometrie_EN = 0  # Corresponds to ord(Geometrie_undefiniert)
-        self.Winkel['l'] = 0
+        self.Winkel["l"] = 0
         self.iBezug1 = 0
         self.iBezug2 = 0
 
@@ -395,152 +396,157 @@ class TMU_Modell(List[TMU_Komponente]):
 
         def AddToList(cid, aEinheit):
             if cid in ConstNeeded:
-                self.ConstList.append({
-                    'cid': cid,
-                    'title': self.getConstTitle(cid),
-                    'einheit': aEinheit
-                })
+                self.ConstList.append(
+                    {"cid": cid, "title": self.getConstTitle(cid), "einheit": aEinheit}
+                )
 
         # Leere Liste
         self.ConstList.clear()
 
         if self.mitBerechnungToleranzFaktor:
-            ConstNeeded = {'TC_Nennmass', 'TC_UntAbmass', 'TC_ObAbmass'}
+            ConstNeeded = {"TC_Nennmass", "TC_UntAbmass", "TC_ObAbmass"}
         else:
             ConstNeeded = set()
 
         if self.AufgabeModell == "a3D_Pruefprozess":
-            ConstNeeded.update({
-                'TC_3d_KMG_A', 'TC_3d_KMG_K', 'TC_3d_KMG_Uc', 'TC_3d_KMG_alphaM',
-                'TC_3d_KMG_LT'
-            })
+            ConstNeeded.update(
+                {
+                    "TC_3d_KMG_A",
+                    "TC_3d_KMG_K",
+                    "TC_3d_KMG_Uc",
+                    "TC_3d_KMG_alphaM",
+                    "TC_3d_KMG_LT",
+                }
+            )
 
         for komponente in self:
             ConstNeeded.update(komponente.ConstNeeded)
 
         # Stammdaten
-        AddToList('TC_Messbereich', 'mm')
-        AddToList('TC_Nennmass', 'mm')
-        AddToList('TC_ObAbmass', 'mm')
-        AddToList('TC_UntAbmass', 'mm')
-        AddToList('TC_Einheit', '')
-        AddToList('TC_Messwert', 'mm')
-        AddToList('TC_MesskraftME', 'N')
-        AddToList('TC_MesskraftSchwankungME', 'N')
-        AddToList('TC_TempME', '°C')
-        AddToList('TC_TempMO', '°C')
-        AddToList('TC_TempEN', '°C')
-        AddToList('TC_AusdehnKoeffME', '1/°K')
-        AddToList('TC_AusdehnKoeffMO', '1/°K')
-        AddToList('TC_AusdehnKoeffEN', '1/°K')
-        AddToList('TC_DurchmesserMessflaeche', 'mm')
-        AddToList('TC_DurchmesserMesseinsatzME', 'mm')
-        AddToList('TC_BreiteMessflaecheMO', 'mm')
-        AddToList('TC_BreiteMessflaecheEN', 'mm')
-        AddToList('TC_FaktorKennlinieME', '')
-        AddToList('TC_ParameterKennlinieME', 'μm')
-        AddToList('TC_NichtLinearKennlinieME', 'μm')
-        AddToList('TC_MantellinieMO', 'mm')
-        AddToList('TC_MantellinieME', 'mm')
-        AddToList('TC_MantellinieEN', 'mm')
-        AddToList('TC_NennmassEN', 'mm')
-        AddToList('TC_ZeitDeltaMessungEN_MO', 'min')
-        AddToList('TC_ZeitDrift', 'μm/min')
-        AddToList('TC_DurchmesserEN', 'mm')
+        AddToList("TC_Messbereich", "mm")
+        AddToList("TC_Nennmass", "mm")
+        AddToList("TC_ObAbmass", "mm")
+        AddToList("TC_UntAbmass", "mm")
+        AddToList("TC_Einheit", "")
+        AddToList("TC_Messwert", "mm")
+        AddToList("TC_MesskraftME", "N")
+        AddToList("TC_MesskraftSchwankungME", "N")
+        AddToList("TC_TempME", "°C")
+        AddToList("TC_TempMO", "°C")
+        AddToList("TC_TempEN", "°C")
+        AddToList("TC_AusdehnKoeffME", "1/°K")
+        AddToList("TC_AusdehnKoeffMO", "1/°K")
+        AddToList("TC_AusdehnKoeffEN", "1/°K")
+        AddToList("TC_DurchmesserMessflaeche", "mm")
+        AddToList("TC_DurchmesserMesseinsatzME", "mm")
+        AddToList("TC_BreiteMessflaecheMO", "mm")
+        AddToList("TC_BreiteMessflaecheEN", "mm")
+        AddToList("TC_FaktorKennlinieME", "")
+        AddToList("TC_ParameterKennlinieME", "μm")
+        AddToList("TC_NichtLinearKennlinieME", "μm")
+        AddToList("TC_MantellinieMO", "mm")
+        AddToList("TC_MantellinieME", "mm")
+        AddToList("TC_MantellinieEN", "mm")
+        AddToList("TC_NennmassEN", "mm")
+        AddToList("TC_ZeitDeltaMessungEN_MO", "min")
+        AddToList("TC_ZeitDrift", "μm/min")
+        AddToList("TC_DurchmesserEN", "mm")
 
         # mit 2006.1 er Komponenten
-        AddToList('TC_Winkelabweichung_von_90_Grad', '°')
-        AddToList('TC_Radius_der_Zone_des_Spiels', 'mm')
-        AddToList('TC_Laenge_kurze_Kante_PEM', 'mm')
-        AddToList('TC_Tol_Abw_Spanne_ISO_3650', 'μm')
-        AddToList('TC_Elast_Modul_Normal', 'N/m²')
-        AddToList('TC_Elast_Modul_MO', 'N/m²')
-        AddToList('TC_Poisson_Koeff_Normal', '')
-        AddToList('TC_Poisson_Koeff_MO', '')
-        AddToList('TC_Korrelationskoeffizient', '')
+        AddToList("TC_Winkelabweichung_von_90_Grad", "°")
+        AddToList("TC_Radius_der_Zone_des_Spiels", "mm")
+        AddToList("TC_Laenge_kurze_Kante_PEM", "mm")
+        AddToList("TC_Tol_Abw_Spanne_ISO_3650", "μm")
+        AddToList("TC_Elast_Modul_Normal", "N/m²")
+        AddToList("TC_Elast_Modul_MO", "N/m²")
+        AddToList("TC_Poisson_Koeff_Normal", "")
+        AddToList("TC_Poisson_Koeff_MO", "")
+        AddToList("TC_Korrelationskoeffizient", "")
 
         # ------------------ Die Neuen 2007-03-22
-        AddToList('TC_Schrittweite_Geradheitskalibrierung_EN', 'mm')  # 2043
-        AddToList('TC_Positionsgenauigkeit_Kalibrierung_MO', 'mm')  # 2044
-        AddToList('TC_Betrag_max_Abweichung_Bezugsgerade', 'μm')  # 2045
-        AddToList('TC_Laenge_stehender_Schenkel_EN', 'mm')  # 2046
-        AddToList('TC_Abstand_Stuetzpunkte_EN', 'mm')  # 2047
-        AddToList('TC_Geradheit_Messplatte_EN', 'μm')  # 2048
-        AddToList('TC_Positionsabweichung_Stuetzpunkte_EN', 'mm')  # 2049
-        AddToList('TC_Kalibrierung_Geradheit_EN', 'μm')  # 2050
-        AddToList('TC_Laenge_stehender_Schenkel_MO', 'mm')  # 2051
-        AddToList('TC_Stuetzpunktabstand_MO', 'mm')  # 2052
-        AddToList('TC_Geradheit_Messplatte_MO', 'μm')  # 2053
-        AddToList('TC_Positionsabweichung_Stuetzpunkte_MO', 'mm')  # 2054
-        AddToList('TC_Kalibrierung_Geradheit_MO', 'μm')  # 2055
-        AddToList('TC_Kalibrierung_Ebenheit_Messplatte', 'μm')  # 2056
-        AddToList('TC_Positionsgenauigkeit_Stuetzpunkte', 'mm')  # 2058
-        AddToList('TC_Schrittweite_Geradheitskalibrierung_MO', 'mm')  # 2059
-        AddToList('TC_Hoehendifferenz_Stuetzpunkte', 'mm')  # 2060
-        AddToList('TC_Laenge_Messobjekt', 'mm')  # 2061
-        AddToList('TC_Anzahl_Verschiebungen_MO', '')  # 2065
-        AddToList('TC_Messbereichsendwert_Messeinrichtung', 'mm')  # 2066
-        AddToList('TC_Hoehe_zu_Rechtwinkligkeit', 'mm')  # 2067
+        AddToList("TC_Schrittweite_Geradheitskalibrierung_EN", "mm")  # 2043
+        AddToList("TC_Positionsgenauigkeit_Kalibrierung_MO", "mm")  # 2044
+        AddToList("TC_Betrag_max_Abweichung_Bezugsgerade", "μm")  # 2045
+        AddToList("TC_Laenge_stehender_Schenkel_EN", "mm")  # 2046
+        AddToList("TC_Abstand_Stuetzpunkte_EN", "mm")  # 2047
+        AddToList("TC_Geradheit_Messplatte_EN", "μm")  # 2048
+        AddToList("TC_Positionsabweichung_Stuetzpunkte_EN", "mm")  # 2049
+        AddToList("TC_Kalibrierung_Geradheit_EN", "μm")  # 2050
+        AddToList("TC_Laenge_stehender_Schenkel_MO", "mm")  # 2051
+        AddToList("TC_Stuetzpunktabstand_MO", "mm")  # 2052
+        AddToList("TC_Geradheit_Messplatte_MO", "μm")  # 2053
+        AddToList("TC_Positionsabweichung_Stuetzpunkte_MO", "mm")  # 2054
+        AddToList("TC_Kalibrierung_Geradheit_MO", "μm")  # 2055
+        AddToList("TC_Kalibrierung_Ebenheit_Messplatte", "μm")  # 2056
+        AddToList("TC_Positionsgenauigkeit_Stuetzpunkte", "mm")  # 2058
+        AddToList("TC_Schrittweite_Geradheitskalibrierung_MO", "mm")  # 2059
+        AddToList("TC_Hoehendifferenz_Stuetzpunkte", "mm")  # 2060
+        AddToList("TC_Laenge_Messobjekt", "mm")  # 2061
+        AddToList("TC_Anzahl_Verschiebungen_MO", "")  # 2065
+        AddToList("TC_Messbereichsendwert_Messeinrichtung", "mm")  # 2066
+        AddToList("TC_Hoehe_zu_Rechtwinkligkeit", "mm")  # 2067
 
         # Formnormal
-        AddToList('TC_Fm_Anzahl_Wiederholmessungen_StreuungAnzeige', '')  # 2078
-        AddToList('TC_Fm_Abstand_zwischen_zwei_benachbarten_Profilpunkten', 'μm')  # 2079
-        AddToList('TC_Fm_Grenzwellenlaenge', 'μm')  # 2080
-        AddToList('TC_Fm_Messwert_MO', 'μm')  # 2081
-        AddToList('TC_Fm_Richtiger_Wert_Rundheit_Kugelnormal', 'μm')  # 2082
-        AddToList('TC_Fm_Messunsicherheit_der_Kalibrierung_Kugelnormal', 'μm')  # 2083
-        AddToList('TC_Fm_Gemessenden_Exzentrizitaet', 'mm')  # 2084
-        AddToList('TC_Fm_Aussendurchmesser_MO', 'mm')  # 2085
-        AddToList('TC_Fm_Tastkugeldurchmesser', 'mm')  # 2086
-        AddToList('TC_Fm_Innendurchmesser_MO', 'mm')  # 2087
-        AddToList('TC_Fm_Kippung_MO_XAchse', 'μm/10mm')  # 2088
-        AddToList('TC_Fm_Kippung_MO_YAchse', 'μm/10mm')  # 2089
-        AddToList('TC_Fm_Radius_MO', 'mm')  # 2090
-        AddToList('TC_Fm_Neigung_Zylinderachse_MO_zu_Flaeche_XOY', 'Grad')  # 2091
-        AddToList('TC_Fm_Formabweichung_Normal', 'μm')  # 2092
-        AddToList('TC_Fm_Kalibrierung_Normal', 'μm')  # 2093
-        AddToList('TC_Fm_Standardabweichung_Wiederholmessungen_Normal', 'μm')  # 2094
-        AddToList('TC_Fm_AnzahlMessungen_Fuehrungsabweichung', '')  # 2095
-        AddToList('TC_Fm_Gemessene_Rundheit_EN', 'μm')  # 2096
-        AddToList('TC_Gewinde_Steigung', 'mm')  # 2097
+        AddToList("TC_Fm_Anzahl_Wiederholmessungen_StreuungAnzeige", "")  # 2078
+        AddToList(
+            "TC_Fm_Abstand_zwischen_zwei_benachbarten_Profilpunkten", "μm"
+        )  # 2079
+        AddToList("TC_Fm_Grenzwellenlaenge", "μm")  # 2080
+        AddToList("TC_Fm_Messwert_MO", "μm")  # 2081
+        AddToList("TC_Fm_Richtiger_Wert_Rundheit_Kugelnormal", "μm")  # 2082
+        AddToList("TC_Fm_Messunsicherheit_der_Kalibrierung_Kugelnormal", "μm")  # 2083
+        AddToList("TC_Fm_Gemessenden_Exzentrizitaet", "mm")  # 2084
+        AddToList("TC_Fm_Aussendurchmesser_MO", "mm")  # 2085
+        AddToList("TC_Fm_Tastkugeldurchmesser", "mm")  # 2086
+        AddToList("TC_Fm_Innendurchmesser_MO", "mm")  # 2087
+        AddToList("TC_Fm_Kippung_MO_XAchse", "μm/10mm")  # 2088
+        AddToList("TC_Fm_Kippung_MO_YAchse", "μm/10mm")  # 2089
+        AddToList("TC_Fm_Radius_MO", "mm")  # 2090
+        AddToList("TC_Fm_Neigung_Zylinderachse_MO_zu_Flaeche_XOY", "Grad")  # 2091
+        AddToList("TC_Fm_Formabweichung_Normal", "μm")  # 2092
+        AddToList("TC_Fm_Kalibrierung_Normal", "μm")  # 2093
+        AddToList("TC_Fm_Standardabweichung_Wiederholmessungen_Normal", "μm")  # 2094
+        AddToList("TC_Fm_AnzahlMessungen_Fuehrungsabweichung", "")  # 2095
+        AddToList("TC_Fm_Gemessene_Rundheit_EN", "μm")  # 2096
+        AddToList("TC_Gewinde_Steigung", "mm")  # 2097
 
         # Konturmessgerät
-        AddToList('TC_KTMG_Gemessener_Abstand', 'mm')  # 2101
-        AddToList('TC_KTMG_Konstanter_Anteil_EMPE', 'μm')  # 2102
-        AddToList('TC_KTMG_Anzahl_Messpunkte', '')  # 2103
-        AddToList('TC_KTMG_Gemessener_Winkel', 'Grad')  # 2104
-        AddToList('TC_KTMG_Laenge_kleinster_Schenkel', 'mm')  # 2105
-        AddToList('TC_KTMG_Gemessene_Geradheit', 'μm')  # 2106
-        AddToList('TC_KTMG_Sektor_Kreis', 'Grad')  # 2107
+        AddToList("TC_KTMG_Gemessener_Abstand", "mm")  # 2101
+        AddToList("TC_KTMG_Konstanter_Anteil_EMPE", "μm")  # 2102
+        AddToList("TC_KTMG_Anzahl_Messpunkte", "")  # 2103
+        AddToList("TC_KTMG_Gemessener_Winkel", "Grad")  # 2104
+        AddToList("TC_KTMG_Laenge_kleinster_Schenkel", "mm")  # 2105
+        AddToList("TC_KTMG_Gemessene_Geradheit", "μm")  # 2106
+        AddToList("TC_KTMG_Sektor_Kreis", "Grad")  # 2107
 
         # 3D Technische Daten des KMG
-        AddToList('TC_3d_KMG_A', '')  # 2301
-        AddToList('TC_3d_KMG_K', '')  # 2302
-        AddToList('TC_3d_KMG_LT', 'mm')  # 2340
-        AddToList('TC_3d_KMG_Uc', 'μm')  # 2303
-        AddToList('TC_3d_KMG_alphaM', '10-6/K')  # 2304
-        AddToList('TC_3d_KMG_MPEML', 'μm')  # 2357
+        AddToList("TC_3d_KMG_A", "")  # 2301
+        AddToList("TC_3d_KMG_K", "")  # 2302
+        AddToList("TC_3d_KMG_LT", "mm")  # 2340
+        AddToList("TC_3d_KMG_Uc", "μm")  # 2303
+        AddToList("TC_3d_KMG_alphaM", "10-6/K")  # 2304
+        AddToList("TC_3d_KMG_MPEML", "μm")  # 2357
 
         # 3D Konstanten Aufgabe Durchmesser
-        AddToList('TC_3d_DUME_D', 'mm')  # 2310
-        AddToList('TC_3d_DUME_alpha', '°')  # 2311
-        AddToList('TC_3d_DUME_l', 'mm')  # 2312
-        AddToList('TC_3d_DUME_LM', 'mm')  # 2341
+        AddToList("TC_3d_DUME_D", "mm")  # 2310
+        AddToList("TC_3d_DUME_alpha", "°")  # 2311
+        AddToList("TC_3d_DUME_l", "mm")  # 2312
+        AddToList("TC_3d_DUME_LM", "mm")  # 2341
 
         # 3D Konstanten Aufgabe Form
-        AddToList('TC_3d_FORM_L', 'mm')  # 2313
-        AddToList('TC_3d_FORM_DL', 'mm')  # 2314
-        AddToList('TC_3d_FORM_F', 'μm')  # 2315
-        AddToList('TC_3d_FORM_FN', 'μm')  # 2359
-        AddToList('TC_3d_FORM_FKMG', 'μm')  # 2360
+        AddToList("TC_3d_FORM_L", "mm")  # 2313
+        AddToList("TC_3d_FORM_DL", "mm")  # 2314
+        AddToList("TC_3d_FORM_F", "μm")  # 2315
+        AddToList("TC_3d_FORM_FN", "μm")  # 2359
+        AddToList("TC_3d_FORM_FKMG", "μm")  # 2360
 
         # 3D Konstanten Aufgabe Abstand
-        AddToList('TC_3d_ABST_L', 'mm')  # 2316
-        AddToList('TC_3d_ABST_LM1', 'mm')  # 2317
-        AddToList('TC_3d_ABST_LE1', 'mm')  # 2358
+        AddToList("TC_3d_ABST_L", "mm")  # 2316
+        AddToList("TC_3d_ABST_LM1", "mm")  # 2317
+        AddToList("TC_3d_ABST_LE1", "mm")  # 2358
 
         # Weitere Konstanten wie in Delphi
-        AddToList('TC_KMG_Messschwankung', 'μm')  # 2305
+        AddToList("TC_KMG_Messschwankung", "μm")  # 2305
 
     def getConstTitle(self, cid):
         # Simulierter Funktionsaufruf zur Bestimmung des Titels
@@ -562,8 +568,8 @@ class TMU_Modell(List[TMU_Komponente]):
     def Geometrie_MO(self):
         return TMU_Geometry(self.iGeometrie_MO + 1)
 
-    def Geometrie_EN(self):
-        return TMU_Geometry(self.iGeometrie_EN + 1)
+    #def Geometrie_EN(self):
+     #   return TMU_Geometry(self.iGeometrie_EN + 1)
 
     def Element1_3d(self):
         return TMU_3DElement(self.iGeometrie_EN)
@@ -571,8 +577,8 @@ class TMU_Modell(List[TMU_Komponente]):
     def Element2_3d(self):
         return TMU_3DElement(self.iGeometrie_MO)
 
-    def Bezug1_3d(self):
-        return TMU_3DElement(self.iBezug1)
+    #def Bezug1_3d(self):
+     #   return TMU_3DElement(self.iBezug1)
 
     def Bezug2_3d(self):
         return TMU_3DElement(self.iBezug2)
@@ -597,14 +603,20 @@ class TMU_Modell(List[TMU_Komponente]):
         valid = False
         for item in self:
             if isinstance(item, TMU_Komponente) and item.varianz() != MU_NAN:
-                print("meine varianz:",item, item.varianz(),"meine unsicherheit:",item.unsicherheitsbeitrag())
+                print(
+                    "meine varianz:",
+                    item,
+                    item.varianz(),
+                    "meine unsicherheit:",
+                    item.unsicherheitsbeitrag(),
+                )
                 v += item.varianz()
                 valid = True
         return v if valid else MU_NAN
 
     def StandardUnsicherheit_Uy(self):
         uy = self.SummeDerVarianzen()
-        print("varianz",uy)
+        print("varianz", uy)
         return math.sqrt(uy) if uy != MU_NAN else MU_NAN
 
     def V_eff(self):
@@ -631,29 +643,29 @@ class TMU_Modell(List[TMU_Komponente]):
                 if isinstance(item, TMU_Komponente):
                     ubi = item.UnsicherheitsBeitrag
                     vi = item.EffektiverFreiheitsgrad
-                    print("lpl",ubi,vi)
-                    if not math.isnan(ubi) and not math.isnan(vi) :
+                    print("lpl", ubi, vi)
+                    if not math.isnan(ubi) and not math.isnan(vi):
                         SummeUB += power(ubi, 4) / vi
                         valid = True
             if valid:
                 print(SummeUB)
                 uy = self.StandardUnsicherheit_Uy()
-                print("lplp",uy)
+                print("lplp", uy)
                 if uy != MU_NAN:
-                    print("YEEEY",uy,SummeUB)
+                    print("YEEEY", uy, SummeUB)
                     try:
                         if SummeUB == 0:
                             result = 500
                         else:
                             result = power(uy, 4) / SummeUB
-                            print("t",result)
-                    except:
+                            print("t", result)
+                    except BaseException:
                         result = MU_NAN
         return result
 
     def Erweiterungsfaktor_k(self):
         veff = self.V_eff()
-        print("disneyland",veff)
+        print("disneyland", veff)
         if not math.isnan(veff):
             if self.AufgabeModell == "a3D_Pruefprozess":
                 result = 2.0
@@ -719,9 +731,9 @@ class TMU_Modell(List[TMU_Komponente]):
     def MUPruefverfahren_U(self):
         k = self.Erweiterungsfaktor_k()
         uy = self.StandardUnsicherheit_Uy()
-        print("Finale",uy,k)
+        print("Finale", uy, k)
         for item in self:
-            print(item,item.unsicherheitsbeitrag())
+            print(item, item.unsicherheitsbeitrag())
         if k != MU_NAN and uy != MU_NAN:
             return k * uy
         return MU_NAN

@@ -12,8 +12,10 @@ class AnakonstBase(BaseModel):
     class Config:
         orm_mode = True
 
+
 class Anakonst(AnakonstBase):
     pass
+
 
 class AnakonstUpdate(AnakonstBase):
     pass
