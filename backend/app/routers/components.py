@@ -1,25 +1,17 @@
-from typing import List
-
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.database import get_db
 from app.database.generic_methods import get_by_id, update_model
 from app.models import Component
-from app.schemas.component import (
-    ComponentBack,
-    ComponentGet,
-    ComponentRefCreate,
-    ComponentRefUpdate,
-)
+from app.schemas.component import ComponentBack, ComponentGet, ComponentRefUpdate
 from app.services.component_service.component_factory import ComponentFactory
-from app.services.component_service.EverythinForComponents.TMU_Modell import TMU_Modell
 
 router = APIRouter(prefix="/components", tags=["components"])
 
 
 # Ist der Endpunkt sinnvoll?
-@router.get("", response_model=List[ComponentBack])
+@router.get("", response_model=list[ComponentBack])
 def get_components():
     components = ComponentFactory.get_all_components()
 

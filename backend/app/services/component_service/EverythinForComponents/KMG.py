@@ -1,5 +1,5 @@
 class KMGAdmin:
-    def __init__(self, data, CMM=''):
+    def __init__(self, data, CMM=""):
         self.CMM = CMM
         self.current_index = 0
         self.KMG_IDENT = data.KMG_IDENT

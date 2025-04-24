@@ -1,5 +1,11 @@
+from collections.abc import Callable
 from http.client import HTTPException
-from typing import Any, Callable, List, Optional, Type, TypeVar, Union
+from typing import Any, TypeVar
+
+from pydantic import BaseModel
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import InstrumentedAttribute
 
 from app.models import Component, Modell
 from app.models.ANAMU import ANAKOMP
@@ -14,23 +20,19 @@ from app.services.component_service.EverythinForComponents.TMuKompRec import (
     TMU_KennwertArt,
     TMU_Verteilung,
 )
-from pydantic import BaseModel
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import InstrumentedAttribute
 
 T = TypeVar("T")
 
 
 async def update_model(
     db: AsyncSession,
-    model_class: Type[T],
+    model_class: type[T],
     *,
-    id: Optional[int] = None,
-    fk_field: Optional[InstrumentedAttribute] = None,
-    fk_value: Optional[Union[int, str]] = None,
-    update_data: dict
-) -> Union[T, List[T]]:
+    id: int | None = None,
+    fk_field: InstrumentedAttribute | None = None,
+    fk_value: int | str | None = None,
+    update_data: dict,
+) -> T | list[T]:
     if id is None and (fk_field is None or fk_value is None):
         raise ValueError("Either 'id' or 'fk_field' and 'fk_value' must be provided")
 
@@ -69,8 +71,8 @@ async def update_model(
 
 
 async def get_by_id(
-    orm_model: Type, model_id: int, db: AsyncSession, pydantic_model: Type[BaseModel]
-) -> Optional[BaseModel]:
+    orm_model: type, model_id: int, db: AsyncSession, pydantic_model: type[BaseModel]
+) -> BaseModel | None:
 
     model_fields = pydantic_model.model_fields.keys()
     columns = [
@@ -82,7 +84,7 @@ async def get_by_id(
     row = result.fetchone()
 
     if row:
-        return pydantic_model(**dict(zip(model_fields, row)))
+        return pydantic_model(**dict(zip(model_fields, row, strict=False)))
     return None
 
 
@@ -98,7 +100,7 @@ def generic_child_builder(model_class, fk_field: str):
 async def create_entity_with_children(
     db: AsyncSession,
     entity: Any,
-    child_data_list: List[Any],
+    child_data_list: list[Any],
     child_builder: Callable[[Any], Any],
 ):
     # Entität zur Session hinzufügen
@@ -120,10 +122,10 @@ async def create_entity_with_children(
 
 
 async def get_all_generic(
-    model: Type[Any],  # Das ORM-Modell (z. B. Component)
+    model: type[Any],  # Das ORM-Modell (z. B. Component)
     db: AsyncSession,
-    pydantic_model: Type[BaseModel],  # Das Pydantic-Response-Modell
-) -> List[Any]:
+    pydantic_model: type[BaseModel],  # Das Pydantic-Response-Modell
+) -> list[Any]:
 
     fields = list(pydantic_model.model_fields.keys())
     stmt = select(*[getattr(model, field) for field in fields])
@@ -131,16 +133,16 @@ async def get_all_generic(
     result = await db.execute(stmt)
     rows = result.all()
 
-    return [pydantic_model(**dict(zip(fields, row))) for row in rows]
+    return [pydantic_model(**dict(zip(fields, row, strict=False))) for row in rows]
 
 
 async def get_by_foreign_key(
-    orm_model: Type,
+    orm_model: type,
     fk_field: InstrumentedAttribute,
     value: Any,
     db: AsyncSession,
-    pydantic_model: Type[BaseModel],
-) -> List[BaseModel]:
+    pydantic_model: type[BaseModel],
+) -> list[BaseModel]:
 
     # Nur die Spalten holen, die auch im Pydantic-Modell sind
     model_fields = pydantic_model.model_fields.keys()
@@ -151,12 +153,14 @@ async def get_by_foreign_key(
     rows = result.all()
 
     # Mapping der Zeilen auf Pydantic-Modelle
-    return [pydantic_model(**dict(zip(model_fields, row))) for row in rows]
+    return [
+        pydantic_model(**dict(zip(model_fields, row, strict=False))) for row in rows
+    ]
 
 
 async def calc_uncertainty(
     project_id: int, modell_id: int, db: AsyncSession
-) -> Optional[float]:  # Oder passendes Rückgabetyp je nach MUPruefverfahren_U()
+) -> float | None:  # Oder passendes Rückgabetyp je nach MUPruefverfahren_U()
 
     modell = await get_by_id(Modell, modell_id, db, ModellBase)
     if not modell:
@@ -173,10 +177,9 @@ async def calc_uncertainty(
     tmu_modell_schema = TMU_ModellSchema(aufgabe=modell.aufgabe, modell_id=modell.id)
     tmu_modell = TMU_Modell(tmu_modell_schema)
 
-
     for component_id in component_ids:
         tmu_modell.addComponent(component_id)
-    for component, comp_data in zip(tmu_modell, components):
+    for component, comp_data in zip(tmu_modell, components, strict=False):
         component.data.TermL0 = comp_data.terml0
         component.data.TermL1 = comp_data.terml1
         component.data.Verteilung = TMU_Verteilung(comp_data.verteilung)

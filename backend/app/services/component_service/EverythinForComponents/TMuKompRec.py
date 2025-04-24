@@ -1,11 +1,10 @@
 from enum import Enum
-from typing import Union
+
+from pydantic import BaseModel, root_validator
 
 from app.services.component_service.EverythinForComponents.TMU_ConstList import (
     TKompConstants,
 )
-from pydantic import BaseModel, root_validator
-
 
 # Enum-Klassen mit den angegebenen Werten
 
@@ -24,7 +23,7 @@ class TMU_Verteilung(Enum):
     V3D_Stdabw = 9
 
     @classmethod
-    def _get_value(cls, value: Union[int, str]):
+    def _get_value(cls, value: int | str):
         if isinstance(value, int):
             return cls(value)
         elif isinstance(value, str):
@@ -42,7 +41,7 @@ class TMU_KennwertArt(Enum):
     M3D_MethodeAnzahlPunkte = 6
 
     @classmethod
-    def _get_value(cls, value: Union[int, str]):
+    def _get_value(cls, value: int | str):
         if isinstance(value, int):
             return cls(value)
         elif isinstance(value, str):
@@ -56,7 +55,7 @@ class TMU_Freiheitsgrad(Enum):
     FG_N_Minus1 = 2
 
     @classmethod
-    def _get_value(cls, value: Union[int, str]):
+    def _get_value(cls, value: int | str):
         if isinstance(value, int):
             return cls(value)
         elif isinstance(value, str):
@@ -95,9 +94,9 @@ class TMuKompRecW:
     def __init__(self):
         self.TermL0: float
         self.TermL1: float
-        self.Verteilung: Union[int, str]
-        self.KennwertArt: Union[int, str]
-        self.Freiheitsgrad: Union[int, str]
+        self.Verteilung: int | str
+        self.KennwertArt: int | str
+        self.Freiheitsgrad: int | str
         self.FreiN_minus_1: int
         self.Flags: int
 

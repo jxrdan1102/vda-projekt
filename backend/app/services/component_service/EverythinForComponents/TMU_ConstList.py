@@ -1,5 +1,4 @@
 from enum import Enum
-from typing import Dict
 
 from pydantic import BaseModel, field_validator
 
@@ -124,7 +123,7 @@ class TKompConstants(Enum):
 
 
 class TMU_ConstList(BaseModel):
-    const_map: Dict[TKompConstants, float] = {}
+    const_map: dict[TKompConstants, float] = {}
 
     @field_validator("const_map", mode="before")
     @classmethod

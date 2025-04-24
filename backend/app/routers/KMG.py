@@ -1,9 +1,10 @@
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.database.database import get_db
 from app.database.generic_methods import get_all_generic, get_by_id, update_model
 from app.models import KMG
-from app.schemas.kmg import KMGCreate, KMGUpdate, KMGResponse
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
+from app.schemas.kmg import KMGCreate, KMGResponse, KMGUpdate
 
 router = APIRouter(prefix="/kmgs", tags=["KMGs"])
 
@@ -28,13 +29,13 @@ async def create_kmg(kmg: KMGCreate, db: AsyncSession = Depends(get_db)):
 
 
 @router.put("/{kmg_id}", response_model=KMGResponse)
-async def update_kmg(kmg_id: int, kmg_data: KMGUpdate, db: AsyncSession = Depends(get_db)):
+async def update_kmg(
+    kmg_id: int, kmg_data: KMGUpdate, db: AsyncSession = Depends(get_db)
+):
     return await update_model(
-        db=db,
-        model_class=KMG,
-        id=kmg_id,
-        update_data=kmg_data.dict(exclude_unset=True)
+        db=db, model_class=KMG, id=kmg_id, update_data=kmg_data.dict(exclude_unset=True)
     )
+
 
 @router.delete("/{kmg_id}")
 async def delete_kmg(kmg_id: int, db: AsyncSession = Depends(get_db)):

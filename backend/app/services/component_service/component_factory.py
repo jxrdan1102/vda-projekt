@@ -1,5 +1,5 @@
-import app.services.component_service.DreiDComponents as d
 import app.services.component_service.components as k
+import app.services.component_service.DreiDComponents as d
 from app.services.component_service.EverythinForComponents.TMU_ConstList import (
     TMU_ConstList,
 )
@@ -20,7 +20,7 @@ class ComponentFactory:
         1111: d.TK_3d_ResKMG,
         2222: d.TK_3d_Wi_WE,
         3333: d.TK_3d_Wi_WB,
-        4444: d.TK_3d_Wi_DeltaEKMG
+        4444: d.TK_3d_Wi_DeltaEKMG,
     }
 
     @staticmethod

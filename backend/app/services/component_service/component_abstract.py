@@ -1,5 +1,4 @@
 import math
-from typing import List, Optional
 
 from app.services.component_service.EverythinForComponents import TMU_ConstList
 from app.services.component_service.EverythinForComponents.TMU_Atom import TMU_Atom
@@ -8,11 +7,7 @@ from app.services.component_service.EverythinForComponents.TMU_ConstList import 
 )
 from app.services.component_service.EverythinForComponents.TMuKompRec import (
     TAuswertungsArchiv,
-    TKompConstantSet,
     TKompEditFieldsSet,
-    TMU_Freiheitsgrad,
-    TMU_KennwertArt,
-    TMU_Verteilung,
     TMuKompRec,
 )
 
@@ -39,13 +34,12 @@ class TMU_Komponente(TMU_Atom):
         self.formel: str = AFormel
         self.modl_txt_id: int = 0
         self.komp_txt_id: int = 0
-        self.arch_data: Optional[TAuswertungsArchiv] = None
-        self.ConstNeeded: List[TKompConstants] = [TKompConstants["TC_Messwert"]]
-        print(self.ConstNeeded)
+        self.arch_data: TAuswertungsArchiv | None = None
+        self.ConstNeeded: list[TKompConstants] = [TKompConstants["TC_Messwert"]]
         self.freikat_text: str = ""
         self.c1_val: float = 1
         self.c2_val: float = 1
-        self.fields_to_edit: Optional[TKompEditFieldsSet] = None
+        self.fields_to_edit: TKompEditFieldsSet | None = None
         self.position: int = 0
         self.einheit_ergebnis: str = ""
         self.clear()
@@ -59,7 +53,6 @@ class TMU_Komponente(TMU_Atom):
     def addConstNeededToModell(self):
         if self.modell is not None:
             for const in self.ConstNeeded:
-                print(const)
                 self.modell.const_needed.add(const)
                 self.modell.const_list.const_map[const] = None
 
@@ -98,16 +91,12 @@ class TMU_Komponente(TMU_Atom):
         return result
 
     def std_unsicherheit(self, l: float) -> float:
-        print("hilf mir", l)
         if l != MU_NAN:
-            print("hilf mir nochmal", self.data.Verteilung.name)
             # Check distribution and return appropriate uncertainty
             if self.data.Verteilung.name == "V_Rechteck":
                 if self.data.KennwertArt.name == "K_HalbWeite":
-                    print("1", l / math.sqrt(3))
                     return l / math.sqrt(3)
                 elif self.data.KennwertArt.name == "K_Spannweite":
-                    print("wurzel", l / (2 * math.sqrt(3)))
                     return l / (2 * math.sqrt(3))
                 elif self.data.KennwertArt.name == "K_Standardabweichung":
                     return l
@@ -125,11 +114,9 @@ class TMU_Komponente(TMU_Atom):
                     return l / (2 * math.sqrt(6))
                 elif self.data.KennwertArt.name == "K_Standardabweichung":
                     return l
-        print("problem std_unsicherheit", self.data.Verteilung.name)
         return MU_NAN
 
     def a_val(self) -> float:
-        print("Zeig mirs ", self.data.TermL0)
         return self.data.TermL0
 
     def b_val(self) -> float:
@@ -147,6 +134,7 @@ class TMU_Komponente(TMU_Atom):
     def sensititivty_c2(self) -> float:
         return self.c2_val
 
+    @property
     def effektiver_freiheitsgrad(self) -> float:
         if self.data.Freiheitsgrad.name == "FG_unbegrenzt":
             self.EffektiverFreiheitsgrad = 1000
@@ -161,7 +149,6 @@ class TMU_Komponente(TMU_Atom):
     def unsicherheitsbeitrag_l0(self) -> float:
         su = self.std_unsicherheit(self.a_val())
         c1 = self.sensititivty_c1()
-        print("fuck man", su, c1, self.a_val())
         if su != MU_NAN and c1 != MU_NAN:
             return su * c1
         return MU_NAN
@@ -169,18 +156,15 @@ class TMU_Komponente(TMU_Atom):
     def unsicherheitsbeitrag_l1(self) -> float:
         su = self.std_unsicherheit(self.b_val())
         c2 = self.sensititivty_c2()
-        print("simma", su, c2)
         l = 25 * 1000  # Messwert in mm Berechnung in µm
         if su != MU_NAN and c2 != MU_NAN and l != MU_NAN:
             return su * c2 * l
         return MU_NAN
 
+    @property
     def unsicherheitsbeitrag(self) -> float:
         su0 = self.unsicherheitsbeitrag_l0()
-        print("geht noch", su0)
-        print("bval", self.b_val())
         su1 = self.unsicherheitsbeitrag_l1()
-        print("geht noch2", su1)
         if su0 != MU_NAN and su1 != MU_NAN:
             if self.id == 4 or self.id == 6:
                 self.data.Flags = 2
@@ -188,8 +172,7 @@ class TMU_Komponente(TMU_Atom):
         return MU_NAN
 
     def varianz(self) -> float:
-        ub = self.unsicherheitsbeitrag()
-        print("componente = ", self, ub)
+        ub = self.unsicherheitsbeitrag
         if not math.isnan(ub):
             return ub**2
         return MU_NAN
@@ -202,10 +185,10 @@ class TMU_Komponente(TMU_Atom):
             "ASUL1": self.std_unsicherheit_l1(),
             "SensC1": self.sensititivty_c1(),
             "SensC2": self.sensititivty_c2(),
-            "FreiEff": self.effektiver_freiheitsgrad(),
-            "UNSBL0": self.unsicherheitsbeitrag_l0(),
-            "UNSBL1": self.unsicherheitsbeitrag_l1(),
-            "UnsB": self.unsicherheitsbeitrag(),
+            "FreiEff": self.effektiver_freiheitsgrad,
+            "UNSBL0": self.unsicherheitsbeitrag_l0,
+            "UNSBL1": self.unsicherheitsbeitrag_l1,
+            "UnsB": self.unsicherheitsbeitrag,
             "VARIANZ": self.varianz(),
         }
 
@@ -216,10 +199,10 @@ class TMU_Komponente(TMU_Atom):
     def db_save(self, analyse_id: int):
         pass
 
-    def debug_str(self, s: List[str]) -> bool:
+    def debug_str(self, s: list[str]) -> bool:
         s.append("Berechnete Daten:")  # For simplicity
         return False
 
-    def debug_grid(self, grid: List[List[str]]) -> bool:
+    def debug_grid(self, grid: list[list[str]]) -> bool:
         grid.append(["Daten", "Werte"])
         return False

@@ -1,6 +1,7 @@
-from app.database.database import Base
 from sqlalchemy import DATETIME, Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
+
+from app.database.database import Base
 
 
 class Modell(Base):
@@ -30,6 +31,8 @@ class Modell(Base):
     formeldesc = Column(String(512))
 
     fk_user_id = Column(Integer, ForeignKey("users.id"))  # 🔐 Ownership
-    owner = relationship("User", back_populates="modells")  # Optional für Zugriff von der anderen Seite
+    owner = relationship(
+        "User", back_populates="modells"
+    )  # Optional für Zugriff von der anderen Seite
     components = relationship("Component", back_populates="modell")
     ana_mu = relationship("ANAMU", back_populates="modell")

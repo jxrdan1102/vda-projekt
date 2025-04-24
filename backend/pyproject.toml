@@ -1,0 +1,57 @@
+[tool.mypy]
+python_version = "3.13"
+strict = true
+plugins = ["pydantic.mypy"]
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+warn_return_any = true
+no_implicit_optional = true
+implicit_reexport = false
+explicit_package_bases = true
+
+# Konfiguration für FastAPI (direkt unter [tool.mypy])
+[mypy-fastapi]
+ignore_missing_imports = true
+
+[mypy-sqlalchemy]
+ignore_missing_imports = true
+
+[mypy-passlib]
+ignore_missing_imports = true
+
+[mypy-jose]
+ignore_missing_imports = true
+
+[tool.black]
+line-length = 88
+target-version = ['py312']
+include = '\.pyi?$'
+skip-string-normalization = false
+
+[tool.isort]
+profile = "black"
+line_length = 88
+multi_line_output = 3
+include_trailing_comma = true
+known_first_party = ["app"]
+known_third_party = ["fastapi", "sqlalchemy", "pydantic"]
+force_grid_wrap = 0
+combine_as_imports = true
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+select = [
+    "E",  # pycodestyle
+    "F",  # pyflakes
+    "B",  # bugbear
+    "I",  # isort
+    "UP",  # pyupgrade
+]
+ignore = ["E501"]  # optional: line too long, already covered by black
+
+[tool.ruff.per-file-ignores]
+"__init__.py" = ["F401"]  # ignore unused imports in init files

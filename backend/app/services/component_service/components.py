@@ -1,10 +1,10 @@
 import math
 
+from app.services.component_service.component_abstract import TMU_Komponente
 from app.services.component_service.EverythinForComponents.TMU_ConstList import (
     TKompConstants,
 )
 from app.services.component_service.EverythinForComponents.TMuKompRec import TMuKompRec
-from app.services.component_service.component_abstract import TMU_Komponente
 
 # __all__ = ["KomponenteA", "TK_KalibrierungME", "TK_Kalibrierung_EN", "TK_AufloesungME","TK_Wiederholpraezision","TK_NichtZentrischeAntastung","TK_AbweichungPoissonKoeffizientMO_EN", "TK_AbweichungElastizitaetsModul_MO_EN", "TK_TempDifferenz_MO_ME", "TK_AbweichungMittlereTemp_MO_ME"]
 
@@ -29,8 +29,6 @@ class KomponenteA(TMU_Komponente):
             Flags=1,
         )
         # self.setData(0.15,0,'V_Rechteck','K_HalbWeite','FG_unbegrenzt',0,1)
-        self.UnsicherheitsBeitrag = self.unsicherheitsbeitrag()
-        self.EffektiverFreiheitsgrad = self.effektiver_freiheitsgrad()
 
         # Initialisierung wie im Delphi-Code
         self.ConstNeeded += [
@@ -135,8 +133,6 @@ class TK_KalibrierungME(TMU_Komponente):
             Flags=1,
         )
         # self.setData(terml0 = 0.035,verteilung = 3,kennwertart = 2,freiheitsgrad=2)
-        self.UnsicherheitsBeitrag = self.unsicherheitsbeitrag()
-        self.EffektiverFreiheitsgrad = self.effektiver_freiheitsgrad()
         self.id = 2
         self.ConstNeeded += []
         self.addConstNeededToModell()
@@ -168,8 +164,6 @@ class TK_Kalibrierung_EN(TMU_Komponente):
         )
         # self.setData(terml0 = 0.05, terml1 = 0.0000012,verteilung = 3,kennwertart = 2,freiheitsgrad=2)
         self.id = 3
-        self.UnsicherheitsBeitrag = self.unsicherheitsbeitrag()
-        self.EffektiverFreiheitsgrad = self.effektiver_freiheitsgrad()
         self.addConstNeededToModell()
 
     def clear(self):
@@ -212,8 +206,6 @@ class TK_AufloesungME(TMU_Komponente):
             Flags=1,
         )
         # self.setData(terml0 = 0.005,verteilung = 2,kennwertart = 3,freiheitsgrad=2)
-        self.UnsicherheitsBeitrag = self.unsicherheitsbeitrag()
-        self.EffektiverFreiheitsgrad = self.effektiver_freiheitsgrad()
         self.ConstNeeded += []
         self.id = 4
         self.addConstNeededToModell()
@@ -243,8 +235,6 @@ class TK_Wiederholpraezision(TMU_Komponente):
         # self.setData(terml0 = 0.01,verteilung = 3,kennwertart = 4,freiheitsgrad=2)
 
         self.ConstNeeded += []
-        self.UnsicherheitsBeitrag = self.unsicherheitsbeitrag()
-        self.EffektiverFreiheitsgrad = self.effektiver_freiheitsgrad()
         self.id = 5
         self.addConstNeededToModell()
 
@@ -272,8 +262,6 @@ class TK_NichtZentrischeAntastung(TMU_Komponente):
         )
         # self.setData(verteilung = 2,kennwertart = 2,freiheitsgrad=2)
 
-        self.UnsicherheitsBeitrag = self.unsicherheitsbeitrag()
-        self.EffektiverFreiheitsgrad = self.effektiver_freiheitsgrad()
         self.id = 6
 
         self.ConstNeeded += [
@@ -298,7 +286,6 @@ class TK_NichtZentrischeAntastung(TMU_Komponente):
         v = 0.12
 
         if g != 0 and r != MU_NAN and g != MU_NAN and v != MU_NAN:
-            print("aval", r * v / g)
             return r * v / g
         else:
             return MU_NAN
@@ -322,8 +309,6 @@ class TK_AbweichungPoissonKoeffizientMO_EN(TMU_Komponente):
         )
         # self.setData(verteilung = 2,kennwertart = 3,freiheitsgrad=2)
 
-        self.UnsicherheitsBeitrag = self.unsicherheitsbeitrag()
-        self.EffektiverFreiheitsgrad = self.effektiver_freiheitsgrad()
         self.id = 7
 
         self.ConstNeeded += [
@@ -385,7 +370,6 @@ class TK_AbweichungPoissonKoeffizientMO_EN(TMU_Komponente):
     def unsicherheitsbeitrag_l0(self):
         su = self.StdUnsicherheit(self.a_Val())
         c1 = self.sensitivity_c1()
-        print("hier fucken", su, c1)
         if su != MU_NAN and c1 != MU_NAN:
             return 2 * su * c1
         else:
@@ -412,8 +396,6 @@ class TK_AbweichungElastizitaetsModul_MO_EN(TMU_Komponente):
         )
         # self.setData(verteilung = 2,kennwertart = 3,freiheitsgrad=2)
 
-        self.UnsicherheitsBeitrag = self.unsicherheitsbeitrag()
-        self.EffektiverFreiheitsgrad = self.effektiver_freiheitsgrad()
         self.id = 8
 
         self.ConstNeeded += [
@@ -472,11 +454,9 @@ class TK_AbweichungElastizitaetsModul_MO_EN(TMU_Komponente):
             )
 
     def unsicherheitsbeitrag_l0(self):
-        # Berechnung des Unsicherheitsbeitrags L0
         su = self.std_unsicherheit(self.a_val())
         c1 = self.sensititivty_c1()
         if su != MU_NAN and c1 != MU_NAN:
-            print("usbl0 = ", 2 * su * c1, "stdusbl0 = ", su)
             return 2 * su * c1
         else:
             return MU_NAN
@@ -494,8 +474,6 @@ class TK_TempDifferenz_MO_ME(TMU_Komponente):
             FreiN_minus_1=0,
             Flags=1,
         )
-        self.UnsicherheitsBeitrag = self.unsicherheitsbeitrag()
-        self.EffektiverFreiheitsgrad = self.effektiver_freiheitsgrad()
         self.id = 9
 
         self.ConstNeeded += [
@@ -527,8 +505,6 @@ class TK_TempDifferenz_MO_ME(TMU_Komponente):
             return MU_NAN
 
     def sensititivty_c2(self):
-        # Berechnung der Sensitivität C2
-        print("Gut ist das")
         ax = 0.0000115
         an = 0.0000115
         if ax != MU_NAN and an != MU_NAN:
@@ -550,8 +526,6 @@ class TK_AbweichungMittlereTemp_MO_ME(TMU_Komponente):
             FreiN_minus_1=0,
             Flags=1,
         )
-        self.UnsicherheitsBeitrag = self.unsicherheitsbeitrag()
-        self.EffektiverFreiheitsgrad = self.effektiver_freiheitsgrad()
         self.id = 10
         # Die spezifischen Initialisierungen für diese Klasse
         self.ConstNeeded += [

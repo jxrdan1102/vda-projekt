@@ -1,19 +1,14 @@
 import csv
 
-from app.database.database import create_tables, ping_connection
-from app.routers import ana_mu, auth, components, items, modells, KMG
-from app.services.component_service.DreiDComponents import TK_3d_ResKMG
-from app.services.component_service.DreiDComponents import TK_3d_Wi_DeltaEKMG
-from app.services.component_service.DreiDComponents import TK_3d_Wi_WB
-from app.services.component_service.DreiDComponents import TK_3d_Wi_WE
-from app.services.component_service.EverythinForComponents.TMU_ConstList import (
-    TKompConstants,
-    TMU_ConstList,
-)
-from app.services.component_service.EverythinForComponents.TMU_Modell import TMU_Modell
-from app.services.component_service.EverythinForComponents.TMU_Modell import TMU_ModellSchema
 from fastapi import FastAPI
 from pypxlib import Table
+
+from app.database.database import create_tables, ping_connection
+from app.routers import KMG, ana_mu, auth, components, items, modells
+from app.services.component_service.EverythinForComponents.TMU_Modell import (
+    TMU_Modell,
+    TMU_ModellSchema,
+)
 
 app = FastAPI()
 app.include_router(items.router)
@@ -47,14 +42,17 @@ async def startup():
     await ping_connection()
     print("🚀 Erstelle Tabellen fertig")
 
-    TMU_ModellSchem = TMU_ModellSchema(aufgabe=1, modell_id=2, iBezug1=1,iGeometrie_EN="Gerade")
+    TMU_ModellSchem = TMU_ModellSchema(
+        aufgabe=1, modell_id=2, iBezug1=1, iGeometrie_EN="Gerade"
+    )
     modell = TMU_Modell(TMU_ModellSchem)
     modell.addComponent(1111)
     modell.addComponent(2222)
     modell.addComponent(3333)
     modell.addComponent(4444)
-    print("modelc",modell)
-    print(modell[3].unsicherheitsbeitrag())
+    print("modelc", modell)
+    print(modell[3].unsicherheitsbeitrag)
+
 
 @app.get("/")
 def index():

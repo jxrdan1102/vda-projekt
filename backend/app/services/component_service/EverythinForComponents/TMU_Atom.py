@@ -13,5 +13,4 @@ class TMU_Atom(ABC):
 
     @abstractmethod
     def is_valid(self) -> bool:
-        """Muss von Unterklassen implementiert werden."""
         pass

@@ -1,5 +1,4 @@
 # schemas/kmg.py
-from typing import Optional
 
 from pydantic import BaseModel
 
@@ -20,13 +19,13 @@ class KMGCreate(KMGBase):
 
 
 class KMGUpdate(BaseModel):
-    kmg_bez: Optional[str]
-    kmg_a: Optional[float]
-    kmg_k: Optional[float]
-    kmg_lt: Optional[float]
-    kmg_uc: Optional[float]
-    kmg_alpham: Optional[float]
-    kmg_mpeml: Optional[float]
+    kmg_bez: str | None
+    kmg_a: float | None
+    kmg_k: float | None
+    kmg_lt: float | None
+    kmg_uc: float | None
+    kmg_alpham: float | None
+    kmg_mpeml: float | None
 
 
 class KMGResponse(KMGBase):

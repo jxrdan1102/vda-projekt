@@ -1,12 +1,12 @@
-from typing import List
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import delete
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import get_current_user
 from app.database.database import get_db
 from app.database.generic_methods import (
-    calc_uncertainty,
     create_entity_with_children,
     generic_child_builder,
-    get_all_generic,
     get_by_foreign_key,
     get_by_id,
     update_model,
@@ -14,7 +14,7 @@ from app.database.generic_methods import (
 from app.models.components import Component
 from app.models.modell import Modell
 from app.models.user import User
-from app.schemas.component import ComponentGet, ComponentGetModell, ComponentKompidOnly
+from app.schemas.component import ComponentGet, ComponentGetModell
 from app.schemas.modell import (
     ModellBase,
     ModellCreate,
@@ -26,15 +26,11 @@ from app.services.component_service.EverythinForComponents.TMU_Modell import (
     TMU_Modell,
     TMU_ModellSchema,
 )
-from app.services.component_service.component_factory import ComponentFactory
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import delete
-from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(prefix="/modells", tags=["modells"])
 
 
-@router.get("", response_model=List[ModellNameDescription])
+@router.get("", response_model=list[ModellNameDescription])
 async def get_modells(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),  # 👈 Benutzer ziehen
@@ -45,15 +41,19 @@ async def get_modells(
     return modells
 
 
-@router.get("/{id}/components", response_model=List[ComponentGet])
+@router.get("/{id}/components", response_model=list[ComponentGet])
 async def get_modell_components(id: int, db: AsyncSession = Depends(get_db)):
     components = await get_by_foreign_key(
         Component, Component.fk_modell, id, db, ComponentGet
     )
     return components
+
+
 @router.get("/{id}/test")
 async def get_modell_test(id: int, db: AsyncSession = Depends(get_db)):
-    TMU_ModellSchem = TMU_ModellSchema(aufgabe=1, modell_id=2, iBezug1=1,iGeometrie_EN="Gerade")
+    TMU_ModellSchem = TMU_ModellSchema(
+        aufgabe=1, modell_id=2, iBezug1=1, iGeometrie_EN="Gerade"
+    )
     modell = TMU_Modell(TMU_ModellSchem)
     modell.addComponent(1111)
     modell.addComponent(2222)
@@ -61,6 +61,7 @@ async def get_modell_test(id: int, db: AsyncSession = Depends(get_db)):
     modell.addComponent(4444)
     print(modell)
     return modell.MUPruefverfahren_U()
+
 
 @router.get("/{id}", response_model=ModellIDResponse)
 async def get_modell_by_id(

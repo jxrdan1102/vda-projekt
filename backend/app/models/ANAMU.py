@@ -1,6 +1,7 @@
-from app.database.database import Base
 from sqlalchemy import DATETIME, Column, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
+
+from app.database.database import Base
 
 
 class ANAMU(Base):

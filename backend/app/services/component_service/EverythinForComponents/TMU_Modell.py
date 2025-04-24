@@ -2,16 +2,16 @@ import math
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional, Set, Union
 
+from pydantic import BaseModel
+
+from app.services.component_service.component_abstract import TMU_Komponente
+from app.services.component_service.component_factory import ComponentFactory
 from app.services.component_service.EverythinForComponents.TMU_Atom import TMU_Atom
 from app.services.component_service.EverythinForComponents.TMU_ConstList import (
     TKompConstants,
     TMU_ConstList,
 )
-from app.services.component_service.component_abstract import TMU_Komponente
-from app.services.component_service.component_factory import ComponentFactory
-from pydantic import BaseModel
 
 
 # Definiere Enum für die zulässigen Prozess-Typen
@@ -34,7 +34,7 @@ def power(value, exp):
 @dataclass
 class TMU_Winkel:
     flag: bool
-    data: Union[int, tuple]
+    data: int | tuple
 
     def __init__(self, flag: bool, value):
         self.flag = flag
@@ -81,9 +81,7 @@ class TMU_ModellSchema(BaseModel):
     # mitgeben kannst
     const_list: TMU_ConstList = TMU_ConstList()
     modell_name: str = ""
-    AufgabeModell: Optional[TMU_AufgabeModell] = (
-        None  # Kannst du nach Bedarf definieren
-    )
+    AufgabeModell: TMU_AufgabeModell | None = None  # Kannst du nach Bedarf definieren
     i_aufgabe: int = 0
     i_geometrie_me: int = 0
     iGeometrie_EN: str = 0
@@ -101,14 +99,14 @@ class TMU_ModellSchema(BaseModel):
     archiv: bool = False
     formel_anteil: str = ""
     formel_beschreibung: str = ""
-    const_needed: Set[TKompConstants] = set()  # Liste von TKompConstants
+    const_needed: set[TKompConstants] = set()  # Liste von TKompConstants
 
     class Config:
         orm_mode = True
         arbitrary_types_allowed = True
 
 
-class TMU_Modell(List[TMU_Komponente]):
+class TMU_Modell(list[TMU_Komponente]):
     def __init__(self, schema: TMU_ModellSchema):
         super().__init__()
         self.iGeometrie_EN = schema.iGeometrie_EN
@@ -568,8 +566,8 @@ class TMU_Modell(List[TMU_Komponente]):
     def Geometrie_MO(self):
         return TMU_Geometry(self.iGeometrie_MO + 1)
 
-    #def Geometrie_EN(self):
-     #   return TMU_Geometry(self.iGeometrie_EN + 1)
+    # def Geometrie_EN(self):
+    #   return TMU_Geometry(self.iGeometrie_EN + 1)
 
     def Element1_3d(self):
         return TMU_3DElement(self.iGeometrie_EN)
@@ -577,8 +575,8 @@ class TMU_Modell(List[TMU_Komponente]):
     def Element2_3d(self):
         return TMU_3DElement(self.iGeometrie_MO)
 
-    #def Bezug1_3d(self):
-     #   return TMU_3DElement(self.iBezug1)
+    # def Bezug1_3d(self):
+    #   return TMU_3DElement(self.iBezug1)
 
     def Bezug2_3d(self):
         return TMU_3DElement(self.iBezug2)
@@ -608,7 +606,7 @@ class TMU_Modell(List[TMU_Komponente]):
                     item,
                     item.varianz(),
                     "meine unsicherheit:",
-                    item.unsicherheitsbeitrag(),
+                    item.unsicherheitsbeitrag,
                 )
                 v += item.varianz()
                 valid = True
@@ -641,8 +639,8 @@ class TMU_Modell(List[TMU_Komponente]):
             SummeUB = 0
             for item in self:
                 if isinstance(item, TMU_Komponente):
-                    ubi = item.UnsicherheitsBeitrag
-                    vi = item.EffektiverFreiheitsgrad
+                    ubi = item.unsicherheitsbeitrag
+                    vi = item.effektiver_freiheitsgrad
                     print("lpl", ubi, vi)
                     if not math.isnan(ubi) and not math.isnan(vi):
                         SummeUB += power(ubi, 4) / vi
@@ -733,7 +731,7 @@ class TMU_Modell(List[TMU_Komponente]):
         uy = self.StandardUnsicherheit_Uy()
         print("Finale", uy, k)
         for item in self:
-            print(item, item.unsicherheitsbeitrag())
+            print(item, item.unsicherheitsbeitrag)
         if k != MU_NAN and uy != MU_NAN:
             return k * uy
         return MU_NAN

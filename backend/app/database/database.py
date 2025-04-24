@@ -1,7 +1,7 @@
 import logging
 
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 DATABASE_URL = "mysql+asyncmy://fastapi_user:JoRu0430@localhost/vda_fastapi_db"

@@ -1,5 +1,3 @@
-from typing import List
-
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,15 +8,14 @@ from app.database.generic_methods import (
     create_entity_with_children,
     generic_child_builder,
     get_all_generic,
-    get_by_foreign_key,
     get_by_id,
     update_model,
 )
-from app.models import ANAMU, Component, Modell
+from app.models import ANAMU
 from app.models.ANAMU import ANAKOMP, ANAKONST
 from app.routers.modells import get_modell_by_id
-from app.schemas.anakomp import Anakomp, AnakompUpdate
-from app.schemas.anakonst import Anakonst, AnakonstUpdate
+from app.schemas.anakomp import AnakompUpdate
+from app.schemas.anakonst import AnakonstUpdate
 from app.schemas.anamu import (
     Anamu,
     AnamuBase,
@@ -26,17 +23,11 @@ from app.schemas.anamu import (
     AnamuIdGet,
     AnamuModellidOnly,
 )
-from app.schemas.component import ComponentKompidOnly
-from app.schemas.modell import ModellBase
-from app.services.component_service.EverythinForComponents.TMU_Modell import (
-    TMU_Modell,
-    TMU_ModellSchema,
-)
 
 router = APIRouter(prefix="/anamu", tags=["anamu"])
 
 
-@router.get("", response_model=List[Anamu])
+@router.get("", response_model=list[Anamu])
 async def get_all_ana_mu(db: AsyncSession = Depends(get_db)):
     return await get_all_generic(
         ANAMU,  # Das ORM-Modell ANAMU

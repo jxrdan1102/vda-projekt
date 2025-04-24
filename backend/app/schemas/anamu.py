@@ -1,9 +1,8 @@
 from datetime import datetime
-from typing import List, Optional
 
 from pydantic import BaseModel
 
-from app.schemas.anakomp import Anakomp, AnakompUpdate
+from app.schemas.anakomp import Anakomp
 from app.schemas.anakonst import Anakonst
 from app.schemas.modell import ModellIDResponse
 
@@ -42,5 +41,5 @@ class AnamuCreate(AnamuBase):
     tolfaktor: int
     tsk_aufgabe: int
     kmg_ident: str
-    anakomps: List[Anakomp] = []
-    anakonst: List[Anakonst] = []
+    anakomps: list[Anakomp] = []
+    anakonst: list[Anakonst] = []
