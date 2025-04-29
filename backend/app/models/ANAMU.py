@@ -1,7 +1,6 @@
+from app.database.database import Base
 from sqlalchemy import DATETIME, Column, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
-
-from app.database.database import Base
 
 
 class ANAMU(Base):
@@ -21,7 +20,7 @@ class ANAMU(Base):
     tsk_aufgabe = Column(Integer)
     fk_kmg = Column(Integer, ForeignKey("kmgs.id"))
 
-    kmg = relationship("kmgs", backref="anamu")
+    kmg = relationship("KMG", back_populates="anamu")
     modell = relationship("Modell", back_populates="ana_mu")
     anakomp = relationship("ANAKOMP", back_populates="anamu")
 

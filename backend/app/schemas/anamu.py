@@ -1,10 +1,9 @@
 from datetime import datetime
 
-from pydantic import BaseModel
-
 from app.schemas.anakomp import Anakomp
 from app.schemas.anakonst import Anakonst
 from app.schemas.modell import ModellIDResponse
+from pydantic import BaseModel
 
 
 class AnamuModellidOnly(BaseModel):
@@ -40,6 +39,6 @@ class AnamuCreate(AnamuBase):
     user: int
     tolfaktor: int
     tsk_aufgabe: int
-    kmg_ident: str
+    fk_kmg: int
     anakomps: list[Anakomp] = []
     anakonst: list[Anakonst] = []

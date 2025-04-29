@@ -1,14 +1,13 @@
 import csv
 
-from fastapi import FastAPI
-from pypxlib import Table
-
 from app.database.database import create_tables, ping_connection
 from app.routers import KMG, ana_mu, auth, components, items, modells
 from app.services.component_service.EverythinForComponents.TMU_Modell import (
     TMU_Modell,
     TMU_ModellSchema,
 )
+from fastapi import FastAPI
+from pypxlib import Table
 
 app = FastAPI()
 app.include_router(items.router)
@@ -19,7 +18,7 @@ app.include_router(auth.router)
 app.include_router(KMG.router)
 
 table = Table(
-    "C:\\Program Files (x86)\\Kistner Messtechnik\\QUEEN VDA5 GUM\\MUDB\\Anamu.DB"
+    "C:\\Program Files (x86)\\Kistner Messtechnik\\QUEEN VDA5 GUM\\MUDB\\MODELL.DB"
 )
 fieldnames = list(table.fields.keys())
 csv_file = "C:\\Users\\Jason\\Desktop\\testsss.csv"

@@ -1,7 +1,3 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import delete
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.core.security import get_current_user
 from app.database.database import get_db
 from app.database.generic_methods import (
@@ -26,6 +22,11 @@ from app.services.component_service.EverythinForComponents.TMU_Modell import (
     TMU_Modell,
     TMU_ModellSchema,
 )
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import delete
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from backend.app.schemas.modell import ModellCreateR
 
 router = APIRouter(prefix="/modells", tags=["modells"])
 
@@ -69,7 +70,7 @@ async def get_modell_by_id(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    modell = await get_by_id(Modell, id, db, ModellBase)
+    modell = await get_by_id(Modell, id, db, ModellNameDescription)
     if not modell:
         raise HTTPException(
             status_code=404, detail="Modell nicht gefunden oder kein Zugriff"
@@ -94,8 +95,9 @@ async def get_modell_by_id(
         components=component_objs,
         constantsValue=tmu_modell.const_list,
     )
-
-
+@router.post("/r")
+async def create_modellr(modell: ModellCreateR, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
+    return
 @router.post("")
 async def create_modell(
     modell: ModellCreate,

@@ -1,18 +1,34 @@
 from datetime import datetime
 
-from pydantic import BaseModel
-
 from app.schemas.component import ComponentGetModell, ComponentRefCreate
 from app.services.component_service.EverythinForComponents.TMU_ConstList import (
     TKompConstants,
     TMU_ConstList,
 )
+from pydantic import BaseModel
 
 
 class ModellBase(BaseModel):
     id: int
     aufgabe: int
 
+class ModellCreateR(BaseModel):
+    geo_gn: int # Prozess
+    name: str
+    aufgabe: int
+class ModellUpdateR(BaseModel):
+    name: str | None = None
+    geo_me: int | None = None # Messeinrichtung
+    geo_mo: int | None = None # Messobjekt
+    geo_bn: int | None = None # Einstellnormal
+    methode: int | None = None # Methode
+    tsk_ausenmessung: int | None = None
+    tsk_innenmessung: int | None = None
+    tsk_tiefenmessung: int | None = None
+    tsk_hoehenmessung: int | None = None
+    tsk_stufenmessung: int | None = None
+    formel: str | None = None
+    formeldesc: str | None = None
 
 class ModellCreate(BaseModel):
     name: str
@@ -71,7 +87,7 @@ class ModellUpdate(BaseModel):
         orm_mode = True
 
 
-class ModellNameDescription(BaseModel):
+class ModellNameDescription(ModellBase):
     name: str
     description: str
 
