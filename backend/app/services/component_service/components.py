@@ -1,10 +1,10 @@
 import math
 
-from app.services.component_service.component_abstract import TMU_Komponente
 from app.services.component_service.EverythinForComponents.TMU_ConstList import (
     TKompConstants,
 )
 from app.services.component_service.EverythinForComponents.TMuKompRec import TMuKompRec
+from app.services.component_service.component_abstract import TMU_Komponente
 
 # __all__ = ["KomponenteA", "TK_KalibrierungME", "TK_Kalibrierung_EN", "TK_AufloesungME","TK_Wiederholpraezision","TK_NichtZentrischeAntastung","TK_AbweichungPoissonKoeffizientMO_EN", "TK_AbweichungElastizitaetsModul_MO_EN", "TK_TempDifferenz_MO_ME", "TK_AbweichungMittlereTemp_MO_ME"]
 
@@ -13,12 +13,12 @@ MU_NAN = math.nan
 
 
 class KomponenteA(TMU_Komponente):
-    def __init__(self, modell, const_list):
+    def __init__(self, modell, const_list, lfdnr):
         super().__init__(modell, 12, const_list, "notthere")
         self.id = 1
-        self.modell = modell
         self.const_list = const_list
         self.archiv = False
+        self.lfdnr = lfdnr
         self.data = TMuKompRec(
             TermL0=0.15,
             TermL1=0,
@@ -112,6 +112,7 @@ class KomponenteA(TMU_Komponente):
             )  # Platzhalter für Standardunsicherheit
             c1 = self.sensitivity_c1()
             r = 0.9
+            print("Testi",self.std_unsicherheit(self.a_val()), self.sensitivity_c1())
             if (su != MU_NAN) and (c1 != MU_NAN) and (r != MU_NAN) and (r <= 1):
                 return 2 * su * c1 * math.sqrt(1 - r)
             else:
@@ -119,10 +120,12 @@ class KomponenteA(TMU_Komponente):
 
 
 class TK_KalibrierungME(TMU_Komponente):
-    def __init__(self, AModell, AConstList):
+    def __init__(self, AModell, AConstList,lfdnr):
         # Der Konstruktor ruft den Konstruktor der Basisklasse auf und setzt
         # die Werte
         super().__init__(AModell, 1001, AConstList, "&delta;I<sub>ME</sub>")
+        self.lfdnr = lfdnr
+
         self.data = TMuKompRec(
             TermL0=0.035,
             TermL1=0,
@@ -146,13 +149,15 @@ class TK_KalibrierungME(TMU_Komponente):
 
 
 class TK_Kalibrierung_EN(TMU_Komponente):
-    def __init__(self, AModell, AConstList):
+    def __init__(self, AModell, AConstList,lfdnr):
         # Der Konstruktor ruft den Konstruktor der Basisklasse auf und setzt
         # die Werte
         super().__init__(AModell, 1027, AConstList, "&delta;I<sub>ENK</sub>")
         self.ConstNeeded += [
             TKompConstants["TC_NennmassEN"]
         ]  # Beispielhafte Konstante für TC_NennmassEN
+        self.lfdnr = lfdnr
+
         self.data = TMuKompRec(
             TermL0=0.05,
             TermL1=0.0000012,
@@ -192,7 +197,7 @@ class TK_Kalibrierung_EN(TMU_Komponente):
 
 
 class TK_AufloesungME(TMU_Komponente):
-    def __init__(self, AModell, AConstList):
+    def __init__(self, AModell, AConstList,lfdnr):
         # Der Konstruktor ruft den Konstruktor der Basisklasse auf und setzt
         # die Werte
         super().__init__(AModell, 1003, AConstList, "&delta;I<sub>MEW</sub>")
@@ -209,6 +214,8 @@ class TK_AufloesungME(TMU_Komponente):
         self.ConstNeeded += []
         self.id = 4
         self.addConstNeededToModell()
+        self.lfdnr = lfdnr
+
 
     def clear(self):
         # Diese Methode wird aufgerufen, um die Felder zurückzusetzen
@@ -219,9 +226,7 @@ class TK_AufloesungME(TMU_Komponente):
 
 
 class TK_Wiederholpraezision(TMU_Komponente):
-    def __init__(self, AModell, AConstList):
-        # Der Konstruktor ruft den Konstruktor der Basisklasse auf und setzt
-        # die Werte
+    def __init__(self, AModell, AConstList,lfdnr):
         super().__init__(AModell, 1040, AConstList, "&delta;W")
         self.data = TMuKompRec(
             TermL0=0.01,
@@ -232,6 +237,8 @@ class TK_Wiederholpraezision(TMU_Komponente):
             FreiN_minus_1=0,
             Flags=1,
         )
+        self.lfdnr = lfdnr
+
         # self.setData(terml0 = 0.01,verteilung = 3,kennwertart = 4,freiheitsgrad=2)
 
         self.ConstNeeded += []
@@ -247,7 +254,7 @@ class TK_Wiederholpraezision(TMU_Komponente):
 
 
 class TK_NichtZentrischeAntastung(TMU_Komponente):
-    def __init__(self, AModell, AConstList):
+    def __init__(self, AModell, AConstList,lfdnr):
         # Der Konstruktor ruft den Konstruktor der Basisklasse auf und setzt
         # die Werte
         super().__init__(AModell, 1041, AConstList, "&delta;I<sub>v</sub>")
@@ -260,6 +267,8 @@ class TK_NichtZentrischeAntastung(TMU_Komponente):
             FreiN_minus_1=0,
             Flags=1,
         )
+        self.lfdnr = lfdnr
+
         # self.setData(verteilung = 2,kennwertart = 2,freiheitsgrad=2)
 
         self.id = 6
@@ -296,8 +305,10 @@ class TK_NichtZentrischeAntastung(TMU_Komponente):
 
 
 class TK_AbweichungPoissonKoeffizientMO_EN(TMU_Komponente):
-    def __init__(self, AModell, AConstList):
+    def __init__(self, AModell, AConstList,lfdnr):
         super().__init__(AModell, 1043, AConstList, "&delta;V")
+        self.lfdnr = lfdnr
+
         self.data = TMuKompRec(
             TermL0=0,
             TermL1=0,
@@ -383,8 +394,10 @@ class TK_AbweichungPoissonKoeffizientMO_EN(TMU_Komponente):
 
 
 class TK_AbweichungElastizitaetsModul_MO_EN(TMU_Komponente):
-    def __init__(self, AModell, AConstList):
+    def __init__(self, AModell, AConstList,lfdnr):
         super().__init__(AModell, 1044, AConstList, "&delta;E")
+        self.lfdnr = lfdnr
+
         self.data = TMuKompRec(
             TermL0=0,
             TermL1=0,
@@ -463,8 +476,10 @@ class TK_AbweichungElastizitaetsModul_MO_EN(TMU_Komponente):
 
 
 class TK_TempDifferenz_MO_ME(TMU_Komponente):
-    def __init__(self, AModell, AConstList):
+    def __init__(self, AModell, AConstList,lfdnr):
         super().__init__(AModell, 1009, AConstList, "&delta;t")
+        self.lfdnr = lfdnr
+
         self.data = TMuKompRec(
             TermL0=0,
             TermL1=0,
@@ -514,7 +529,7 @@ class TK_TempDifferenz_MO_ME(TMU_Komponente):
 
 
 class TK_AbweichungMittlereTemp_MO_ME(TMU_Komponente):
-    def __init__(self, AModell, AConstList):
+    def __init__(self, AModell, AConstList, lfdnr):
         # Aufruf des Konstruktors der Basisklasse
         super().__init__(AModell, 1010, AConstList, "notthere")
         self.data = TMuKompRec(
@@ -526,6 +541,7 @@ class TK_AbweichungMittlereTemp_MO_ME(TMU_Komponente):
             FreiN_minus_1=0,
             Flags=1,
         )
+        self.lfdnr = lfdnr
         self.id = 10
         # Die spezifischen Initialisierungen für diese Klasse
         self.ConstNeeded += [

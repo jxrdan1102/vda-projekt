@@ -1,59 +1,252 @@
-from fastapi import APIRouter, Depends, HTTPException
-from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy.ext.asyncio import AsyncSession
+import os
+import secrets
+import uuid
+from datetime import timedelta, datetime
+from typing import Annotated
 
-from app.core.security import (
-    admin_required,
-    create_access_token,
-    get_current_user,
-    get_user_by_username,
-    hash_password,
-    verify_password,
-)
+import jwt
 from app.database.database import get_db
+from app.models import RefreshToken
+from app.models.LoginAttempts import LoginAttempt
+from app.models.company import Company
 from app.models.user import User
-from app.schemas.user import UserCreate
-from app.services.user_service import username_exists  # 👈 hier neu
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import ed25519
+from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from passlib.context import CryptContext
+from pydantic import BaseModel
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+from starlette import status
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
 
-@router.post("/register")
-async def register(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
-    if await username_exists(db, user_data.username):  # 👈 neue Funktion verwenden
-        raise HTTPException(status_code=400, detail="Username bereits vergeben")
+PRIVATE_KEY_FILE = "private_key.pem"
+PUBLIC_KEY_FILE = "public_key.pem"
 
-    new_user = User(
-        username=user_data.username,
-        hashed_password=hash_password(user_data.password),
-        role=user_data.role,
+if os.path.exists(PRIVATE_KEY_FILE):
+    with open(PRIVATE_KEY_FILE, "rb") as f:
+        private_key = serialization.load_pem_private_key(f.read(), password=None)
+else:
+    # neues Schlüsselpaar generieren
+    private_key = ed25519.Ed25519PrivateKey.generate()
+    private_key_pem = private_key.private_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PrivateFormat.PKCS8,
+        encryption_algorithm=serialization.NoEncryption()
     )
-    db.add(new_user)
+    with open(PRIVATE_KEY_FILE, "wb") as f:
+        f.write(private_key_pem)
+
+# Public Key genauso behandeln
+if os.path.exists(PUBLIC_KEY_FILE):
+    with open(PUBLIC_KEY_FILE, "rb") as f:
+        public_key = serialization.load_pem_public_key(f.read())
+else:
+    public_key = private_key.public_key()
+    public_key_pem = public_key.public_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo
+    )
+    with open(PUBLIC_KEY_FILE, "wb") as f:
+        f.write(public_key_pem)
+
+SECRET_KEY = 'soll noch in EdDSA gemacht werden'
+ALGORITHM = 'EdDSA'
+MAX_LOGIN_ATTEMPTS = 5  # Maximale Anmeldeversuche
+LOCKOUT_TIME = timedelta(minutes=15)  # Sperrzeit bei zu vielen Fehlversuchen
+
+bcrypt_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
+oauth2_bearer = OAuth2PasswordBearer(tokenUrl="/auth/token")
+
+class CreateUserRequest(BaseModel):
+    username: str
+    password: str
+    role: str
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+
+db_dependency = Annotated[Session, Depends(get_db)]
+
+@router.post("/")
+async def create_user(db: db_dependency, user_in: CreateUserRequest):
+    create_user_model = User(username=user_in.username,
+                              hashed_password=bcrypt_context.hash(user_in.password), role=user_in.role)
+    db.add(create_user_model)
     await db.commit()
+    return {"id": create_user_model.id}
+
+@router.post("/token", response_model=Token)
+async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()],db: db_dependency, request: Request):
+    ip_address = request.client.host
+    result = await db.execute(select(LoginAttempt).where(LoginAttempt.ip_address == ip_address))
+    login_attempt = result.scalars().first()
+
+    if login_attempt:
+        if login_attempt.attempts >= MAX_LOGIN_ATTEMPTS and datetime.utcnow() - login_attempt.last_attempt < LOCKOUT_TIME:
+            raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                                detail="Too many login attempts. Please try again later.")
+
+    user = await authenticate_user(form_data.username, form_data.password, db)
+    if not user:
+        if login_attempt:
+            login_attempt.attempts += 1
+            login_attempt.last_attempt = datetime.utcnow()
+        else:
+            login_attempt = LoginAttempt(ip_address=ip_address, attempts=1)
+            db.add(login_attempt)
+
+        await db.commit()
+        raise HTTPException(status_code= status.HTTP_401_UNAUTHORIZED, detail="Incorrect username or password")
+
+    if login_attempt:
+        login_attempt.attempts = 0
+        await db.commit()
+
+    token = create_access_token(user.username, user.id, timedelta(minutes=5))
+
+    refresh_token = secrets.token_urlsafe(64)
+    expires_at = datetime.utcnow() + timedelta(days=7)
+
+    # Store refresh token in DB
+    new_token = RefreshToken(user_id=user.id, token=refresh_token, expires_at=expires_at)
+    db.add(new_token)
+    await db.commit()
+
     return {
-        "message": "User erstellt",
-        "username": new_user.username,
-        "role": new_user.role,
+        "access_token": token,
+        "refresh_token": refresh_token,  # <<< optional: send it back
+        "token_type": "bearer"
     }
 
 
-@router.post("/login")
-async def login(
-    form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)
-):
-    user = await get_user_by_username(db, form_data.username)
-    if not user or not verify_password(form_data.password, user.hashed_password):
-        raise HTTPException(status_code=401, detail="Falsche Anmeldedaten")
+async def authenticate_user(username: str, password: str, db):
+    stmt = select(User).filter(User.username == username)
+    result = await db.execute(stmt)
+    user = result.scalars().first()
 
-    token = create_access_token({"sub": user.username, "role": user.role})
-    return {"access_token": token, "token_type": "bearer"}
+    if not user or not bcrypt_context.verify(password, user.hashed_password):
+        return False
 
+    return user
+
+
+def create_access_token(username: str, user_id: int, expires_delta: timedelta):
+    encode = {'sub':username, 'id': user_id, 'iat': datetime.utcnow()}
+    expire = datetime.utcnow() + expires_delta
+    encode.update({'exp': expire, 'jti': str(uuid.uuid4())})
+    return jwt.encode(encode, private_key, algorithm=ALGORITHM)
+
+
+async def get_current_user(token: Annotated[str, Depends(oauth2_bearer)], db: db_dependency):
+    try:
+        with open(PUBLIC_KEY_FILE, "rb") as f:
+            public_key_pem = f.read()
+        print("TOKEN:", token)
+        print("PUBLIC_KEY:", public_key_pem.decode())
+        payload = jwt.decode(token, public_key_pem, algorithms=[ALGORITHM])
+        username: str = payload.get('sub')
+        user_id: int = payload['id']
+        if username is None or user_id is None:
+            raise HTTPException(status_code= status.HTTP_401_UNAUTHORIZED, detail='Could not validate user.')
+        result = await db.execute(select(User).where(User.id == user_id))
+        user = result.scalars().first()
+
+        if user is None:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='User not found')
+        return user
+    except jwt.PyJWTError:
+        raise HTTPException(status_code= status.HTTP_401_UNAUTHORIZED, detail='Could not validate user.')
 
 @router.get("/me")
-async def get_profile(user: User = Depends(get_current_user)):
-    return {"username": user.username, "role": user.role}
+async def user(user: Annotated[dict, Depends(get_current_user)], db: db_dependency):
+    if user is None:
+        raise HTTPException(status_code= status.HTTP_401_UNAUTHORIZED, detail='Authentication failed.')
+    return {"User": user}
+
+@router.post("/refresh_token", response_model=Token)
+async def refresh_token(refresh_token: str, db: db_dependency):
+    print("hints")
+
+    token_entry = await db.execute(select(RefreshToken).where(RefreshToken.token == refresh_token))
+    token_entry = token_entry.scalars().first()
+
+    if not token_entry or token_entry.expires_at < datetime.utcnow():
+        raise HTTPException(status_code=401, detail="Invalid or expired refresh token")
+    print("hints3", token_entry.user_id)
+
+    user = await db.execute(select(User).where(User.id == token_entry.user_id))
+    user = user.scalars().first()
+    # Lösche alten Refresh Token
+    await db.delete(token_entry)
+    await db.commit()
+
+    # Erstelle neuen Refresh Token
+    new_refresh_token = secrets.token_urlsafe(64)
+    expires_at = datetime.utcnow() + timedelta(days=7)
+    new_token_entry = RefreshToken(user_id=user.id, token=new_refresh_token, expires_at=expires_at)
+    db.add(new_token_entry)
+    await db.commit()
+
+    # Erstelle Access Token
+    new_access_token = create_access_token(user.username, user.id, timedelta(minutes=5))
+
+    return {
+        "access_token": new_access_token,
+        "refresh_token": new_refresh_token,
+        "token_type": "bearer"
+    }
+@router.post("/logout")
+async def logout(refresh_token: str, db: db_dependency):
+    token_entry = await db.execute(select(RefreshToken).where(RefreshToken.token == refresh_token))
+    token_entry = token_entry.scalars().first()
+    if token_entry:
+        await db.delete(token_entry)
+        await db.commit()
+
+    return {"message": "Logged out"}
+
+def require_roles(*allowed_roles: str):
+    async def role_checker(user: User = Depends(get_current_user)):
+        if user.role not in allowed_roles:
+            raise HTTPException(status_code=403, detail="Not enough permissions")
+        return user
+    return role_checker
 
 
-@router.get("/admin-data")
-async def get_admin_data(user: User = Depends(admin_required)):
-    return {"msg": f"Hallo Admin {user.username} 🎩"}
+@router.get("/edit")
+async def editor_or_admin(user: User = Depends(require_roles("editor", "admin"))):
+    return {"message": f"Hallo {user.username}, du hast Bearbeitungsrechte!"}
+
+
+@router.post("/create_user")
+async def create_user_for_company(user_in: CreateUserRequest, db: db_dependency,
+                                  current_user: User = Depends(get_current_user)):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Only admins can create users.")
+
+    company = await db.execute(select(Company).where(Company.id == current_user.company_id))
+    company = company.scalars().first()
+
+    new_user = User(
+        username=user_in.username,
+        hashed_password=bcrypt_context.hash(user_in.password),
+        role=user_in.role,
+        company_id=company.id
+    )
+    db.add(new_user)
+    await db.commit()
+    return {"id": new_user.id}
+
+@router.get("/company_data")
+async def get_company_data(db: db_dependency, current_user: User = Depends(get_current_user)):
+    result = await db.execute(select(User).where(User.fk_company == current_user.fk_company))
+    data = result.scalars().all()
+    return data
+

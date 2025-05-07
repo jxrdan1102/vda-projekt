@@ -1,6 +1,9 @@
 from datetime import datetime
+from typing import List
 
 from app.schemas.component import ComponentGetModell, ComponentRefCreate
+from app.schemas.component import ComponentGetR
+from app.schemas.component import TMU_Komponente_Pydantic
 from app.services.component_service.EverythinForComponents.TMU_ConstList import (
     TKompConstants,
     TMU_ConstList,
@@ -8,14 +11,38 @@ from app.services.component_service.EverythinForComponents.TMU_ConstList import 
 from pydantic import BaseModel
 
 
+class ModellGetAllR(BaseModel):
+    name: str
+    description: str | None = None
+
+    class Config:
+        orm_mode = True
+
 class ModellBase(BaseModel):
     id: int
     aufgabe: int
 
+    class Config:
+        orm_mode = True
+
 class ModellCreateR(BaseModel):
-    geo_gn: int # Prozess
+    iGeometrie_EN: int # Prozess
+    name: str
+    aufgabe: int | None = None
+
+    class Config:
+        orm_mode = True
+
+class ModellForAnamuR(BaseModel):
     name: str
     aufgabe: int
+    methode: int
+    geo_me: int
+    geo_mo: int
+
+    class Config:
+        orm_mode = True
+
 class ModellUpdateR(BaseModel):
     name: str | None = None
     geo_me: int | None = None # Messeinrichtung
@@ -30,12 +57,34 @@ class ModellUpdateR(BaseModel):
     formel: str | None = None
     formeldesc: str | None = None
 
+    class Config:
+        orm_mode = True
+
+class ModellGetIdR(BaseModel):
+    name: str | None = None
+    geo_me: int | None = None # Messeinrichtung
+    geo_mo: int | None = None # Messobjekt
+    geo_bn: int | None = None # Einstellnormal
+    methode: int | None = None # Methode
+    tsk_ausenmessung: int | None = None
+    tsk_innenmessung: int | None = None
+    tsk_tiefenmessung: int | None = None
+    tsk_hoehenmessung: int | None = None
+    tsk_stufenmessung: int | None = None
+    formel: str | None = None
+    formeldesc: str | None = None
+
+    components: list[ComponentGetR] | None = None
+
+    class Config:
+        orm_mode = True
+
 class ModellCreate(BaseModel):
     name: str
     description: str | None = None
     geo_me: int | None = None
     geo_mo: int | None = None
-    geo_gn: int
+    iGeometrie_EN: int
     geo_bn: int | None = None
     tol_fak: int | None = None
     aufgabe: int | None = None
@@ -106,3 +155,13 @@ class ModellIDResponse(BaseModel):
         orm_mode = True
         arbitrary_types_allowed = True
         json_encoders = {TKompConstants: lambda v: v.name}
+
+
+class TMU_Modell_Pydantic(BaseModel):
+    aufgabe: int
+    modell_id: int
+
+    components: List[TMU_Komponente_Pydantic]
+
+    class Config:
+        orm_mode = True  # Erlaubt die Konvertierung von ORM-Modellen in Pydantic-Modelle

@@ -15,25 +15,29 @@ class ANAMU(Base):
     remark = Column(String(255))
     creation = Column(DATETIME)
     modify = Column(DATETIME)
-    user = Column(Integer)
     tolfaktor = Column(Integer)
     tsk_aufgabe = Column(Integer)
     fk_kmg = Column(Integer, ForeignKey("kmgs.id"))
+    fk_user = Column(Integer, ForeignKey("users.id"))
 
     kmg = relationship("KMG", back_populates="anamu")
     modell = relationship("Modell", back_populates="ana_mu")
     anakomp = relationship("ANAKOMP", back_populates="anamu")
+    anakonst = relationship("ANAKONST", back_populates="anamu")
+    user = relationship("User", back_populates="anamu")
+
 
 
 class ANAKONST(Base):
     __tablename__ = "anakonst"
 
     id = Column(Integer, primary_key=True)
-    fk_anamu = Column(Integer)
+    fk_anamu = Column(Integer, ForeignKey("ana_mu.id"))
     constnum = Column(Integer)
     constval = Column(Float)
     remark = Column(String(255))
 
+    anamu = relationship("ANAMU", back_populates="anakonst")
 
 class ANAKOMP(Base):
     __tablename__ = "anakomp"

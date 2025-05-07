@@ -1,7 +1,6 @@
+from app.database.database import Base
 from sqlalchemy import DATETIME, Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
-
-from app.database.database import Base
 
 
 class Modell(Base):
@@ -20,8 +19,8 @@ class Modell(Base):
     gegenstanf = Column(Integer)
     messeinsatz = Column(Integer)
     einstellmass = Column(Integer)
-    modcreation = DATETIME
-    modmod = DATETIME
+    modcreation = Column(DATETIME)
+    modmod = Column(DATETIME)
     tsk_ausenmessung = Column(Integer)
     tsk_innenmessung = Column(Integer)
     tsk_tiefenmessung = Column(Integer)

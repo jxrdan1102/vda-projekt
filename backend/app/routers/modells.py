@@ -1,4 +1,3 @@
-from app.core.security import get_current_user
 from app.database.database import get_db
 from app.database.generic_methods import (
     create_entity_with_children,
@@ -10,7 +9,10 @@ from app.database.generic_methods import (
 from app.models.components import Component
 from app.models.modell import Modell
 from app.models.user import User
+from app.routers.auth import get_current_user
+from app.schemas.component import ComponentAddR
 from app.schemas.component import ComponentGet, ComponentGetModell
+from app.schemas.component import ComponentGetR
 from app.schemas.modell import (
     ModellBase,
     ModellCreate,
@@ -18,127 +20,104 @@ from app.schemas.modell import (
     ModellNameDescription,
     ModellUpdate,
 )
+from app.schemas.modell import ModellCreateR
+from app.schemas.modell import ModellGetAllR
+from app.schemas.modell import ModellGetIdR
+from app.schemas.modell import ModellUpdateR
 from app.services.component_service.EverythinForComponents.TMU_Modell import (
     TMU_Modell,
     TMU_ModellSchema,
 )
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import delete
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from backend.app.schemas.modell import ModellCreateR
+from sqlalchemy.orm import joinedload
 
 router = APIRouter(prefix="/modells", tags=["modells"])
 
 
-@router.get("", response_model=list[ModellNameDescription])
-async def get_modells(
+
+
+
+@router.get("/r", response_model=list[ModellGetAllR])
+async def get_modellsr(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),  # 👈 Benutzer ziehen
 ):
-    modells = await get_by_foreign_key(
-        Modell, Modell.fk_user_id, current_user.id, db, ModellNameDescription
-    )
+    stmt = select(Modell).where(Modell.fk_user_id == current_user.id)
+    result = await db.execute(stmt)
+    modells = result.scalars().all()  # 👈 alle Modelle als Liste extrahieren
     return modells
 
 
-@router.get("/{id}/components", response_model=list[ComponentGet])
-async def get_modell_components(id: int, db: AsyncSession = Depends(get_db)):
-    components = await get_by_foreign_key(
-        Component, Component.fk_modell, id, db, ComponentGet
-    )
-    return components
 
 
-@router.get("/{id}/test")
-async def get_modell_test(id: int, db: AsyncSession = Depends(get_db)):
-    TMU_ModellSchem = TMU_ModellSchema(
-        aufgabe=1, modell_id=2, iBezug1=1, iGeometrie_EN="Gerade"
-    )
-    modell = TMU_Modell(TMU_ModellSchem)
-    modell.addComponent(1111)
-    modell.addComponent(2222)
-    modell.addComponent(3333)
-    modell.addComponent(4444)
-    print(modell)
-    return modell.MUPruefverfahren_U()
+@router.get("/{id}/components/r", response_model=list[ComponentGetR])
+async def get_modell_componentsr(id: int, db: AsyncSession = Depends(get_db)):
+    stmt = select(Component).where(Component.fk_modell == id)
+    result = await db.execute(stmt)
+    return result.scalars().all()
 
 
-@router.get("/{id}", response_model=ModellIDResponse)
-async def get_modell_by_id(
-    id: int,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    modell = await get_by_id(Modell, id, db, ModellNameDescription)
-    if not modell:
-        raise HTTPException(
-            status_code=404, detail="Modell nicht gefunden oder kein Zugriff"
-        )
 
-    # Retrieve components
-    component_objs = await get_by_foreign_key(
-        Component, Component.fk_modell, id, db, ComponentGetModell
-    )
-    component_ids = [comp.kompid for comp in component_objs]
 
-    tmu_modell = TMU_Modell.from_schema_params(
-        aufgabe=modell.aufgabe, modell_id=modell.id
-    )
+@router.post("{id}/addComponent")
+async def addComponent(id: int, component=ComponentAddR, db: AsyncSession = Depends(get_db)):
+    db_component = Modell(**component.model_dump(), fk_modell=id)
+    db.add(db_component)
+    await db.commit()
+    await db.refresh(db_component)
+    return "Komponente wurde erfolgreich hinzugefügt"
 
-    for component_id in component_ids:
-        tmu_modell.addComponent(component_id)
 
-    return ModellIDResponse(
-        name=modell.name,
-        description=modell.description,
-        components=component_objs,
-        constantsValue=tmu_modell.const_list,
-    )
+
+
+
+@router.get("/{id}/r", response_model=ModellGetIdR)
+async def get_modell_by_idr(
+    id: int, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
+    stmt = (select(Modell).options(joinedload(Modell.components)).where(Modell.id == id, Modell.fk_user_id == current_user.id))
+
+    result = await db.execute(stmt)
+    db_modell = result.unique().scalar_one_or_none()
+
+    if db_modell is None:
+        raise HTTPException(status_code=404, detail="Item not found")
+
+    return db_modell
+
+
+
+
 @router.post("/r")
 async def create_modellr(modell: ModellCreateR, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
-    return
-@router.post("")
-async def create_modell(
-    modell: ModellCreate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),  # 👈 wieder User
-):
-    db_modell = Modell(
-        **modell.model_dump(exclude={"components"}),
-        fk_user_id=current_user.id,  # 👈 Ownership setzen
-    )
-
-    return await create_entity_with_children(
-        db=db,
-        entity=db_modell,
-        child_data_list=modell.components,
-        child_builder=generic_child_builder(Component, "fk_modell"),
-    )
+    db_modell = Modell(**modell.model_dump(), fk_user_id = current_user.id)
+    db.add(db_modell)
+    await db.commit()
+    await db.refresh(db_modell)
+    return "Modell wurde erfolgreich erstellt"
 
 
-@router.put("/{id}")
-async def update_modell(
-    id: int, modell: ModellUpdate, db: AsyncSession = Depends(get_db)
-):
-    # Use the update_model generic method for the modell
-    updated_modell = await update_model(
-        db=db,
-        model_class=Modell,
-        id=id,
-        update_data=modell.model_dump(exclude_unset=True, exclude={"components"}),
-    )
 
-    # Add components if new ones are provided
-    if modell.components:
-        new_components = [
-            Component(**component.model_dump(), fk_modell=id)
-            for component in modell.components
-        ]
-        db.add_all(new_components)
+
+@router.put("/{id}/r")
+async def update_modellr(id:int, modell: ModellUpdateR, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Modell).where(Modell.id == id))
+    db_modell = result.scalar_one_or_none()
+
+    if db_modell is None:
+        raise HTTPException(status_code=404, detail="Item not found")
+
+    update_data = modell.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(db_modell, key, value)  # Dynamische Feldaktualisierung
 
     await db.commit()
-    return updated_modell
+    await db.refresh(db_modell)
+
+    return "Modell wurde erfolgreich geändert"
+
+
 
 
 @router.delete("/{id}")
@@ -147,8 +126,6 @@ async def delete_modell_by_id(id: int, db: AsyncSession = Depends(get_db)):
     if not modell:
         raise HTTPException(status_code=404, detail="Modell nicht gefunden")
 
-    # Optional: Delete related components manually if not handled by ON DELETE
-    # CASCADE
     await db.execute(delete(Component).where(Component.fk_modell == id))
 
     await db.delete(modell)

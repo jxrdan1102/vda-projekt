@@ -1,6 +1,5 @@
-from pydantic import BaseModel
-
 from app.services.component_service.EverythinForComponents.TMuKompRec import TMuKompRec
+from pydantic import BaseModel
 
 
 class ComponentGetModell(BaseModel):
@@ -27,6 +26,16 @@ class ComponentRefBase(BaseModel):
     class Config:
         orm_mode = True
 
+class ComponentAddR(ComponentRefBase):
+    pass
+
+class ComponentGetR(BaseModel):
+    id: int
+    kompid: int
+    modltxtid: int | None = None
+
+    class Config:
+        orm_mode = True
 
 class ComponentGet(ComponentRefBase):
     pass
@@ -59,3 +68,11 @@ class ComponentData(BaseModel):
     wertart: int | None = None
     freigrad: int | None = None
     frei_n_1: int | None = None
+
+
+class TMU_Komponente_Pydantic(BaseModel):
+    lfdnr: int
+    name: str
+
+    class Config:
+        orm_mode = True

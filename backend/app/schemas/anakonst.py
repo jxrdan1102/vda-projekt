@@ -10,6 +10,17 @@ class AnakonstBase(BaseModel):
     class Config:
         orm_mode = True
 
+class AnakonstUpdateR(BaseModel):
+    constval: int | None = None
+    remark: int | None = None
+    class Config:
+        orm_mode = True
+
+class AnakonstForAnamuR(BaseModel):
+    constnum: int | None = None
+    constval: int | None = None
+    class Config:
+        orm_mode = True
 
 class Anakonst(AnakonstBase):
     pass

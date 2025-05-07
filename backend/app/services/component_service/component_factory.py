@@ -1,5 +1,5 @@
-import app.services.component_service.components as k
 import app.services.component_service.DreiDComponents as d
+import app.services.component_service.components as k
 from app.services.component_service.EverythinForComponents.TMU_ConstList import (
     TMU_ConstList,
 )
@@ -24,9 +24,9 @@ class ComponentFactory:
     }
 
     @staticmethod
-    def get_component(modell: "TMU_Modell", type_name: str):
+    def get_component(modell: "TMU_Modell", type_name: str, lfdnr: int):
         component_class = ComponentFactory.COMPONENTS.get(type_name)
-        return component_class(modell, TMU_ConstList) if component_class else None
+        return component_class(modell, TMU_ConstList, lfdnr) if component_class else None
 
     @staticmethod
     def get_all_components():

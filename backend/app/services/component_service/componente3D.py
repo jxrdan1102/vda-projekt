@@ -1,13 +1,22 @@
+from app.services.component_service.EverythinForComponents.TMU_ConstList import TKompConstants
 from app.services.component_service.component_abstract import MU_NAN, TMU_Komponente
 
 
 class TMU_3DKomponente(TMU_Komponente):
     def __init__(self, modell, komp_id, const_list, formel):
         super().__init__(modell, komp_id, const_list, formel)
-        self.const_needed = ["TC_3d_KMG_A"]
-        self.c1_val = self.sensititivty_c1()
+        self.ConstNeeded = [TKompConstants["TC_3d_KMG_A"],TKompConstants["TC_3d_KMG_K"],TKompConstants["TC_3d_KMG_Uc"],TKompConstants["TC_3d_KMG_alphaM"],TKompConstants["TC_3d_KMG_LT"]]
+        #self.c1_val = self.sensititivty_c1()
         self.c2_val = 0
         self.copy_source = None
+
+    "TC_3d_KMG_A",
+    "TC_3d_KMG_K",
+    "TC_3d_KMG_Uc",
+    "TC_3d_KMG_alphaM",
+    "TC_3d_KMG_LT",
+    def c1_val(self) -> float:
+        return self.sensititivty_c1()
 
     def a_val(self) -> float:
         return self.standard_unsicherheit_su()
@@ -54,8 +63,9 @@ class TMU_3DKomponente(TMU_Komponente):
     def anzahl_messungen(self) -> int:
         return round(self.data.TermL1)
 
+    @property
     def messpunkt_anzahl(self) -> int:
-        return self.data.frei_n_minus_1
+        return self.data.FreiN_minus_1
 
     def tabelle1_su(self, l: float) -> float:
         if self.archiv:

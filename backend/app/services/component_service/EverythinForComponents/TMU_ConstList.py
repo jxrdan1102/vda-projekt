@@ -1,6 +1,9 @@
 from enum import Enum
 
+from app.models.ANAMU import ANAKONST
 from pydantic import BaseModel, field_validator
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class TKompConstants(Enum):
@@ -105,6 +108,90 @@ class TKompConstants(Enum):
     TC_KTMG_Laenge_kleinster_Schenkel = 99
     TC_KTMG_Gemessene_Geradheit = 100
     TC_KTMG_Sektor_Kreis = 101
+    TC_3d_KMG_A = 102
+    TC_3d_KMG_K = 103
+    TC_3d_KMG_Uc = 104
+    TC_3d_KMG_alphaM = 105
+    TC_3d_KMG_Tm = 106
+    TC_3d_KMG_deltaTm = 107
+    TC_3d_KMG_alphaW = 108
+    TC_3d_KMG_Tw = 109
+    TC_3d_KMG_deltaTw = 110
+    TC_3d_DUME_D = 111
+    TC_3d_DUME_alpha = 112
+    TC_3d_DUME_l = 113
+    TC_3d_FORM_L = 114
+    TC_3d_FORM_DL = 115
+    TC_3d_FORM_F = 116
+    TC_3d_ABST_L = 117
+    TC_3d_ABST_LM1 = 118
+    TC_3d_ABST_LE1 = 119
+    TC_3d_ABST_LM2 = 120
+    TC_3d_ABST_LE2 = 121
+    TC_3d_Ri_LA = 122
+    TC_3d_Ri_Alpha = 123
+    TC_3d_Ri_LME = 124
+    TC_3d_Ri_LE = 125
+    TC_3d_Ri_LMB = 126
+    TC_3d_Sym_DE = 127
+    TC_3d_Sym_LE = 128
+    TC_3d_Sym_DB = 129
+    TC_3d_Sym_LMB = 130
+    TC_3d_Koax_DE = 131
+    TC_3d_Koax_LE = 132
+    TC_3d_Koax_LA = 133
+    TC_3d_Koax_DB = 134
+    TC_3d_Koax_LB = 135
+    TC_3d_Koax_LMB = 136
+    TC_3d_KoaxGA_DE = 137
+    TC_3d_KoaxGA_LME = 138
+    TC_3d_KoaxGA_LE = 139
+    TC_3d_KoaxGA_LB = 140
+    TC_3d_KMG_LT = 141
+    TC_3d_DUME_LM = 142
+    TC_3D_DUME_LS = 143
+    TC_3D_ABST_LTE = 144
+    TC_3D_ABST_LTB = 145
+    TC_3d_Ri_LTE1 = 146
+    TC_3d_Ri_LTE2 = 147
+    TC_3d_Ri_LTB1 = 148
+    TC_3d_Ri_LTB2 = 149
+    TC_3d_Sym_LME = 150
+    TC_3d_Sym_LB = 151
+    TC_3d_Sym_LTE = 152
+    TC_3d_Sym_LTB = 153
+    TC_3d_Koax_LME = 154
+    TC_3d_Koax_LT_entfaellt = 155
+    TC_3d_Koax_LTB = 156
+    TC_3d_Koax_LTE = 157
+    TC_3d_KoaxGA_LA = 158
+    TC_3d_KoaxGA_LTB = 159
+    TC_3d_KoaxGA_LTE = 160
+    TC_3d_KMG_MpeML = 161
+    TC_Gewinde_Steigung = 162
+    TC_3D_NennLaenge_LD = 163
+    TC_3d_FORM_FN = 164
+    TC_3d_FORM_FKMG = 165
+    TC_3d_KMG_AUFLOES = 166
+    TC_3d_PktPkt_dist = 167
+    TC_3d_PktPkt_Wechsel = 168
+    TC_3d_PktPkt_nTastBe = 169
+    TC_3d_PktPkt_nTastTe = 170
+    TC_3d_PktPkt_SigBe = 171
+    TC_3d_PktPkt_SigTe = 172
+    TC_3d_PktPkt_ScanKgl = 173
+    TC_3d_PktPkt_MBe = 174
+    TC_3d_PktPkt_Mte = 175
+    TC_3d_PktPkt_Temp = 176
+    TC_3d_PktPkt_Gamma0 = 177
+    TC_3d_PktPkt_Gamma1 = 178
+    TC_3d_PktPkt_WinkelSeg_BE = 179
+    TC_3d_PktPkt_WinkelSeg_TE = 180
+    TC_3d_PktPkt_AnzSims = 181
+    TC_3d_PktPkt_Dia_BE = 182
+    TC_3d_PktPkt_Dia_TE = 183
+    TC_3d_KMG_AmpX = 184
+    TC_3d_KMG_AmpY = 185
 
     def add_by_value(self, value: int):
         try:
@@ -142,6 +229,19 @@ class TMU_ConstList(BaseModel):
                 new_map[enum_key] = float(val)
             return new_map
         raise ValueError("const_map muss ein Dictionary sein")
+
+    async def load_constants(self, anamu_id: int, db: AsyncSession):
+        print("reached it")
+        stmt = select(ANAKONST).where(ANAKONST.fk_anamu == anamu_id)
+        result = await db.execute(stmt)
+        constants = result.scalars().all()  # GIBT MODELLE, keine Tupel
+
+        for const in constants:
+            try:
+                enum_key = TKompConstants(const.constnum)
+                self.const_map[enum_key] = const.constval
+            except ValueError:
+                print(f"Unbekannter constnum {const.constnum} → nicht im Enum enthalten")
 
     class Config:
         use_enum_values = False
