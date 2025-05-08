@@ -89,7 +89,7 @@ class ModellCreate(BaseModel):
     tol_fak: int | None = None
     aufgabe: int | None = None
     methode: int | None = None
-    gegenstanf: int | None = None
+    gegenstand: int | None = None
     messeinsatz: int | None = None
     einstellmass: int | None = None
     modcreation: datetime | None = None
@@ -117,7 +117,7 @@ class ModellUpdate(BaseModel):
     tol_fak: int | None = None
     aufgabe: int | None = None
     methode: int | None = None
-    gegenstanf: int | None = None
+    gegenstand: int | None = None
     messeinsatz: int | None = None
     einstellmass: int | None = None
     modcreation: datetime | None = None

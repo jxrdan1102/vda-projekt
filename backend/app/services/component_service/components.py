@@ -15,7 +15,7 @@ MU_NAN = math.nan
 class KomponenteA(TMU_Komponente):
     def __init__(self, modell, const_list, lfdnr):
         super().__init__(modell, 12, const_list, "notthere")
-        self.id = 1
+        #self.id =1
         self.const_list = const_list
         self.archiv = False
         self.lfdnr = lfdnr
@@ -136,7 +136,7 @@ class TK_KalibrierungME(TMU_Komponente):
             Flags=1,
         )
         # self.setData(terml0 = 0.035,verteilung = 3,kennwertart = 2,freiheitsgrad=2)
-        self.id = 2
+        #self.id =2
         self.ConstNeeded += []
         self.addConstNeededToModell()
 
@@ -168,7 +168,7 @@ class TK_Kalibrierung_EN(TMU_Komponente):
             Flags=1,
         )
         # self.setData(terml0 = 0.05, terml1 = 0.0000012,verteilung = 3,kennwertart = 2,freiheitsgrad=2)
-        self.id = 3
+        #self.id =3
         self.addConstNeededToModell()
 
     def clear(self):
@@ -212,7 +212,7 @@ class TK_AufloesungME(TMU_Komponente):
         )
         # self.setData(terml0 = 0.005,verteilung = 2,kennwertart = 3,freiheitsgrad=2)
         self.ConstNeeded += []
-        self.id = 4
+        #self.id =4
         self.addConstNeededToModell()
         self.lfdnr = lfdnr
 
@@ -242,7 +242,7 @@ class TK_Wiederholpraezision(TMU_Komponente):
         # self.setData(terml0 = 0.01,verteilung = 3,kennwertart = 4,freiheitsgrad=2)
 
         self.ConstNeeded += []
-        self.id = 5
+        #self.id =5
         self.addConstNeededToModell()
 
     def clear(self):
@@ -271,7 +271,7 @@ class TK_NichtZentrischeAntastung(TMU_Komponente):
 
         # self.setData(verteilung = 2,kennwertart = 2,freiheitsgrad=2)
 
-        self.id = 6
+        #self.id =6
 
         self.ConstNeeded += [
             TKompConstants["TC_Radius_der_Zone_des_Spiels"],
@@ -320,7 +320,7 @@ class TK_AbweichungPoissonKoeffizientMO_EN(TMU_Komponente):
         )
         # self.setData(verteilung = 2,kennwertart = 3,freiheitsgrad=2)
 
-        self.id = 7
+        #self.id =7
 
         self.ConstNeeded += [
             TKompConstants["TC_MesskraftME"],
@@ -409,7 +409,7 @@ class TK_AbweichungElastizitaetsModul_MO_EN(TMU_Komponente):
         )
         # self.setData(verteilung = 2,kennwertart = 3,freiheitsgrad=2)
 
-        self.id = 8
+        #self.id =8
 
         self.ConstNeeded += [
             TKompConstants["TC_MesskraftME"],
@@ -489,7 +489,7 @@ class TK_TempDifferenz_MO_ME(TMU_Komponente):
             FreiN_minus_1=0,
             Flags=1,
         )
-        self.id = 9
+        #self.id =9
 
         self.ConstNeeded += [
             TKompConstants["TC_TempME"],
@@ -542,7 +542,7 @@ class TK_AbweichungMittlereTemp_MO_ME(TMU_Komponente):
             Flags=1,
         )
         self.lfdnr = lfdnr
-        self.id = 10
+        #self.id =10
         # Die spezifischen Initialisierungen für diese Klasse
         self.ConstNeeded += [
             TKompConstants["TC_TempME"],

@@ -1,4 +1,3 @@
-import base64
 import csv
 
 from app.database.database import SessionLocal
@@ -24,7 +23,7 @@ app.include_router(auth.router)
 app.include_router(KMG.router)
 
 table = Table(
-    "C:\\Program Files (x86)\\Kistner Messtechnik\\QUEEN VDA5 GUM\\MUDB\\modkomp.DB"
+    "C:\\Program Files (x86)\\Kistner Messtechnik\\QUEEN VDA5 GUM\\MUDB\\MODELL.DB"
 )
 fieldnames = list(table.fields.keys())
 csv_file = "C:\\Users\\Jason\\Desktop\\testssss.csv"
@@ -39,62 +38,6 @@ with open(csv_file, mode="w+", newline="", encoding="utf-8") as f:
             [getattr(row, field) for field in fieldnames]
         )  # Werte als Liste speichern
 
-
-
-
-import xml.etree.ElementTree as ET
-
-# XML-Datei einlesen
-tree = ET.parse(r"C:\Users\Jason\Desktop\M2500001.XML")
-root = tree.getroot()
-
-mapping = {
-    'MODNAME': 'name',
-    'MODDESC': 'description',
-    'GEO_ME': 'geo_me',
-    'GEO_MO': 'geo_mo',
-    'GEO_GN': 'geo_gn',
-    'GEO_BN': 'geo_bn',
-    'TOL_FAK': 'tol_fak',
-    'AUFGABE': 'aufgabe',
-    'METHODE': 'methode',
-    'GEGENSTAND': 'gegenstanf',
-    'MODCREAT': 'modcreation',
-    'MODMOD': 'modmod',
-    'TSK_AUSSENMESSUNG': 'tsk_ausenmessung',
-    'TSK_INNNENMESSUNG': 'tsk_innenmessung',
-    'TSK_TIEFENMESSUNG': 'tsk_tiefenmessung',
-    'TSK_HOEHENMESSUNG': 'tsk_hoehenmessung',
-    'TSK_STUFENMESSUNG': 'tsk_stufenmessung',
-    'FORMEL': 'formel',
-    'FORMELDESC': 'formeldesc'
-}
-
-for row in root.find('recorddata').findall('row'):
-    data = {k: "" for k in mapping.values()}  # init leere Strings
-    data['messeinsatz'] = ""
-    data['einstellmass'] = ""
-    data['fk_user_id'] = "13"
-
-    for field in row.findall('field'):
-        field_name = field.attrib.get('name')
-        if field_name in mapping:
-            if 'value' in field.attrib:
-                data[mapping[field_name]] = field.attrib['value']
-            elif field.text:
-                # Base64-decode versuchen
-                try:
-                    decoded = base64.b64decode(field.text.strip()).decode('latin-1')
-                    data[mapping[field_name]] = decoded
-                except Exception as e:
-                    print(f"Fehler beim Decodieren von {field_name}: {e}")
-                    data[mapping[field_name]] = field.text.strip()
-print(data)
-async def main(dat):
-    db = SessionLocal()
-    model = Modell(**dat)
-    await db.add(model)
-    await db.commit()
 
 origins = [
     "http://localhost:3000",  # Hier den richtigen Frontend-Link angeben
@@ -114,6 +57,23 @@ async def startup():
     await create_tables()
     await ping_connection()
     print("🚀 Erstelle Tabellen fertig")
+    value = 257
+
+    # 4 Bytes extrahieren
+    byte1 = (value >> 24) & 0xFF
+    byte2 = (value >> 16) & 0xFF
+    byte3 = (value >> 8) & 0xFF
+    byte4 = value & 0xFF
+
+    b1_str = format(byte1, '08b')
+    b2_str = format(byte2, '08b')
+    b3_str = format(byte3, '08b')
+    b4_str = format(byte4, '08b')
+
+    print(b1_str)
+    print(b2_str)
+    print(b3_str)
+    print(b4_str)
 
 
 @app.get("/")

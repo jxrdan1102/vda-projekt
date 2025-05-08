@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod
+from abc import ABC
 
 
 class TMU_Atom(ABC):
@@ -11,6 +11,3 @@ class TMU_Atom(ABC):
         self.einheit = ""
         self.dez = 0
 
-    @abstractmethod
-    def is_valid(self) -> bool:
-        pass

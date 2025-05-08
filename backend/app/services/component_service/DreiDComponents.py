@@ -82,6 +82,7 @@ class TK_3d_ResKMG(TMU_3DKomponente):
             FreiN_minus_1=0,
             Flags=1,
         )
+        self.messpunkt_anzahl = None
         self.addConstNeededToModell()
 
     def sensititivty_c1(self) -> float:
@@ -114,7 +115,7 @@ class TK_3d_Wi_WE(TMU_3dKomponente_Richtung):
         self.dez = 5
         self.ConstNeeded += [TKompConstants["TC_3d_Ri_LME"],TKompConstants["TC_3d_Ri_LE"],]
         self.fields_to_edit = ["EF_Term0", "EF_Kennwertart", "EF_MPAnzahl"]
-        #self.messpunkt_anzahl = 4
+        self.messpunkt_anzahl = None
         self.id: int
         self.data = TMuKompRec(
             TermL0=0.0,
@@ -131,26 +132,28 @@ class TK_3d_Wi_WE(TMU_3dKomponente_Richtung):
         if self.archiv:
             return self.arch_data.bval
         result = MU_NAN
+        print(self.modell.Element1, self.data.KennwertArt.name, self, "hilfe", self.messpunkt_anzahl)
         if self.data.KennwertArt.name == "M3D_MethodeA":
-            if self.modell.iGeometrie_EN.value in ["Gerade", "Ebene", "Zylinder", "Kegel"]:
+            if self.modell.Element1 in ["Gerade", "Ebene", "Zylinder", "Kegel"]:
                 result = 1.0
         elif self.messpunkt_anzahl > 0:
-            if self.modell.iGeometrie_EN.value in ["Gerade", "Ebene"]:
-                if self.modell.WinkelE1_3d == 1:
+            if self.modell.Element1 in ["Gerade", "Ebene"]:
+                print("hierrr",self.modell.punktmuster)
+                if self.modell.punktmuster == 1:
                     result = sqrt((12 * (4 - 1)) / (4 * (4 + 1)))
-                elif self.modell.Winkel.WinkelE1_3d  == 2:
+                elif self.modell.punktmuster  == 2:
                     result = sqrt(4 / 4)
-                elif self.modell.Winkel.WinkelE1_3d  == 3:
-                    result = sqrt(8 / self.messpunktanzahl)
+                elif self.modell.punktmuster  == 3:
+                    result = sqrt(8 / self.messpunkt_anzahl)
 
-            elif self.modell.iGeometrie_EN.value in ["Zylinder", "Kegel"]:
-                if self.modell.Winkel.WinkelE1_3d  == 1:
+            elif self.modell.Element1 in ["Zylinder", "Kegel"]:
+                if self.modell.punktmuster  == 1:
                     result = sqrt(
-                        (24 * (self.messpunktanzahl - 1))
-                        / (self.messpunktanzahl * (self.messpunktanzahl + 1))
+                        (24 * (self.messpunkt_anzahl - 1))
+                        / (self.messpunkt_anzahl * (self.messpunkt_anzahl + 1))
                     )
-                elif self.modell.Winkel.WinkelE1_3d  == 2:
-                    result = sqrt(8 / self.messpunktanzahl)
+                elif self.modell.punktmuster  == 2:
+                    result = sqrt(8 / self.messpunkt_anzahl)
         return result
 
     def standard_unsicherheit_su(self) -> float:
@@ -179,7 +182,7 @@ class TK_3d_Wi_WE(TMU_3dKomponente_Richtung):
         if self.archiv:
             return self.arch_data.sens_c1
 
-        if self.modell.iGeometrie_EN.value not in ["Punkt", "Kreis"]:
+        if self.modell.Element1 not in ["Punkt", "Kreis"]:
             lme = 2
             le = 2
             if le != MU_NAN and lme != MU_NAN and lme != 0:
@@ -195,7 +198,7 @@ class TK_3d_Wi_WB(TMU_3dKomponente_Richtung):
         self.id: int
         self.archiv = None
         self.modell = modell
-        #self.messpunkt_anzahl = 2
+        self.messpunkt_anzahl = None
         self.lmb = 2
         self.lb = 2
         self.a = 1
@@ -221,7 +224,7 @@ class TK_3d_Wi_WB(TMU_3dKomponente_Richtung):
         if self.archiv:
             return self.archiv_data_sens_c1()
         else:
-            if self.modell.iBezug1.value in ["Gerade", "Ebene", "Zylinder", "Kegel"]:
+            if self.modell.Bezug1 in ["Gerade", "Ebene", "Zylinder", "Kegel"]:
                 if self.lmb is not None and self.lb is not None and self.lmb != 0:
                     return self.in_grad(self.lb / self.lmb)
         return MU_NAN
@@ -232,7 +235,7 @@ class TK_3d_Wi_WB(TMU_3dKomponente_Richtung):
         else:
             if self.sensititivty_c1() != MU_NAN:
                 if self.data.KennwertArt.name == "M3D_MethodeA":
-                    if self.modell.iGeometrie_EN.value in [
+                    if self.modell.Element1 in [
                         "Gerade",
                         "Ebene",
                         "Zylinder",
@@ -240,10 +243,10 @@ class TK_3d_Wi_WB(TMU_3dKomponente_Richtung):
                     ]:
                         return 1
                 else:
-                    print ("jojojo", self.modell.iGeometrie_EN.value, self.modell.iBezug1.value,)
+                    print ("jojojo", self.modell.Element1, self.modell.Bezug1,)
                     if self.messpunkt_anzahl > 1:
-                        if self.modell.iGeometrie_EN.value in ["Gerade", "Ebene"]:
-                            if self.modell.iBezug1.value in ["Punkt", "NDEF"]:
+                        if self.modell.Element1 in ["Gerade", "Ebene"]:
+                            if self.modell.Bezug1 in ["Punkt", "NDEF"]:
                                 return math.sqrt(
                                     (12 * (self.messpunkt_anzahl - 1))
                                     / (
@@ -251,12 +254,12 @@ class TK_3d_Wi_WB(TMU_3dKomponente_Richtung):
                                         * (self.messpunkt_anzahl + 1)
                                     )
                                 )
-                            elif self.modell.iBezug1.value == "Gerade":
+                            elif self.modell.Bezug1 == "Gerade":
                                 return math.sqrt(4 / self.messpunkt_anzahl)
-                            elif self.modell.iBezug1.value == "Ebene":
+                            elif self.modell.Bezug1 == "Ebene":
                                 return math.sqrt(8 / self.messpunkt_anzahl)
-                        elif self.modell.iGeometrie_EN.value in ["Zylinder", "Kegel"]:
-                            if self.modell.iBezug1.value in ["Punkt", "Kegel"]:
+                        elif self.modell.Element1 in ["Zylinder", "Kegel"]:
+                            if self.modell.Bezug1 in ["Punkt", "Kegel"]:
                                 return math.sqrt(
                                     (24 * (self.messpunkt_anzahl - 1))
                                     / (
@@ -264,7 +267,7 @@ class TK_3d_Wi_WB(TMU_3dKomponente_Richtung):
                                         * (self.messpunkt_anzahl + 1)
                                     )
                                 )
-                            elif self.modell.iBezug1.value == "Gerade":
+                            elif self.modell.Bezug1 == "Gerade":
                                 return math.sqrt(8 / self.messpunkt_anzahl)
         return self.MU_NAN
 
@@ -318,7 +321,7 @@ class TK_3d_Wi_WB(TMU_3dKomponente_Richtung):
 class TK_3d_Wi_DeltaEKMG(TMU_3dKomponente_Richtung):
     def __init__(self, modell, const_list,lfdnr):
         super().__init__(modell, 1381, const_list, "&Delta;I<sub>KMG;R</sub>")
-        #self.messpunkt_anzahl = 5000
+        self.messpunkt_anzahl = None
         self.archiv = None
         self.lfdnr = lfdnr
         self.id: int

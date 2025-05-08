@@ -1,7 +1,6 @@
+from app.database.database import Base
 from sqlalchemy import Column, Float, ForeignKey, Integer
 from sqlalchemy.orm import relationship
-
-from app.database.database import Base
 
 
 class Component(Base):
@@ -19,6 +18,7 @@ class Component(Base):
     frei_n_1 = Column(Integer)
     verteilung = Column(Integer)
     kflags = Column(Integer)
+    messpunkt_anzahl = Column(Integer)
 
     modell = relationship("Modell", back_populates="components")
     anakomp = relationship("ANAKOMP", back_populates="komponente")

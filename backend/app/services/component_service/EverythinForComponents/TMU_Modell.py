@@ -63,24 +63,18 @@ class TMU_3DElement(Enum):
     E3D_Kegel = "Kegel"
 
 
-# Assuming the other classes like TMU_ConstList, TMU_Atom, TMU_Winkel,
-# etc., are defined elsewhere in Python
+
 class TMU_ModellSchema(BaseModel):
     aufgabe: int
     id: int
     mit_berechnung_toleranzfaktor: bool = False
-    # Angenommen, du hast eine Klasse TMU_ConstList, die du hier als Option
-    # mitgeben kannst
     const_list: TMU_ConstList = Field(default_factory=TMU_ConstList)
     modell_name: str = ""
     AufgabeModell: TMU_AufgabeModell | None = None  # Kannst du nach Bedarf definieren
     i_aufgabe: int = 0
     i_geometrie_me: int = 0
-    iGeometrie_EN: TMU_3DElement | None = None
+    iGeometrie_EN: int | None = None
     i_geometrie_mo: int = 0
-    winkelE1: int | None = None
-    iBezug1: TMU_3DElement | None = None
-    i_bezug2: int = 0
     read_only: bool = False
     modell_desc: str = ""
     methode: int = 0
@@ -89,6 +83,15 @@ class TMU_ModellSchema(BaseModel):
     einstellmass: int = 0
     modell_created: datetime = datetime.now()
     modell_modified: datetime = datetime.now()
+    punktmuster: int | None = None
+    Element1: str | None = None
+    Element2: str | None = None
+    Bezug1: str | None = None
+    Bezug2: str | None = None
+    winkelE1: int | None = None
+    winkelE2: int | None = None
+    winkelB1: int | None = None
+    winkelB2: int | None = None
     archiv: bool = False
     formel_anteil: str = ""
     formel_beschreibung: str = ""
@@ -99,12 +102,10 @@ class TMU_ModellSchema(BaseModel):
     def assign_geo_bn_to_igeometrie_en(cls, data):
         if hasattr(data, "geo_bn"):
             data.iGeometrie_EN = data.geo_bn
-        if hasattr(data, "tsk_tiefenmessung"):
-            data.iBezug1 = data.tsk_tiefenmessung
         if hasattr(data, "tsk_ausenmessung"):
             data.winkelE1 = data.tsk_ausenmessung
-        if hasattr(data, "geo_gn"):
-            data.AufgabeModell = data.geo_gn
+        if hasattr(data, "aufgabe_modell"):
+            data.AufgabeModell = data.aufgabe_modell
         return data
 
     @field_validator("AufgabeModell", mode="before")
@@ -116,29 +117,6 @@ class TMU_ModellSchema(BaseModel):
             1: TMU_AufgabeModell.aKalibrierprozess,
             2: TMU_AufgabeModell.a3D_Pruefprozess,
             3: TMU_AufgabeModell.aUnbekannt,
-        }
-        if isinstance(value, int):
-            try:
-                return mapping[value]
-            except KeyError:
-                raise ValueError(f"Invalid integer value for iGeometrie_EN: {value}")
-        elif isinstance(value, str):
-            return TMU_3DElement(value)
-        return value
-
-    @field_validator("iGeometrie_EN","iBezug1", mode="before")
-    @classmethod
-    def convert_aufgabe_enum(cls, value):
-        # Mapping-Tabelle
-        mapping = {
-            0: TMU_3DElement.E3D_NDEF,
-            1: TMU_3DElement.E3D_Punkt,
-            2: TMU_3DElement.E3D_Gerade,
-            3: TMU_3DElement.E3D_Ebene,
-            4: TMU_3DElement.E3D_Kreis,
-            5: TMU_3DElement.E3D_Halbkugel,
-            6: TMU_3DElement.E3D_Zylinder,
-            7: TMU_3DElement.E3D_Kegel,
         }
         if isinstance(value, int):
             try:
@@ -169,8 +147,6 @@ class TMU_Modell(list[TMU_Komponente]):
         self.i_aufgabe = schema.i_aufgabe
         self.i_geometrie_me = schema.i_geometrie_me
         self.i_geometrie_mo = schema.i_geometrie_mo
-        self.iBezug1 = schema.iBezug1
-        self.i_bezug2 = schema.i_bezug2
         self.read_only = schema.read_only
         self.modell_desc = schema.modell_desc
         self.methode = schema.methode
@@ -185,6 +161,16 @@ class TMU_Modell(list[TMU_Komponente]):
         self.const_needed = schema.const_needed
         self.const_list = schema.const_list
         self.buildConstList()
+        self.punktmuster = schema.punktmuster
+        self.Element1 = schema.Element1
+        self.Element2 = schema.Element2
+        self.Bezug1 = schema.Bezug1
+        self.Bezug2 = schema.Bezug2
+        self.winkelE1 = schema.winkelE1
+        self.winkelE2 = schema.winkelE2
+        self.winkelB1 = schema.winkelB1
+        self.winkelB2 = schema.winkelB2
+
 
     @classmethod
     def from_schema_params(cls, **kwargs):

@@ -52,6 +52,6 @@ class ANAKOMP(Base):
     freigrad = Column(Integer)
     frei_n_1 = Column(Integer)
     verteilung = Column(Integer)
-
+    messpunkt_anzahl = Column(Integer)
     komponente = relationship("Component", back_populates="anakomp")
     anamu = relationship("ANAMU", back_populates="anakomp")

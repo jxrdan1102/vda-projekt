@@ -142,63 +142,59 @@ async def update_anakonstr(id: int, anakonst: AnakonstUpdateR, db: AsyncSession 
     return "Konstante wurde erfolgreich geändert"
 
 
+def map_component_data(tcomponent, source):
+    tcomponent.setData({
+        'KennwertArt': source.wertart,
+        'Freiheitsgrad': source.freigrad,
+        'FreiN_minus_1': source.frei_n_1,
+        'TermL0': source.terml0,
+        'TermL1': source.terml1,
+        'Verteilung': source.verteilung
+    })
+    tcomponent.messpunkt_anzahl = source.messpunkt_anzahl
 
 @router.get("/{id}/calc/r")
 async def calc_uncertainty(id: int, db: AsyncSession = Depends(get_db)):
-    stmt = select(ANAMU).options(joinedload(ANAMU.anakonst),joinedload(ANAMU.anakomp)).where(ANAMU.id == id)
+    stmt = select(ANAMU).options(
+        joinedload(ANAMU.anakonst),
+        joinedload(ANAMU.anakomp)
+    ).where(ANAMU.id == id)
     result = await db.execute(stmt)
     anamu = result.unique().scalar_one_or_none()
-    anakomps = anamu.anakomp
     if anamu is None:
         raise HTTPException(status_code=404, detail="Item not found")
 
-    stmt = select(Modell).options(joinedload(Modell.components)).where(Modell.id == anamu.fk_modell)
+    stmt = select(Modell).options(
+        joinedload(Modell.components)
+    ).where(Modell.id == anamu.fk_modell)
     result = await db.execute(stmt)
     modell = result.unique().scalar_one_or_none()
     if modell is None:
         raise HTTPException(status_code=404, detail="Item not found")
-    components = modell.components
 
     tschema = TMU_ModellSchema.model_validate(modell)
     tmodell = TMU_Modell(tschema)
-    print("Element",tmodell.iGeometrie_EN)
-    for component in components:
+
+    components_map = {m.lfdnr: m for m in modell.components}
+    anakomps_map = {a.fk_mod_components: a for a in anamu.anakomp}
+
+    for component in modell.components:
         tmodell.addComponent(component.kompid, component.lfdnr)
 
     for tcomponent in tmodell:
-        for mcomponent in components:
-            if tcomponent.lfdnr == mcomponent.lfdnr:
-                tcomponent.id = mcomponent.id
-                tcomponent.setData({
-                    'KennwertArt': mcomponent.wertart,
-                    'Freiheitsgrad': mcomponent.freigrad,
-                    'FreiheitsMinus1': mcomponent.frei_n_1,
-                    'TermL0': mcomponent.terml0,
-                    'TermL1': mcomponent.terml1,
-                    'Verteilung': mcomponent.verteilung,
-                    'Flags': mcomponent.kflags
-                })
-                break
-    for tcomponent in tmodell:
-        for acomp in anakomps:
-            if tcomponent.id == acomp.fk_mod_components:
-                tcomponent.setData({
-                    'KennwertArt': acomp.wertart,
-                    'Freiheitsgrad': acomp.freigrad,
-                    'FreiN_minus_1': acomp.frei_n_1,
-                    'TermL0': acomp.terml0,
-                    'TermL1': acomp.terml1,
-                    'Verteilung': acomp.verteilung
-                    # 'Flags' wird hier weggelassen
-                })
-                break
-    await tmodell.setConstValue(anamu.id, db)
-    print("LISTEEEE",tmodell.const_list)
-    print(tmodell.iGeometrie_EN.value)
-    for c in tmodell:
-        print (c.data.FreiN_minus_1)
-    return tmodell.MUPruefverfahren_U()
+        mcomponent = components_map.get(tcomponent.lfdnr)
+        if mcomponent:
+            tcomponent.id = mcomponent.id
+            map_component_data(tcomponent, mcomponent)
+            tcomponent.setData({'Flags': mcomponent.kflags})
 
+        acomp = anakomps_map.get(tcomponent.id)
+        if acomp:
+            map_component_data(tcomponent, acomp)
+
+    await tmodell.setConstValue(anamu.id, db)
+
+    return tmodell.MUPruefverfahren_U()
 
 
 @router.delete("/{id}")

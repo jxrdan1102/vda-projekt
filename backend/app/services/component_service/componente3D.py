@@ -9,12 +9,9 @@ class TMU_3DKomponente(TMU_Komponente):
         #self.c1_val = self.sensititivty_c1()
         self.c2_val = 0
         self.copy_source = None
+        self.messpunkt_anzahl = None
 
-    "TC_3d_KMG_A",
-    "TC_3d_KMG_K",
-    "TC_3d_KMG_Uc",
-    "TC_3d_KMG_alphaM",
-    "TC_3d_KMG_LT",
+
     def c1_val(self) -> float:
         return self.sensititivty_c1()
 
@@ -62,10 +59,6 @@ class TMU_3DKomponente(TMU_Komponente):
 
     def anzahl_messungen(self) -> int:
         return round(self.data.TermL1)
-
-    @property
-    def messpunkt_anzahl(self) -> int:
-        return self.data.FreiN_minus_1
 
     def tabelle1_su(self, l: float) -> float:
         if self.archiv:
