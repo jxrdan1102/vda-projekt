@@ -1,15 +1,11 @@
 import math
+from functools import cached_property
 
 from app.services.component_service.EverythinForComponents import TMU_ConstList
 from app.services.component_service.EverythinForComponents.TMU_Atom import TMU_Atom
-from app.services.component_service.EverythinForComponents.TMU_ConstList import (
-    TKompConstants,
-)
-from app.services.component_service.EverythinForComponents.TMuKompRec import (
-    TAuswertungsArchiv,
-    TKompEditFieldsSet,
-    TMuKompRec,
-)
+from app.services.component_service.EverythinForComponents.TMU_ConstList import TKompConstants
+from app.services.component_service.EverythinForComponents.TMuKompRec import TAuswertungsArchiv, TKompEditFieldsSet, \
+    TMuKompRec
 from app.services.component_service.EverythinForComponents.TMuKompRec import TMU_Verteilung, TMU_KennwertArt, \
     TMU_Freiheitsgrad
 
@@ -88,32 +84,40 @@ class TMU_Komponente(TMU_Atom):
             Flags=1,
         )
 
-
     def std_unsicherheit(self, l: float) -> float:
-        if l != MU_NAN:
-            print("Standard unsicherheit:", l, self.data.Verteilung.name, self, self.data.TermL0)
-            # Check distribution and return appropriate uncertainty
-            if self.data.Verteilung.name == "V_Rechteck":
-                if self.data.KennwertArt.name == "K_HalbWeite":
+        if not is_valid_number(l):
+            return MU_NAN
+
+        verteilung = getattr(self.data.Verteilung, "name", "")
+        kennwert = getattr(self.data.KennwertArt, "name", "")
+
+        try:
+            if verteilung == "V_Rechteck":
+                if kennwert == "K_HalbWeite":
                     return l / math.sqrt(3)
-                elif self.data.KennwertArt.name == "K_Spannweite":
+                elif kennwert == "K_Spannweite":
                     return l / (2 * math.sqrt(3))
-                elif self.data.KennwertArt.name == "K_Standardabweichung":
+                elif kennwert == "K_Standardabweichung":
                     return l
-            elif self.data.Verteilung.name == "V_Normal":
-                if self.data.KennwertArt.name == "K_HalbWeite":
+
+            elif verteilung == "V_Normal":
+                if kennwert == "K_HalbWeite":
                     return l / 2
-                elif self.data.KennwertArt.name == "K_Spannweite":
+                elif kennwert == "K_Spannweite":
                     return l / 4
-                elif self.data.KennwertArt.name == "K_Standardabweichung":
+                elif kennwert == "K_Standardabweichung":
                     return l
-            elif self.data.Verteilung.name == "V_Dreieck":
-                if self.data.KennwertArt.name == "K_HalbWeite":
+
+            elif verteilung == "V_Dreieck":
+                if kennwert == "K_HalbWeite":
                     return l / math.sqrt(6)
-                elif self.data.KennwertArt.name == "K_Spannweite":
+                elif kennwert == "K_Spannweite":
                     return l / (2 * math.sqrt(6))
-                elif self.data.KennwertArt.name == "K_Standardabweichung":
+                elif kennwert == "K_Standardabweichung":
                     return l
+        except Exception as e:
+            print(f"Fehler bei std_unsicherheit(): {e}")
+
         return MU_NAN
 
     def a_val(self) -> float:
@@ -136,45 +140,59 @@ class TMU_Komponente(TMU_Atom):
 
     @property
     def effektiver_freiheitsgrad(self) -> float:
-        if self.data.Freiheitsgrad.name == "FG_unbegrenzt":
-            self.EffektiverFreiheitsgrad = 1000
-            return 1000
-        elif self.data.Freiheitsgrad.name == "FG_N_Minus1":
-            if self.data.FreiN_minus_1 > 0:
-                self.EffektiverFreiheitsgrad = self.data.FreiN_minus_1
-                return self.data.FreiN_minus_1
-            return MU_NAN
+        try:
+            if self.data.Freiheitsgrad.name == "FG_unbegrenzt":
+                return 1000
+            elif self.data.Freiheitsgrad.name == "FG_N_Minus1":
+                if self.data.FreiN_minus_1 > 0:
+                    return self.data.FreiN_minus_1
+        except Exception as e:
+            print(f"Fehler bei effektiver_freiheitsgrad: {e}")
         return MU_NAN
+
 
     def unsicherheitsbeitrag_l0(self) -> float:
         su = self.std_unsicherheit(self.a_val())
-        print ("testiii", su, self)
         c1 = self.sensititivty_c1()
-        if su != MU_NAN and c1 != MU_NAN:
-            print("dazu", su*c1)
+        if is_valid_number(su) and is_valid_number(c1):
             return su * c1
         return MU_NAN
 
     def unsicherheitsbeitrag_l1(self) -> float:
         su = self.std_unsicherheit(self.b_val())
         c2 = self.sensititivty_c2()
-        l = 25 * 1000  # Messwert in mm Berechnung in µm
-        if su != MU_NAN and c2 != MU_NAN and l != MU_NAN:
+        l = 25 * 1000  # mm → µm
+        if is_valid_number(su) and is_valid_number(c2) and is_valid_number(l):
             return su * c2 * l
         return MU_NAN
 
-    @property
+    @cached_property
     def unsicherheitsbeitrag(self) -> float:
-        su0 = self.unsicherheitsbeitrag_l0()
-        su1 = self.unsicherheitsbeitrag_l1()
-        print("unsicherheitsbeitrags1s2", su0, su1)
-        if su0 != MU_NAN and su1 != MU_NAN:
+        try:
+            su0 = self.unsicherheitsbeitrag_l0()
+            su1 = self.unsicherheitsbeitrag_l1()
+
+            if math.isnan(su0) or math.isnan(su1):
+                return MU_NAN
+
+            if self.data.Flags < 0:
+                # Optional: logge hier einen Fehler oder Hinweis
+                return MU_NAN
+
             return math.sqrt(self.data.Flags) * (abs(su0) + abs(su1))
-        return MU_NAN
+
+        except Exception as e:
+            # Optional: logge den Fehler
+            return MU_NAN
 
     def varianz(self) -> float:
-        ub = self.unsicherheitsbeitrag
-        if not math.isnan(ub):
-            return ub**2
+        try:
+            ub = self.unsicherheitsbeitrag
+            if is_valid_number(ub):
+                return ub ** 2
+        except Exception as e:
+            print(f"Fehler bei varianz(): {e}")
         return MU_NAN
 
+def is_valid_number(value: float) -> bool:
+    return value is not None and not math.isnan(value)

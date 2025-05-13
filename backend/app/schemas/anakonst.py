@@ -8,19 +8,19 @@ class AnakonstBase(BaseModel):
     remark: int | None = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class AnakonstUpdateR(BaseModel):
     constval: int | None = None
     remark: int | None = None
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class AnakonstForAnamuR(BaseModel):
     constnum: int | None = None
     constval: int | None = None
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class Anakonst(AnakonstBase):
     pass

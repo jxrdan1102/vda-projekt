@@ -6,7 +6,7 @@ class ItemCreate(BaseModel):
     description: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class ItemUpdate(BaseModel):
@@ -14,4 +14,4 @@ class ItemUpdate(BaseModel):
     description: str | None = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True

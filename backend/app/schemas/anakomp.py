@@ -13,7 +13,7 @@ class AnakompBase(BaseModel):
     verteilung: int | None = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class AnakompForAnamuR(BaseModel):
     fk_mod_components: int
@@ -25,7 +25,7 @@ class AnakompForAnamuR(BaseModel):
     verteilung: int | None = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 class Anakomp(AnakompBase):
     pass
 

@@ -19,6 +19,9 @@ class Component(Base):
     verteilung = Column(Integer)
     kflags = Column(Integer)
     messpunkt_anzahl = Column(Integer)
+    anzahl_messungen = Column(Integer)
+    fk_user_id = Column(Integer, ForeignKey("users.id"))
 
+    user = relationship("User", back_populates="components")
     modell = relationship("Modell", back_populates="components")
     anakomp = relationship("ANAKOMP", back_populates="komponente")

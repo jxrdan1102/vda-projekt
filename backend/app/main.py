@@ -23,8 +23,9 @@ app.include_router(auth.router)
 app.include_router(KMG.router)
 
 table = Table(
-    "C:\\Program Files (x86)\\Kistner Messtechnik\\QUEEN VDA5 GUM\\MUDB\\MODELL.DB"
+    "C:\\Program Files (x86)\\Kistner Messtechnik\\QUEEN VDA5 GUM\\MUDB\\Anakomp.DB"
 )
+
 fieldnames = list(table.fields.keys())
 csv_file = "C:\\Users\\Jason\\Desktop\\testssss.csv"
 # CSV-Datei erstellen und Daten schreiben
@@ -51,12 +52,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 @app.on_event("startup")
 async def startup():
-    print("🚀 Erstelle Tabellen in der Datenbank...")
     await create_tables()
     await ping_connection()
-    print("🚀 Erstelle Tabellen fertig")
     value = 257
 
     # 4 Bytes extrahieren

@@ -16,14 +16,14 @@ class ModellGetAllR(BaseModel):
     description: str | None = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class ModellBase(BaseModel):
     id: int
     aufgabe: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class ModellCreateR(BaseModel):
     iGeometrie_EN: int # Prozess
@@ -31,7 +31,7 @@ class ModellCreateR(BaseModel):
     aufgabe: int | None = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class ModellForAnamuR(BaseModel):
     name: str
@@ -41,7 +41,7 @@ class ModellForAnamuR(BaseModel):
     geo_mo: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class ModellUpdateR(BaseModel):
     name: str | None = None
@@ -58,7 +58,7 @@ class ModellUpdateR(BaseModel):
     formeldesc: str | None = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class ModellGetIdR(BaseModel):
     name: str | None = None
@@ -77,7 +77,7 @@ class ModellGetIdR(BaseModel):
     components: list[ComponentGetR] | None = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class ModellCreate(BaseModel):
     name: str
@@ -105,7 +105,7 @@ class ModellCreate(BaseModel):
     components: list[ComponentRefCreate] | None = None  # Beziehung zur Component-Klasse
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class ModellUpdate(BaseModel):
@@ -133,7 +133,7 @@ class ModellUpdate(BaseModel):
     components: list[ComponentRefCreate] | None = None  # Beziehung zur Component-Klasse
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class ModellNameDescription(ModellBase):
@@ -141,7 +141,7 @@ class ModellNameDescription(ModellBase):
     description: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True
         from_attributes = True
 
 
@@ -152,7 +152,7 @@ class ModellIDResponse(BaseModel):
     constantsValue: TMU_ConstList | None = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
         arbitrary_types_allowed = True
         json_encoders = {TKompConstants: lambda v: v.name}
 
@@ -164,4 +164,4 @@ class TMU_Modell_Pydantic(BaseModel):
     components: List[TMU_Komponente_Pydantic]
 
     class Config:
-        orm_mode = True  # Erlaubt die Konvertierung von ORM-Modellen in Pydantic-Modelle
+        from_attributes = True  # Erlaubt die Konvertierung von ORM-Modellen in Pydantic-Modelle

@@ -8,7 +8,7 @@ class ComponentGetModell(BaseModel):
     modltxtid: int | None = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class ComponentRefBase(BaseModel):
@@ -24,7 +24,7 @@ class ComponentRefBase(BaseModel):
     kflags: int | None = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class ComponentAddR(ComponentRefBase):
     pass
@@ -35,7 +35,7 @@ class ComponentGetR(BaseModel):
     modltxtid: int | None = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class ComponentGet(ComponentRefBase):
     pass
@@ -75,4 +75,4 @@ class TMU_Komponente_Pydantic(BaseModel):
     name: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True

@@ -13,7 +13,7 @@ class AnamuModellidOnly(BaseModel):
     fk_modell: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class AnamuBase(BaseModel):
     name: str
@@ -23,7 +23,7 @@ class AnamuBase(BaseModel):
     creation: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class AnamuGetR(AnamuBase):
     pass
@@ -41,7 +41,7 @@ class AnamuGetIdR(BaseModel):
     anakonst: list[AnakonstForAnamuR] | None = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class AnamuIdGet(BaseModel):
     name: str
@@ -50,7 +50,7 @@ class AnamuIdGet(BaseModel):
     modell: ModellIDResponse
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class AnamuCreate(AnamuBase):
     partno: int
@@ -64,7 +64,7 @@ class AnamuCreate(AnamuBase):
     anakonst: list[Anakonst] = []
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class AnamuCreateR(BaseModel):
     name: str
@@ -72,4 +72,4 @@ class AnamuCreateR(BaseModel):
     aenderungszustand: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True

@@ -1,9 +1,10 @@
 from enum import Enum
 
-from app.models.ANAMU import ANAKONST
 from pydantic import BaseModel, field_validator
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.models.ANAMU import ANAKONST
 
 
 class TKompConstants(Enum):

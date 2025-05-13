@@ -12,6 +12,7 @@ class User(Base):
     role = Column(String(8), default="user")
     fk_company = Column(Integer, ForeignKey("companies.id"))
 
+    components = relationship("Component", back_populates="user")
     company = relationship("Company", back_populates="users")
     refresh_tokens = relationship("RefreshToken", back_populates="user")
     modells = relationship("Modell", back_populates="owner")

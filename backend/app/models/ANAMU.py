@@ -18,7 +18,7 @@ class ANAMU(Base):
     tolfaktor = Column(Integer)
     tsk_aufgabe = Column(Integer)
     fk_kmg = Column(Integer, ForeignKey("kmgs.id"))
-    fk_user = Column(Integer, ForeignKey("users.id"))
+    fk_user_id = Column(Integer, ForeignKey("users.id"))
 
     kmg = relationship("KMG", back_populates="anamu")
     modell = relationship("Modell", back_populates="ana_mu")
@@ -53,5 +53,7 @@ class ANAKOMP(Base):
     frei_n_1 = Column(Integer)
     verteilung = Column(Integer)
     messpunkt_anzahl = Column(Integer)
+    anzahl_messungen = Column(Integer)
+
     komponente = relationship("Component", back_populates="anakomp")
     anamu = relationship("ANAMU", back_populates="anakomp")

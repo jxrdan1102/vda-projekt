@@ -9,6 +9,7 @@ from app.models.user import User
 from app.routers.auth import get_current_user
 from app.schemas.item import ItemCreate, ItemUpdate
 from fastapi import APIRouter, Depends
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
@@ -161,5 +162,10 @@ async def importXMLModell(db: AsyncSession = Depends(get_db), current_user: User
         db.add(db_comp)
         await db.commit()
         await db.refresh(db_comp)
+
+        result = await db.execute(text('SHOW COLUMNS FROM mod_components'))
+        columns = result.fetchall()
+        for col in columns:
+            print(col)
 
     return "Modell wurde erfolgreich importiert"

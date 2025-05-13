@@ -4,17 +4,13 @@ from datetime import datetime
 from enum import Enum
 from typing import Optional
 
-from app.database.database import get_db
-from app.models.ANAMU import ANAKONST
-from app.services.component_service.EverythinForComponents.TMU_Atom import TMU_Atom
-from app.services.component_service.EverythinForComponents.TMU_ConstList import (
-    TKompConstants,
-    TMU_ConstList,
-)
-from app.services.component_service.component_abstract import TMU_Komponente
-from app.services.component_service.component_factory import ComponentFactory
 from pydantic import BaseModel, Field, field_validator, model_validator
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.services.component_service.EverythinForComponents.TMU_Atom import TMU_Atom
+from app.services.component_service.EverythinForComponents.TMU_ConstList import TKompConstants, TMU_ConstList
+from app.services.component_service.component_abstract import TMU_Komponente
+from app.services.component_service.component_factory import ComponentFactory
 
 
 # Definiere Enum für die zulässigen Prozess-Typen
@@ -129,7 +125,7 @@ class TMU_ModellSchema(BaseModel):
 
 
     class Config:
-        orm_mode = True
+        from_attributes = True
         arbitrary_types_allowed = True
         from_attributes = True
 
@@ -276,20 +272,13 @@ class TMU_Modell(list[TMU_Komponente]):
         valid = False
         for item in self:
             if isinstance(item, TMU_Komponente) and item.varianz() != MU_NAN:
-                print(
-                    "meine varianz:",
-                    item,
-                    item.varianz(),
-                    "meine unsicherheit:",
-                    item.unsicherheitsbeitrag,
-                )
+
                 v += item.varianz()
                 valid = True
         return v if valid else MU_NAN
 
     def StandardUnsicherheit_Uy(self):
         uy = self.SummeDerVarianzen()
-        print("varianz", uy)
         return math.sqrt(uy) if uy != MU_NAN else MU_NAN
 
     def V_eff(self):
@@ -310,35 +299,28 @@ class TMU_Modell(list[TMU_Komponente]):
             else:
                 result = power(U, 4) / SummeEFG
         else:
-            print("Hier bin iCh wieder", self)
             SummeUB = 0
             for item in self:
                 if isinstance(item, TMU_Komponente):
                     ubi = item.unsicherheitsbeitrag
                     vi = item.effektiver_freiheitsgrad
-                    print("lpl", ubi, vi)
                     if not math.isnan(ubi) and not math.isnan(vi):
                         SummeUB += power(ubi, 4) / vi
                         valid = True
             if valid:
-                print(SummeUB)
                 uy = self.StandardUnsicherheit_Uy()
-                print("lplp", uy)
                 if uy != MU_NAN:
-                    print("YEEEY", uy, SummeUB)
                     try:
                         if SummeUB == 0:
                             result = 500
                         else:
                             result = power(uy, 4) / SummeUB
-                            print("t", result)
                     except BaseException:
                         result = MU_NAN
         return result
 
     def Erweiterungsfaktor_k(self):
         veff = self.V_eff()
-        print("disneyland", veff)
         if not math.isnan(veff):
             if self.AufgabeModell == "a3D_Pruefprozess":
                 result = 2.0
@@ -404,9 +386,6 @@ class TMU_Modell(list[TMU_Komponente]):
     def MUPruefverfahren_U(self):
         k = self.Erweiterungsfaktor_k()
         uy = self.StandardUnsicherheit_Uy()
-        print("Finale", uy, k)
-        for item in self:
-            print(item, item.unsicherheitsbeitrag)
         if k != MU_NAN and uy != MU_NAN:
             return k * uy
         return MU_NAN
