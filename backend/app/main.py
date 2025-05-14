@@ -1,18 +1,11 @@
 import csv
 
-from app.database.database import SessionLocal
-from app.database.database import create_tables, ping_connection
-from app.database.database import get_db
-from app.database.database import get_db
-from app.models import Modell
-from app.routers import KMG, ana_mu, auth, components, items, modells
-from app.services.component_service.EverythinForComponents.TMU_Modell import (
-    TMU_Modell,
-    TMU_ModellSchema,
-)
 from fastapi import FastAPI
 from pypxlib import Table
 from starlette.middleware.cors import CORSMiddleware
+
+from app.database.database import create_tables, ping_connection
+from app.routers import KMG, ana_mu, auth, components, items, modells
 
 app = FastAPI()
 app.include_router(items.router)
@@ -41,7 +34,7 @@ with open(csv_file, mode="w+", newline="", encoding="utf-8") as f:
 
 
 origins = [
-    "http://localhost:3000",  # Hier den richtigen Frontend-Link angeben
+    "http://localhost:5173",  # Hier den richtigen Frontend-Link angeben
 ]
 
 app.add_middleware(

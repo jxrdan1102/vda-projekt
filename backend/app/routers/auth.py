@@ -5,20 +5,21 @@ from datetime import timedelta, datetime
 from typing import Annotated
 
 import jwt
-from app.database.database import get_db
-from app.models import RefreshToken
-from app.models.LoginAttempts import LoginAttempt
-from app.models.company import Company
-from app.models.user import User
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ed25519
 from fastapi import APIRouter, Depends, HTTPException, Request
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from starlette import status
+
+from app.database.database import get_db
+from app.models import RefreshToken
+from app.models.LoginAttempts import LoginAttempt
+from app.models.company import Company
+from app.models.user import User
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
@@ -81,9 +82,15 @@ async def create_user(db: db_dependency, user_in: CreateUserRequest):
     db.add(create_user_model)
     await db.commit()
     return {"id": create_user_model.id}
+class LoginRequest(BaseModel):
+    username: str
+    password: str
 
 @router.post("/token", response_model=Token)
-async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()],db: db_dependency, request: Request):
+async def login_for_access_token(login_request: LoginRequest,
+    db: db_dependency, request: Request
+):
+    # Verwende login_request.username und login_request.password
     ip_address = request.client.host
     result = await db.execute(select(LoginAttempt).where(LoginAttempt.ip_address == ip_address))
     login_attempt = result.scalars().first()
@@ -93,7 +100,7 @@ async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm,
             raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS,
                                 detail="Too many login attempts. Please try again later.")
 
-    user = await authenticate_user(form_data.username, form_data.password, db)
+    user = await authenticate_user(login_request.username, login_request.password, db)
     if not user:
         if login_attempt:
             login_attempt.attempts += 1
@@ -103,7 +110,7 @@ async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm,
             db.add(login_attempt)
 
         await db.commit()
-        raise HTTPException(status_code= status.HTTP_401_UNAUTHORIZED, detail="Incorrect username or password")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect username or password")
 
     if login_attempt:
         login_attempt.attempts = 0
@@ -121,10 +128,9 @@ async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm,
 
     return {
         "access_token": token,
-        "refresh_token": refresh_token,  # <<< optional: send it back
+        "refresh_token": refresh_token,
         "token_type": "bearer"
     }
-
 
 async def authenticate_user(username: str, password: str, db):
     stmt = select(User).filter(User.username == username)
@@ -169,6 +175,7 @@ async def user(user: Annotated[dict, Depends(get_current_user)], db: db_dependen
     if user is None:
         raise HTTPException(status_code= status.HTTP_401_UNAUTHORIZED, detail='Authentication failed.')
     return {"User": user}
+
 
 @router.post("/refresh_token", response_model=Token)
 async def refresh_token(refresh_token: str, db: db_dependency):
