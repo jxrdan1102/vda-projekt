@@ -14,6 +14,7 @@
         try {
             const response = await fetch('http://localhost:9999/auth/token', {
                 method: 'POST',
+                credentials: 'include',
                 headers: {
                     'Content-Type': 'application/json'
                 },
@@ -67,4 +68,5 @@
             {#if loading}Wird gesendet...{:else}Anmelden{/if}
         </button>
     </form>
+    <a href="/admin">Test</a>
 </div>

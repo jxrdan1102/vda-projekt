@@ -14,6 +14,7 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from starlette import status
+from starlette.responses import JSONResponse
 
 from app.database.database import get_db
 from app.models import RefreshToken
@@ -126,11 +127,29 @@ async def login_for_access_token(login_request: LoginRequest,
     db.add(new_token)
     await db.commit()
 
-    return {
-        "access_token": token,
-        "refresh_token": refresh_token,
-        "token_type": "bearer"
-    }
+    response = JSONResponse(content={"message": "Login successful"})
+
+    # Access Token als HttpOnly-Cookie
+    response.set_cookie(
+        key="access_token",
+        value=token,
+        httponly=True,
+        secure=False,  # ⛔ Bei Entwicklung lokal False, im Livebetrieb auf True stellen!
+        samesite="Lax",
+        max_age=60 * 5  # 5 Minuten
+    )
+
+    # Refresh Token als HttpOnly-Cookie (optional)
+    response.set_cookie(
+        key="refresh_token",
+        value=refresh_token,
+        httponly=True,
+        secure=False,
+        samesite="Lax",
+        max_age=60 * 60 * 24 * 7  # 7 Tage
+    )
+
+    return response
 
 async def authenticate_user(username: str, password: str, db):
     stmt = select(User).filter(User.username == username)
@@ -150,25 +169,38 @@ def create_access_token(username: str, user_id: int, expires_delta: timedelta):
     return jwt.encode(encode, private_key, algorithm=ALGORITHM)
 
 
-async def get_current_user(token: Annotated[str, Depends(oauth2_bearer)], db: db_dependency):
+from fastapi import Request
+
+
+async def get_current_user(request: Request, db: db_dependency):
+    token = request.cookies.get("access_token")
+
+    if not token:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token not found in cookies.")
+
     try:
         with open(PUBLIC_KEY_FILE, "rb") as f:
             public_key_pem = f.read()
-        print("TOKEN:", token)
-        print("PUBLIC_KEY:", public_key_pem.decode())
+
+        # Entschlüsselung des Tokens
         payload = jwt.decode(token, public_key_pem, algorithms=[ALGORITHM])
+
         username: str = payload.get('sub')
         user_id: int = payload['id']
+
         if username is None or user_id is None:
-            raise HTTPException(status_code= status.HTTP_401_UNAUTHORIZED, detail='Could not validate user.')
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Could not validate user.')
+
+        # Überprüfe den Benutzer in der DB
         result = await db.execute(select(User).where(User.id == user_id))
         user = result.scalars().first()
 
         if user is None:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='User not found')
+
         return user
     except jwt.PyJWTError:
-        raise HTTPException(status_code= status.HTTP_401_UNAUTHORIZED, detail='Could not validate user.')
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Could not validate user.')
 
 @router.get("/me")
 async def user(user: Annotated[dict, Depends(get_current_user)], db: db_dependency):
@@ -231,6 +263,9 @@ def require_roles(*allowed_roles: str):
 async def editor_or_admin(user: User = Depends(require_roles("editor", "admin"))):
     return {"message": f"Hallo {user.username}, du hast Bearbeitungsrechte!"}
 
+@router.get("/admin", response_model=bool)
+async def has_edit_permission(user: User = Depends(get_current_user)):
+    return user.role in {"editor", "admin"}
 
 @router.post("/create_user")
 async def create_user_for_company(user_in: CreateUserRequest, db: db_dependency,
