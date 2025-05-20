@@ -7,7 +7,7 @@ from typing import Annotated
 import jwt
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ed25519
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Cookie
 from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
 from pydantic import BaseModel
@@ -117,7 +117,7 @@ async def login_for_access_token(login_request: LoginRequest,
         login_attempt.attempts = 0
         await db.commit()
 
-    token = create_access_token(user.username, user.id, timedelta(minutes=5))
+    token = create_access_token(user.username, user.id, timedelta(minutes=1))
 
     refresh_token = secrets.token_urlsafe(64)
     expires_at = datetime.utcnow() + timedelta(days=7)
@@ -136,7 +136,8 @@ async def login_for_access_token(login_request: LoginRequest,
         httponly=True,
         secure=False,  # ⛔ Bei Entwicklung lokal False, im Livebetrieb auf True stellen!
         samesite="Lax",
-        max_age=60 * 5  # 5 Minuten
+        max_age=60  # 5 Minuten
+        ,path = "/"
     )
 
     # Refresh Token als HttpOnly-Cookie (optional)
@@ -147,6 +148,8 @@ async def login_for_access_token(login_request: LoginRequest,
         secure=False,
         samesite="Lax",
         max_age=60 * 60 * 24 * 7  # 7 Tage
+        , path="/"
+
     )
 
     return response
@@ -208,39 +211,122 @@ async def user(user: Annotated[dict, Depends(get_current_user)], db: db_dependen
         raise HTTPException(status_code= status.HTTP_401_UNAUTHORIZED, detail='Authentication failed.')
     return {"User": user}
 
-
-@router.post("/refresh_token", response_model=Token)
-async def refresh_token(refresh_token: str, db: db_dependency):
-    print("hints")
+@router.get("/refresh_token")
+async def refresh_token(
+    db: db_dependency,
+    refresh_token: str = Cookie(),  # Cookie auslesen
+):
+    print("LEE",refresh_token)
+    if refresh_token is None:
+        raise HTTPException(status_code=401, detail="Refresh token missing")
+    print("TokenRE", refresh_token)
 
     token_entry = await db.execute(select(RefreshToken).where(RefreshToken.token == refresh_token))
     token_entry = token_entry.scalars().first()
-
+    print("verdammte", token_entry)
     if not token_entry or token_entry.expires_at < datetime.utcnow():
         raise HTTPException(status_code=401, detail="Invalid or expired refresh token")
-    print("hints3", token_entry.user_id)
+    print("verdammt")
 
     user = await db.execute(select(User).where(User.id == token_entry.user_id))
     user = user.scalars().first()
-    # Lösche alten Refresh Token
+
+    # Delete old refresh token
     await db.delete(token_entry)
     await db.commit()
 
-    # Erstelle neuen Refresh Token
+    # Generate new refresh token
     new_refresh_token = secrets.token_urlsafe(64)
     expires_at = datetime.utcnow() + timedelta(days=7)
     new_token_entry = RefreshToken(user_id=user.id, token=new_refresh_token, expires_at=expires_at)
     db.add(new_token_entry)
     await db.commit()
 
-    # Erstelle Access Token
-    new_access_token = create_access_token(user.username, user.id, timedelta(minutes=5))
+    # Generate access token
+    new_access_token = create_access_token(user.username, user.id, timedelta(minutes=1))
 
-    return {
-        "access_token": new_access_token,
-        "refresh_token": new_refresh_token,
-        "token_type": "bearer"
-    }
+    # Create response
+    response = JSONResponse(content={"message": "Token refreshed"})
+
+    # Set tokens as cookies on the actual JSONResponse object
+    response.set_cookie(
+        key="access_token",
+        value=new_access_token,
+        httponly=True,
+        secure=False,
+        samesite="Lax",
+        max_age=60
+        , path="/"
+
+    )
+    response.set_cookie(
+        key="refresh_token",
+        value=new_refresh_token,
+        httponly=True,
+        secure=False,
+        samesite="Lax",
+        max_age=60 * 60 * 24 * 7
+        , path="/"
+
+    )
+    print(response.headers.getlist('set-cookie'))
+    return response
+@router.get("/refresh_tokens")
+async def refresh_token(
+    db: db_dependency,
+    refresh_token: str = Cookie(),  # Cookie auslesen
+):
+    if refresh_token is None:
+        raise HTTPException(status_code=401, detail="Refresh token missing")
+    print("TokenRE", refresh_token)
+
+    token_entry = await db.execute(select(RefreshToken).where(RefreshToken.token == refresh_token))
+    token_entry = token_entry.scalars().first()
+
+    if not token_entry or token_entry.expires_at < datetime.utcnow():
+        raise HTTPException(status_code=401, detail="Invalid or expired refresh token")
+
+    user = await db.execute(select(User).where(User.id == token_entry.user_id))
+    user = user.scalars().first()
+
+    # Delete old refresh token
+    await db.delete(token_entry)
+    await db.commit()
+
+    # Generate new refresh token
+    new_refresh_token = secrets.token_urlsafe(64)
+    expires_at = datetime.utcnow() + timedelta(days=7)
+    new_token_entry = RefreshToken(user_id=user.id, token=new_refresh_token, expires_at=expires_at)
+    db.add(new_token_entry)
+    await db.commit()
+
+    # Generate access token
+    new_access_token = create_access_token(user.username, user.id, timedelta(minutes=1))
+
+    # Create response
+    response = JSONResponse(content={"message": "Token refreshed"})
+
+    # Set tokens as cookies on the actual JSONResponse object
+    response.set_cookie(
+        key="access_token",
+        value=new_access_token,
+        httponly=True,
+        secure=False,
+        samesite="Lax",
+        max_age=60,
+        path = "/"
+    )
+    response.set_cookie(
+        key="refresh_token",
+        value=new_refresh_token,
+        httponly=True,
+        secure=False,
+        samesite="Lax",
+        max_age=60 * 60 * 24 * 7,
+        path = "/"
+    )
+    print(response.headers.getlist('set-cookie'))
+    return response
 @router.post("/logout")
 async def logout(refresh_token: str, db: db_dependency):
     token_entry = await db.execute(select(RefreshToken).where(RefreshToken.token == refresh_token))

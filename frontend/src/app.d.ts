@@ -8,6 +8,9 @@ declare global {
 				id: number;
 			} | null;
 		}
+		interface PageState {
+			newModell?: any;
+		}
 		// interface Error {}
 		// interface Locals {}
 		// interface PageData {}

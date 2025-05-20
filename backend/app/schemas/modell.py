@@ -1,6 +1,8 @@
 from datetime import datetime
 from typing import List
 
+from pydantic import BaseModel
+
 from app.schemas.component import ComponentGetModell, ComponentRefCreate
 from app.schemas.component import ComponentGetR
 from app.schemas.component import TMU_Komponente_Pydantic
@@ -8,10 +10,10 @@ from app.services.component_service.EverythinForComponents.TMU_ConstList import 
     TKompConstants,
     TMU_ConstList,
 )
-from pydantic import BaseModel
 
 
 class ModellGetAllR(BaseModel):
+    id: int
     name: str
     description: str | None = None
 
@@ -26,7 +28,7 @@ class ModellBase(BaseModel):
         from_attributes = True
 
 class ModellCreateR(BaseModel):
-    iGeometrie_EN: int # Prozess
+    aufgabe_modell: int # Prozess
     name: str
     aufgabe: int | None = None
 

@@ -31,6 +31,8 @@ class BaseCRUD:
 
     async def update(self, db: AsyncSession, id: int, data: dict, user_id: int = None):
         instance = await self.get_by_id(db, id, user_id)
+        if not data:
+            raise ValueError("Leere Daten – nichts zu aktualisieren.")
         for key, value in data.items():
             setattr(instance, key, value)
         await db.commit()

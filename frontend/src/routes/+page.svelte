@@ -42,31 +42,49 @@
     };
 </script>
 
-<style>
-    /* Dein Stil wie oben – kannst du beibehalten */
-</style>
+<!-- Tailwind-Stil -->
+<div class="min-h-screen flex items-center justify-center bg-gray-100 px-4">
+    <div class="w-full max-w-md bg-white p-8 rounded-xl shadow-md border border-gray-200">
+        <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">Kister Metrologie – Login</h2>
 
-<div class="login-form">
-    <h2>Login</h2>
+        {#if errorMessage}
+            <p class="text-red-600 text-sm mb-4 text-center">{errorMessage}</p>
+        {/if}
 
-    {#if errorMessage}
-        <p class="error">{errorMessage}</p>
-    {/if}
+        <form on:submit|preventDefault={handleLogin} class="space-y-4">
+            <div>
+                <label for="username" class="block text-sm font-medium text-gray-700">Benutzername</label>
+                <input
+                        id="username"
+                        type="text"
+                        bind:value={username}
+                        required
+                        class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                />
+            </div>
 
-    {#if loading}
-        <p class="loading">Lade...</p>
-    {/if}
+            <div>
+                <label for="password" class="block text-sm font-medium text-gray-700">Passwort</label>
+                <input
+                        id="password"
+                        type="password"
+                        bind:value={password}
+                        required
+                        class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                />
+            </div>
 
-    <form on:submit|preventDefault={handleLogin}>
-        <label for="username">Benutzername</label>
-        <input type="text" id="username" bind:value={username} required />
+            <button
+                    type="submit"
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md transition disabled:opacity-50"
+                    disabled={loading}
+            >
+                {#if loading}Wird gesendet...{:else}Anmelden{/if}
+            </button>
+        </form>
 
-        <label for="password">Passwort</label>
-        <input type="password" id="password" bind:value={password} required />
-
-        <button type="submit" disabled={loading}>
-            {#if loading}Wird gesendet...{:else}Anmelden{/if}
-        </button>
-    </form>
-    <a href="/admin">Test</a>
+        <div class="text-center mt-6">
+            <a href="/admin" class="text-sm text-blue-600 hover:underline">Admin-Zugang</a>
+        </div>
+    </div>
 </div>
