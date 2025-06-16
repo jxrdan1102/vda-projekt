@@ -59,7 +59,7 @@
         <div class="w-1/2">Modell</div>
         <div class="w-1/2 flex justify-between items-center">
             <span>Beschreibung</span>
-            <a href="/kmgs/add" on:click={onNewModellClick} title="Neues Modell hinzufügen">
+            <a href="/modelle/add" on:click={onNewModellClick} title="Neues Modell hinzufügen">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-green-600 hover:scale-110 transition-transform">
                     <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 9a.75.75 0 0 0-1.5 0v2.25H9a.75.75 0 0 0 0 1.5h2.25V15a.75.75 0 0 0 1.5 0v-2.25H15a.75.75 0 0 0 0-1.5h-2.25V9Z" clip-rule="evenodd" />
                 </svg>
@@ -69,11 +69,11 @@
 
     <!-- Table Body -->
     <div class="border border-t-0 border-gray-300 divide-y divide-gray-200">
-        {#each data.kmg as kmg}
-            <div class="flex px-4 py-1 hover:bg-gray-100 cursor-pointer" on:dblclick={() => goto(`/kmgs/${kmg.id}`)}>
-                <div class="w-1/2">{kmg.name}</div>
+        {#each data.modell as modell}
+            <div class="flex px-4 py-1 hover:bg-gray-100 cursor-pointer" on:dblclick={() => goto(`/modelle/${modell.id}`)}>
+                <div class="w-1/2">{modell.name}</div>
                 <div class="w-1/2 flex justify-between items-center">
-                    <span>{kmg.description}</span>
+                    <span>{modell.description}</span>
                     <div class="flex gap-3">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-5 h-5 text-gray-500 hover:text-blue-500 cursor-pointer">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16.5 8.25V6a2.25 2.25 0 0 0-2.25-2.25H6A2.25 2.25 0 0 0 3.75 6v8.25A2.25 2.25 0 0 0 6 16.5h2.25m8.25-8.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-7.5A2.25 2.25 0 0 1 8.25 18v-1.5m8.25-8.25h-6a2.25 2.25 0 0 0-2.25 2.25v6" />

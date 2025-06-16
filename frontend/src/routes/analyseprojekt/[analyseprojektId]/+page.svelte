@@ -4,6 +4,8 @@
     import Modal from "$lib/components/Modal.svelte";
     import NewModelPage from "./component-[anakompId]/+page.svelte";
     import NewConstPage from "./constant-[anakonstId]/+page.svelte";
+    import KmgInfoPage from "./kmg/+page.svelte";
+
 
     export let data;
     let analyseprojekt = data.analyseprojekt;
@@ -16,12 +18,24 @@
 
     $: showConstModal = !!$page.state?.selectedConstant;
     $: modellDialogOpen = !!$page.state?.updateComp;
+    $: showKmg = !!$page.state?.kmgInfo;
+
 
     async function onUpdateCompClick(compId: number) {
         const href = `/analyseprojekt/${analyseprojektId}/component-${compId}`;
         const result = await preloadData(href);
         if (result.type === 'loaded' && result.status === 200) {
             pushState(href, { updateComp: result.data });
+        } else {
+            goto(href);
+        }
+    }
+
+    async function openKmg() {
+        const href = `/analyseprojekt/${analyseprojektId}/kmg`;
+        const result = await preloadData(href);
+        if (result.type === 'loaded' && result.status === 200) {
+            pushState(href, { kmgInfo: result.data });
         } else {
             goto(href);
         }
@@ -93,45 +107,68 @@
         remark?: boolean;
     };
 
-    type FieldName = keyof EditFields;
 
 
-    const editableFields: FieldName[] = ['terml0', 'terml1', 'verteilung', 'freigrad', 'wertart', 'frei_n_1', 'remark'];
     let selectedRow: number | null = null;
 
 </script>
 
 <section class="space-y-4 text-sm font-sans text-gray-800 m-auto pt-5">
     <form method="POST" action="?/speichern">
-    <h1 class="text-lg font-semibold border-b pb-1">Analyseprojekt
-        <button type="submit" name="berechnen" formaction="?/berechnen" class="bg-gray-600 text-white text-sm px-3 py-1 rounded hover:bg-gray-700 float-right">
-            Berechnen
-        </button>
-        <button type="submit" name="speichern" class="bg-gray-600 mr-2 text-white text-sm px-3 py-1 rounded hover:bg-gray-700 float-right">
-            Speichern
-        </button>
-    </h1>
+        <h1 class="text-lg font-semibold border-b pb-1">Analyseprojekt
+            <button type="button" name="berechnen" on:click={() => goto(`/analyseprojekt/${analyseprojektId}/MU`) } class="bg-gray-600 text-white text-sm px-3 py-1 rounded hover:bg-gray-700 float-right">
+                Berechnen
+            </button>
+            <button type="submit" name="speichern" class="bg-gray-600 mr-2 text-white text-sm px-3 py-1 rounded hover:bg-gray-700 float-right">
+                Speichern
+            </button>
+            <button type="button" on:click={openKmg} name="kmg" class="bg-gray-600 mr-2 text-white text-sm px-3 py-1 rounded hover:bg-gray-700 float-right">
+                KMG
+            </button>
+        </h1>
+        <div class="flex gap-10 justify-between mt-3">
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 border p-4 rounded bg-gray-100">
-        <div>
-            <label class="block text-gray-700">Name</label>
-            <input type="text" name="name" bind:value={name} class="w-full border border-gray-400 px-2 py-1 bg-white" />
-        </div>
-        <div>
-            <label class="block text-gray-700">Änderungszustand</label>
-            <input type="text" name="aenderungszustand" bind:value={aenderungszustand} class="w-full border border-gray-400 px-2 py-1 bg-white" />
-        </div>
-        <div>
-            <label class="block text-gray-700">Identnummer</label>
-            <input type="number" name="identnr" bind:value={identnr} class="w-full border border-gray-400 px-2 py-1 bg-white" />
-        </div>
-        <div class="md:col-span-3">
-            <label class="block text-gray-700">Bemerkung</label>
-            <input type="text" name="remark" bind:value={remark} class="w-full border border-gray-400 px-2 py-1 bg-white" />
-        </div>
+        <div class="grid grid-cols-3 gap-3 border p-4 rounded bg-gray-100 w-2xl">
+            <div>
+                <label class="block text-gray-700 text-xs mb-1">Name</label>
+                <input type="text" name="name" bind:value={name} class="w-full h-6 border border-gray-400 px-2 text-sm py-2 bg-white" />
+            </div>
+            <div>
+                <label class="block text-gray-700 text-xs mb-1">Änderungszustand</label>
+                <input type="text" name="aenderungszustand" bind:value={aenderungszustand} class="w-full h-6 border border-gray-400 px-2 text-sm py-2 bg-white" />
+            </div>
+            <div>
+                <label class="block text-gray-700 text-xs mb-1">Identnummer</label>
+                <input type="number" name="identnr" bind:value={identnr} class="w-full h-6 border border-gray-400 px-2 text-sm py-2 bg-white" />
+            </div>
+            <div>
+                <label class="block text-gray-700 text-xs mb-1">Sachnummer</label>
+                <input type="text" name="sachnummer" value="Sachnummer" class="w-full h-6 border border-gray-400 px-2 text-sm py-2 bg-white" />
+            </div>
+            <div>
+                <label class="block text-gray-700 text-xs mb-1">Bemerkung</label>
+                <input type="text" name="remark" bind:value={remark} class="w-full h-6 border border-gray-400 px-2 text-sm py-2 bg-white" />
+            </div>
+            <div class="flex ml-6 items-center space-x-2 mb-1">
+                <label for="eignungswert" class="text-gray-700 text-xs object-bottom">Eignungskennwert</label>
+                <input type="checkbox" name="eignungswert" id="eignungswert" class="h-4 w-4 text-gray-600 border-gray-400 rounded" />
+            </div>
 
-    </div>
+
+        </div>
+            <!-- Modellinformationen -->
+            <div class="border p-4 rounded bg-gray-50 w-full md:w-1/2 space-y-2">
+                <h2 class="text-sm font-semibold border-b pb-1 text-gray-800"> Modell XY-2025</h2>
+                <div class="text-gray-800 text-sm space-y-1">
+                    <div><span class="font-semibold">Aufgabe:</span> Analyse von Vibrationsdaten</div>
+                    <div><span class="font-semibold">Methode:</span> FFT-Spektralanalyse</div>
+                    <div><span class="font-semibold">Messobjekt:</span> Elektromotor – Lagerseite</div>
+                    <div><span class="font-semibold">Messeinrichtung:</span> Beschleunigungssensor IEPE</div>
+                </div>
+            </div>
+        </div>
     </form>
+
     <div class="border border-gray-300 rounded overflow-hidden bg-gray-200">
         <div class="flex items-center gap-2 px-2 py-1 bg-gray-100 border-b">
             Komponenten
@@ -190,4 +227,8 @@
 
 <Modal open={showConstModal} on:close={closeModal}>
     <NewConstPage data={$page.state.selectedConstant} />
+</Modal>
+
+<Modal open={showKmg} on:close={closeModal}>
+    <KmgInfoPage data={$page.state.kmgInfo} />
 </Modal>

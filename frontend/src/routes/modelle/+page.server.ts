@@ -8,7 +8,7 @@ export const load: PageServerLoad = async ({ fetch }) => {
     const responseBody = await response.json();
     console.log(responseBody);
     return {
-        title: 'Messgeräte',
-        kmg: responseBody
+        title: 'Modelle',
+        modell: responseBody
     }
 }

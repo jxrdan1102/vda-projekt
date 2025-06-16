@@ -2,26 +2,26 @@
     import {goto, preloadData, pushState} from "$app/navigation";
     import {page} from '$app/stores';
     import Modal from "$lib/components/Modal.svelte";
-    import NewCompPage from "../[kmgId]/addComponent/+page.svelte";
+    import NewCompPage from "../[modellId]/addComponent/+page.svelte";
 
     export let data;
 
     // Lokale reactive Variablen
-    let name = data.kmg.name ?? '';
-    let geo_me = data.kmg.geo_me.toString() ?? null;
-    let geo_mo = data.kmg.geo_mo.toString() ?? null;
-    let geo_bn = data.kmg.geo_bn.toString() ?? null;
-    let methode = data.kmg.methode.toString() ?? null;
-    let tsk_ausenmessung = data.kmg.tsk_ausenmessung ?? 0;
-    let tsk_innenmessung = data.kmg.tsk_innenmessung ?? 0;
-    let tsk_tiefenmessung = data.kmg.tsk_tiefenmessung ?? 0;
-    let tsk_hoehenmessung = data.kmg.tsk_hoehenmessung ?? 0;
-    let tsk_stufenmessung = data.kmg.tsk_stufenmessung ?? 0;
-    let aufgabe_modell = data.kmg.aufgabe_modell ?? 0;
+    let name = data.modell.name ?? '';
+    let geo_me = data.modell.geo_me.toString() ?? null;
+    let geo_mo = data.modell.geo_mo.toString() ?? null;
+    let geo_bn = data.modell.geo_bn.toString() ?? null;
+    let methode = data.modell.methode.toString() ?? null;
+    let tsk_ausenmessung = data.modell.tsk_ausenmessung ?? 0;
+    let tsk_innenmessung = data.modell.tsk_innenmessung ?? 0;
+    let tsk_tiefenmessung = data.modell.tsk_tiefenmessung ?? 0;
+    let tsk_hoehenmessung = data.modell.tsk_hoehenmessung ?? 0;
+    let tsk_stufenmessung = data.modell.tsk_stufenmessung ?? 0;
+    let aufgabe_modell = data.modell.aufgabe_modell ?? 0;
 
-    let formel = data.kmg.formel ?? '';
-    let formeldesc = data.kmg.formeldesc ?? '';
-    let kmgId = data.kmgId;
+    let formel = data.modell.formel ?? '';
+    let formeldesc = data.modell.formeldesc ?? '';
+    let modellId = data.modellId;
     let message = '';
     let error = '';
     export let form: {
@@ -29,14 +29,14 @@
         message?: string;
         error?: string;
     } | null = null;
-    $: kmgId = $page.params.kmgId;
+    $: modellId = $page.params.modellId;
     $: componentDialogOpen = !!$page.state?.newComponent;
 
     async function onNewComponentClick(e: MouseEvent & { currentTarget: SVGElement }) {
         if (e.metaKey || e.ctrlKey) return;
         e.preventDefault();
 
-        const href = `/kmgs/${kmgId}/addComponent`;
+        const href = `/modelle/${modellId}/addComponent`;
         const result = await preloadData(href);
 
         if (result.type === 'loaded' && result.status === 200) {
@@ -51,7 +51,7 @@
     let selectedRow: number | null = null;
 
     $: prozesstitel = (() => {
-        switch (data.kmg.aufgabe_modell) {
+        switch (data.modell.aufgabe_modell) {
             case 1:
                 return 'Prüfprozess';
             case 2:
@@ -75,7 +75,7 @@
             });
             if (!res.ok) throw new Error('Fehler beim Löschen der Komponente');
 
-            data.kmg.components = data.kmg.components.filter((c: any) => c.id !== compId);
+            data.modell.components = data.modell.components.filter((c: any) => c.id !== compId);
         } catch (err) {
             console.error(err);
             alert('Löschen fehlgeschlagen');
@@ -195,10 +195,10 @@
             </tr>
             </thead>
             <tbody>
-            {#each data.kmg.components as comp, i}
+            {#each data.modell.components as comp, i}
                 <tr class="{selectedRow === i ? 'bg-green-200' : 'hover:bg-gray-100'} cursor-pointer"
                     on:click={() => selectedRow = i}
-                    on:dblclick={() => goto(`/kmgs/${kmgId}/component-${comp.id}`)}>
+                    on:dblclick={() => goto(`/modelle/${modellId}/component-${comp.id}`)}>
                     <td class="px-2 py-1">{i + 1}</td>
                     <td class="px-2 py-1">{comp.kompid}</td>
                     <td class="px-2 py-1">{comp.id}</td>

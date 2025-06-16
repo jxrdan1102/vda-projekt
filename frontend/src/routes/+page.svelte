@@ -33,7 +33,7 @@
                 localStorage.setItem('refresh_token', data.refresh_token);
             }
 
-            goto('/kmgs');
+            goto('/modelle');
         } catch (e) {
             errorMessage = e.message || 'Ein Fehler ist aufgetreten';
         } finally {

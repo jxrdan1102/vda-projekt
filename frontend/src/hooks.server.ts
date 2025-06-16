@@ -70,7 +70,7 @@ export const handleAuth: Handle = async ({ event, resolve }) => {
 
 // 2. Protection-Handle: Routen schützen und Admin-Check
 export const handleProtect: Handle = async ({ event, resolve }) => {
-    if (event.url.pathname.startsWith('/kmgs') && !event.locals.user) {
+    if (event.url.pathname.startsWith('/modelle') && !event.locals.user) {
         throw redirect(303, '/');
     }
 

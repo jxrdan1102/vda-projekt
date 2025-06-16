@@ -30,6 +30,7 @@ class KMGUpdate(BaseModel):
 
 class KMGResponse(KMGBase):
     id: int
+    kmg_bez: str
 
     class Config:
         from_attributes = True

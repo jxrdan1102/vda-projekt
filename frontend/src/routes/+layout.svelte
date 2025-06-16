@@ -16,7 +16,7 @@
                 <a href="/admin" class="hover:text-blue-200 transition">Admin</a>
             </li>
             <li>
-                <a href="/kmgs" class="hover:text-blue-200 transition">Modelle</a>
+                <a href="/modelle" class="hover:text-blue-200 transition">Modelle</a>
             </li>
             <li>
                 <a href="/analyseprojekt" class="hover:text-blue-200 transition">Analyseprojekte</a>

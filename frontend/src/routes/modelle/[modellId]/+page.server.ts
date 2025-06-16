@@ -2,9 +2,9 @@ import type {Actions, PageServerLoad} from './$types';
 import {fail} from "@sveltejs/kit";
 
 export const load: PageServerLoad = async ({ params, fetch }) => {
-    const { kmgId } = params;
+    const { modellId } = params;
 
-    const response = await fetch(`http://localhost:9999/modells/${kmgId}/r`, {
+    const response = await fetch(`http://localhost:9999/modells/${modellId}/r`, {
         method: 'GET',
         credentials: 'include'  // ← WICHTIG
     });
@@ -12,15 +12,15 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
     console.log(responseBody);
     return {
         title: 'Messgerät:',
-        kmg: responseBody,
-        kmgId: kmgId,
+        modell: responseBody,
+        modellId: modellId,
     }
 }
 
 
 export const actions: Actions = {
     default: async ({ params, request, fetch }) => {
-        const { kmgId } = params;
+        const { modellId } = params;
         const formData = await request.formData();
 
         function parseOptionalInt(key: string): number | undefined {
@@ -72,7 +72,7 @@ export const actions: Actions = {
 
         console.log(payload);
         // Update an Backend senden
-        const res = await fetch(`http://localhost:9999/modells/${kmgId}/r`, {
+        const res = await fetch(`http://localhost:9999/modells/${modellId}/r`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',

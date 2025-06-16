@@ -13,6 +13,7 @@ declare global {
 			newComponent?: any;
 			updateComp?: any
 			selectedConstant?: any
+			kmgInfo?: any;
 		}
 		// interface Error {}
 		// interface Locals {}
