@@ -1,7 +1,7 @@
-from app.models.components import Component
-from app.schemas.component import ComponentGet
-from app.services.BaseCRUD import BaseCRUD
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.models.components import Component
+from app.services.BaseCRUD import BaseCRUD
 
 ComponentCRUD = BaseCRUD(Component)
 
@@ -10,3 +10,6 @@ async def get_component_by_id(db: AsyncSession, id: int, user_id: int):
 
 async def update_component(db: AsyncSession, id: int, data: dict, user_id: int):
     return await ComponentCRUD.update(db, id, data, user_id)
+
+async def delete_component(db: AsyncSession, id: int, user_id: int):
+    return await ComponentCRUD.delete(db, id, user_id)

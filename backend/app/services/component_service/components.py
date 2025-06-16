@@ -8,6 +8,7 @@ MU_NAN = math.nan
 
 
 class KomponenteA(TMU_Komponente):
+
     def __init__(self, modell, const_list, lfdnr):
         try:
             super().__init__(modell, 12, const_list, "notthere")
@@ -15,7 +16,7 @@ class KomponenteA(TMU_Komponente):
             self.archiv = False
             self.lfdnr = lfdnr
             self.data = TMuKompRec(
-                TermL0=0.15,
+                TermL0=0,
                 TermL1=0,
                 Verteilung="V_Rechteck",
                 KennwertArt="K_HalbWeite",
@@ -42,7 +43,6 @@ class KomponenteA(TMU_Komponente):
             self.addConstNeededToModell()
         except Exception as e:
             print(f"[Fehler in KomponenteA.__init__] {e}")
-
     def clear(self):
         try:
             super().clear()
@@ -54,23 +54,23 @@ class KomponenteA(TMU_Komponente):
 
     def sensitivity_c1(self):
         try:
-            dk = 10 / 1000
-            En = 200e9
-            Emo = 210e9
-            Vn = 0.21
-            Vmo = 0.22
-            F = 0.75
-            r = 0.9
+            dk = self.modell.const_list.const_map[TKompConstants.TC_DurchmesserMesseinsatzME] / 1000
+            En = self.modell.const_list.const_map[TKompConstants.TC_Elast_Modul_Normal]
+            Emo = self.modell.const_list.const_map[TKompConstants.TC_Elast_Modul_MO]
+            Vn = self.modell.const_list.const_map[TKompConstants.TC_Poisson_Koeff_Normal]
+            Vmo = self.modell.const_list.const_map[TKompConstants.TC_Poisson_Koeff_MO]
+            F = self.modell.const_list.const_map[TKompConstants.TC_MesskraftME]
+            r = self.modell.const_list.const_map[TKompConstants.TC_Korrelationskoeffizient]
             E = (Emo + En) / 2
             v = (Vmo + Vn) / 2
-            if any(val == MU_NAN for val in [dk, En, Emo, E, v, Vn, Vmo, F]):
+            if any(val == MU_NAN for val in [dk, En, Emo, E, v, Vn, Vmo, F, r]):
                 return MU_NAN
             return (
-                1.1
-                * math.pow(10, 6)
-                * math.pow(dk, -1 / 3)
-                * math.pow((1 - v**2) / E, 2 / 3)
-                * math.pow(F, -1 / 3)
+                    1.1
+                    * math.pow(10, 6)
+                    * math.pow(dk, -1 / 3)
+                    * math.pow((1 - v**2) / E, 2 / 3)
+                    * math.pow(F, -1 / 3)
             )
         except Exception as e:
             print(f"[Fehler in KomponenteA.sensitivity_c1] {e}")
@@ -82,7 +82,7 @@ class KomponenteA(TMU_Komponente):
                 return self.arch_data.UNSBL0
             su = self.std_unsicherheit(self.a_val())
             c1 = self.sensitivity_c1()
-            r = 0.9
+            r = self.modell.const_list.const_map[TKompConstants.TC_Korrelationskoeffizient]
             if all(x != MU_NAN for x in [su, c1, r]) and r <= 1:
                 return 2 * su * c1 * math.sqrt(1 - r)
             else:
@@ -157,7 +157,7 @@ class TK_Kalibrierung_EN(TMU_Komponente):
                 return self.ArchData["UNSBL1"]
             su = self.std_unsicherheit(self.b_val())
             c2 = self.sensititivty_c2()
-            NennmassEN = 1 * 1000  # Beispielwert
+            NennmassEN = self.modell.const_list.const_map[TKompConstants.TC_NennmassEN] * 1000
 
             if su != MU_NAN and c2 != MU_NAN and NennmassEN != MU_NAN:
                 return su * c2 * NennmassEN
@@ -260,9 +260,9 @@ class TK_NichtZentrischeAntastung(TMU_Komponente):
 
     def a_val(self):
         try:
-            r = 0.5
-            g = 9
-            v = 0.12
+            r = self.modell.const_list.const_map[TKompConstants.TC_Radius_der_Zone_des_Spiels]
+            g = self.modell.const_list.const_map[TKompConstants.TC_Laenge_kurze_Kante_PEM]
+            v = self.modell.const_list.const_map[TKompConstants.TC_Tol_Abw_Spanne_ISO_3650]
 
             if g != 0 and r != MU_NAN and g != MU_NAN and v != MU_NAN:
                 return r * v / g
@@ -315,8 +315,8 @@ class TK_AbweichungPoissonKoeffizientMO_EN(TMU_Komponente):
 
     def a_Val(self):
         try:
-            Vn = 0.21
-            Vmo = 0.22
+            Vn = self.modell.const_list.const_map[TKompConstants.TC_Poisson_Koeff_Normal]
+            Vmo = self.modell.const_list.const_map[TKompConstants.TC_Poisson_Koeff_MO]
             if Vn != MU_NAN and Vmo != MU_NAN:
                 return abs(Vmo - Vn) / 2
             else:
@@ -330,12 +330,12 @@ class TK_AbweichungPoissonKoeffizientMO_EN(TMU_Komponente):
 
     def sensitivity_c1(self):
         try:
-            dk = 10 / 1000  # Eingabe in mm, Berechnung in m
-            En = 200000000000
-            Emo = 210000000000
-            Vn = 0.21
-            Vmo = 0.22
-            F = 0.75
+            dk = self.modell.const_list.const_map[TKompConstants.TC_DurchmesserMesseinsatzME] / 1000  # Eingabe in mm, Berechnung in m
+            En = self.modell.const_list.const_map[TKompConstants.TC_Elast_Modul_Normal]
+            Emo = self.modell.const_list.const_map[TKompConstants.TC_Elast_Modul_MO]
+            Vn = self.modell.const_list.const_map[TKompConstants.TC_Poisson_Koeff_Normal]
+            Vmo = self.modell.const_list.const_map[TKompConstants.TC_Poisson_Koeff_MO]
+            F = self.modell.const_list.const_map[TKompConstants.TC_MesskraftME]
             v = (Vmo + Vn) / 2
             E = (Emo + En) / 2
 
@@ -417,8 +417,8 @@ class TK_AbweichungElastizitaetsModul_MO_EN(TMU_Komponente):
 
     def a_val(self):
         try:
-            En = 200000000000
-            Emo = 210000000000
+            En = self.modell.const_list.const_map[TKompConstants.TC_Elast_Modul_Normal]
+            Emo = self.modell.const_list.const_map[TKompConstants.TC_Elast_Modul_MO]
             if En != MU_NAN and Emo != MU_NAN:
                 return abs(Emo - En) / 2
             else:
@@ -432,12 +432,12 @@ class TK_AbweichungElastizitaetsModul_MO_EN(TMU_Komponente):
 
     def sensititivty_c1(self):
         try:
-            dk = 10 / 1000  # Eingabe in mm, Berechnung in m
-            En = 200000000000
-            Emo = 210000000000
-            Vn = 0.21
-            Vmo = 0.22
-            F = 0.75
+            dk = self.modell.const_list.const_map[TKompConstants.TC_DurchmesserMesseinsatzME] / 1000  # Eingabe in mm, Berechnung in m
+            En = self.modell.const_list.const_map[TKompConstants.TC_Elast_Modul_Normal]
+            Emo = self.modell.const_list.const_map[TKompConstants.TC_Elast_Modul_MO]
+            Vn = self.modell.const_list.const_map[TKompConstants.TC_Poisson_Koeff_Normal]
+            Vmo = self.modell.const_list.const_map[TKompConstants.TC_Poisson_Koeff_MO]
+            F = self.modell.const_list.const_map[TKompConstants.TC_MesskraftME]
             v = (Vmo + Vn) / 2
             E = (Emo + En) / 2
 
@@ -510,8 +510,8 @@ class TK_TempDifferenz_MO_ME(TMU_Komponente):
 
     def b_val(self):
         try:
-            tx = 20.2
-            tn = 20.0
+            tx = self.modell.const_list.const_map[TKompConstants.TC_TempMO]
+            tn = self.modell.const_list.const_map[TKompConstants.TC_TempME]
             if tx != MU_NAN and tn != MU_NAN:
                 return abs(tx - tn)
             else:
@@ -522,8 +522,8 @@ class TK_TempDifferenz_MO_ME(TMU_Komponente):
 
     def sensititivty_c2(self):
         try:
-            ax = 0.0000115
-            an = 0.0000115
+            ax = self.modell.const_list.const_map[TKompConstants.TC_AusdehnKoeffME]
+            an = self.modell.const_list.const_map[TKompConstants.TC_AusdehnKoeffMO]
             if ax != MU_NAN and an != MU_NAN:
                 return (ax + an) / 2
             else:
@@ -575,8 +575,8 @@ class TK_AbweichungMittlereTemp_MO_ME(TMU_Komponente):
     def b_val(self):
         try:
             # Berechnet den Temperaturunterschied b_Val
-            tx = 20.2
-            tn = 20
+            tx = self.modell.const_list.const_map[TKompConstants.TC_TempMO]
+            tn = self.modell.const_list.const_map[TKompConstants.TC_TempME]
 
             if tx is None or tn is None:
                 return None
@@ -589,8 +589,8 @@ class TK_AbweichungMittlereTemp_MO_ME(TMU_Komponente):
         try:
             # Berechnet die Sensitivität C2 basierend auf den
             # Ausdehnungskoeffizienten
-            ax = 0.000015
-            an = 0.000015
+            ax = self.modell.const_list.const_map[TKompConstants.TC_AusdehnKoeffME]
+            an = self.modell.const_list.const_map[TKompConstants.TC_AusdehnKoeffMO]
 
             if ax is None or an is None:
                 return None
@@ -598,3 +598,304 @@ class TK_AbweichungMittlereTemp_MO_ME(TMU_Komponente):
         except Exception as e:
             print(f"[Fehler in TK_AbweichungMittlereTemp_MO_ME.sensititivty_c2] {e}")
             return None
+
+class TK_ErmittelteMessabweichungME(TMU_Komponente):
+    def __init__(self, modell, const_list, lfdnr):
+        try:
+            super().__init__(modell, 1002, const_list, "notthere")
+            self.const_list = const_list
+            self.archiv = False
+            self.lfdnr = lfdnr
+            self.data = TMuKompRec(
+                TermL0=0,
+                TermL1=0,
+                Verteilung="V_Rechteck",
+                KennwertArt="K_HalbWeite",
+                Freiheitsgrad="FG_unbegrenzt",
+                FreiN_minus_1=0,
+                Flags=1,
+            )
+            self.FieldsToEdit = [
+                "EF_Term0",
+                "EF_Verteilung",
+                "EF_Kennwertart",
+                "EF_Freheitsgrad",
+            ]
+            self.Einheit = "N"
+            self.addConstNeededToModell()
+        except Exception as e:
+            print(f"[Fehler in TK_ErmittelteMessabweichungME.__init__] {e}")
+    def clear(self):
+        try:
+            super().clear()
+            self.data.Verteilung = 1
+            self.data.KennwertArt = 1
+            self.data.Freiheitsgrad = 1
+        except Exception as e:
+            print(f"[Fehler in TK_ErmittelteMessabweichungME.clear] {e}")
+
+class TK_Positioniergenauigkeit_Taster_X_Achse(TMU_Komponente):
+    def __init__(self, modell, const_list, lfdnr):
+        try:
+            super().__init__(modell, 1002, const_list, "notthere")
+            self.const_list = const_list
+            self.archiv = False
+            self.lfdnr = lfdnr
+            self.data = TMuKompRec(
+                TermL0=0,
+                TermL1=0,
+                Verteilung="V_Rechteck",
+                KennwertArt="K_Spannweite",
+                Freiheitsgrad="FG_unbegrenzt",
+                FreiN_minus_1=0,
+                Flags=1,
+            )
+            self.ConstNeeded += [
+                TKompConstants["TC_Hoehendifferenz_Stuetzpunkte"],
+                TKompConstants["TC_Laenge_Messobjekt"],
+            ]
+            self.FieldsToEdit = [
+                "EF_Term0",
+                "EF_Verteilung",
+                "EF_Kennwertart",
+                "EF_Freheitsgrad",
+            ]
+            self.Einheit = "N"
+            self.addConstNeededToModell()
+        except Exception as e:
+            print(f"[Fehler in TK_Positioniergenauigkeit_Taster_X_Achse.__init__] {e}")
+    def clear(self):
+        try:
+            super().clear()
+            self.data.Verteilung = 1
+            self.data.KennwertArt = 2
+            self.data.Freiheitsgrad = 1
+        except Exception as e:
+            print(f"[Fehler in TK_Positioniergenauigkeit_Taster_X_Achse.clear] {e}")
+
+    def sensititivty_c1(self) -> float:
+        h = self.modell.const_list.const_map[TKompConstants.TC_Hoehendifferenz_Stuetzpunkte]
+        L = self.modell.const_list.const_map[TKompConstants.TC_Laenge_Messobjekt]
+        if not math.isnan(h) and not math.isnan(L) and L != 0:
+            return h/L
+        return MU_NAN
+
+class TK_Ebenheit_Messplatte(TMU_Komponente):
+    def __init__(self, modell, const_list, lfdnr):
+        try:
+            super().__init__(modell, 1002, const_list, "notthere")
+            self.const_list = const_list
+            self.archiv = False
+            self.lfdnr = lfdnr
+            self.data = TMuKompRec(
+                TermL0=0,
+                TermL1=0,
+                Verteilung="V_Rechteck",
+                KennwertArt="K_Spannweite",
+                Freiheitsgrad="FG_unbegrenzt",
+                FreiN_minus_1=0,
+                Flags=1,
+            )
+            self.FieldsToEdit = [
+                "EF_Term0",
+                "EF_Verteilung",
+                "EF_Kennwertart",
+                "EF_Freheitsgrad",
+            ]
+            self.Einheit = "N"
+            self.addConstNeededToModell()
+        except Exception as e:
+            print(f"[Fehler in TK_Ebenheit_Messplatte.__init__] {e}")
+    def clear(self):
+        try:
+            super().clear()
+            self.data.Verteilung = 1
+            self.data.KennwertArt = 2
+            self.data.Freiheitsgrad = 1
+        except Exception as e:
+            print(f"[Fehler in TK_Ebenheit_Messplatte.clear] {e}")
+
+    def b_val(self):
+        return 0
+
+class TK_Kalibrierung_Ebenheit_Messplatte(TMU_Komponente):
+    def __init__(self, modell, const_list, lfdnr):
+        try:
+            super().__init__(modell, 1002, const_list, "notthere")
+            self.const_list = const_list
+            self.archiv = False
+            self.lfdnr = lfdnr
+            self.data = TMuKompRec(
+                TermL0=0,
+                TermL1=0,
+                Verteilung="V_Rechteck",
+                KennwertArt="K_Spannweite",
+                Freiheitsgrad="FG_unbegrenzt",
+                FreiN_minus_1=0,
+                Flags=1,
+            )
+            self.FieldsToEdit = [
+                "EF_Term0",
+                "EF_Verteilung",
+                "EF_Kennwertart",
+                "EF_Freheitsgrad",
+            ]
+            self.Einheit = "N"
+            self.addConstNeededToModell()
+        except Exception as e:
+            print(f"[Fehler in TK_Kalibrierung_Ebenheit_Messplatte.__init__] {e}")
+    def clear(self):
+        try:
+            super().clear()
+            self.data.Verteilung = 1
+            self.data.KennwertArt = 2
+            self.data.Freiheitsgrad = 1
+        except Exception as e:
+            print(f"[Fehler in TK_Kalibrierung_Ebenheit_Messplatte.clear] {e}")
+
+    def b_val(self):
+        return 0
+
+class TK_Aufloesung_ME_Einstell(TMU_Komponente):
+    def __init__(self, modell, const_list, lfdnr):
+        try:
+            super().__init__(modell, 1002, const_list, "notthere")
+            self.const_list = const_list
+            self.archiv = False
+            self.lfdnr = lfdnr
+            self.data = TMuKompRec(
+                TermL0=0,
+                TermL1=0,
+                Verteilung="V_Rechteck",
+                KennwertArt="K_Spannweite",
+                Freiheitsgrad="FG_unbegrenzt",
+                FreiN_minus_1=0,
+                Flags=1,
+            )
+            self.FieldsToEdit = [
+                "EF_Term0",
+                "EF_Verteilung",
+                "EF_Kennwertart",
+                "EF_Freheitsgrad",
+            ]
+            self.Einheit = "N"
+            self.addConstNeededToModell()
+        except Exception as e:
+            print(f"[Fehler in TK_Aufloesung_ME_Einstell.__init__] {e}")
+    def clear(self):
+        try:
+            super().clear()
+            self.data.Verteilung = 1
+            self.data.KennwertArt = 2
+            self.data.Freiheitsgrad = 1
+        except Exception as e:
+            print(f"[Fehler in TK_Aufloesung_ME_Einstell.clear] {e}")
+
+
+class TK_Ebenheit_1_2_MO(TMU_Komponente):
+    def __init__(self, modell, const_list, lfdnr):
+        try:
+            super().__init__(modell, 1002, const_list, "notthere")
+            self.const_list = const_list
+            self.archiv = False
+            self.lfdnr = lfdnr
+            self.data = TMuKompRec(
+                TermL0=0,
+                TermL1=0,
+                Verteilung="V_Rechteck",
+                KennwertArt="K_Spannweite",
+                Freiheitsgrad="FG_unbegrenzt",
+                FreiN_minus_1=0,
+                Flags=1,
+            )
+            self.FieldsToEdit = [
+                "EF_Term0",
+                "EF_Verteilung",
+                "EF_Kennwertart",
+                "EF_Freheitsgrad",
+            ]
+            self.Einheit = "N"
+            self.addConstNeededToModell()
+        except Exception as e:
+            print(f"[Fehler in TK_Ebenheit_1_2_MO.__init__] {e}")
+    def clear(self):
+        try:
+            super().clear()
+            self.data.Verteilung = 1
+            self.data.KennwertArt = 2
+            self.data.Freiheitsgrad = 1
+        except Exception as e:
+            print(f"[Fehler in TK_Ebenheit_1_2_MO.clear] {e}")
+
+
+class TK_Korr_Zylin_GN_1_2(TMU_Komponente):
+    def __init__(self, modell, const_list, lfdnr):
+        try:
+            super().__init__(modell, 1002, const_list, "notthere")
+            self.const_list = const_list
+            self.archiv = False
+            self.lfdnr = lfdnr
+            self.data = TMuKompRec(
+                TermL0=0,
+                TermL1=0,
+                Verteilung="V_Rechteck",
+                KennwertArt="K_Spannweite",
+                Freiheitsgrad="FG_unbegrenzt",
+                FreiN_minus_1=0,
+                Flags=1,
+            )
+            self.FieldsToEdit = [
+                "EF_Term0",
+                "EF_Verteilung",
+                "EF_Kennwertart",
+                "EF_Freheitsgrad",
+            ]
+            self.Einheit = "N"
+            self.addConstNeededToModell()
+        except Exception as e:
+            print(f"[Fehler in TK_Korr_Zylin_GN_1_2.__init__] {e}")
+    def clear(self):
+        try:
+            super().clear()
+            self.data.Verteilung = 1
+            self.data.KennwertArt = 2
+            self.data.Freiheitsgrad = 1
+        except Exception as e:
+            print(f"[Fehler in TK_Korr_Zylin_GN_1_2.clear] {e}")
+
+
+
+class TK_Korr_Rundheit_EN_1_2(TMU_Komponente):
+    def __init__(self, modell, const_list, lfdnr):
+        try:
+            super().__init__(modell, 1002, const_list, "notthere")
+            self.const_list = const_list
+            self.archiv = False
+            self.lfdnr = lfdnr
+            self.data = TMuKompRec(
+                TermL0=0,
+                TermL1=0,
+                Verteilung="V_Rechteck",
+                KennwertArt="K_Spannweite",
+                Freiheitsgrad="FG_unbegrenzt",
+                FreiN_minus_1=0,
+                Flags=1,
+            )
+            self.FieldsToEdit = [
+                "EF_Term0",
+                "EF_Verteilung",
+                "EF_Kennwertart",
+                "EF_Freheitsgrad",
+            ]
+            self.Einheit = "N"
+            self.addConstNeededToModell()
+        except Exception as e:
+            print(f"[Fehler in TK_Korr_Rundheit_EN_1_2.__init__] {e}")
+    def clear(self):
+        try:
+            super().clear()
+            self.data.Verteilung = 1
+            self.data.KennwertArt = 2
+            self.data.Freiheitsgrad = 1
+        except Exception as e:
+            print(f"[Fehler in TK_Korr_Rundheit_EN_1_2.clear] {e}")

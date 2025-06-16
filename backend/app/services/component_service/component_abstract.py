@@ -188,6 +188,7 @@ class TMU_Komponente(TMU_Atom):
     def varianz(self) -> float:
         try:
             ub = self.unsicherheitsbeitrag
+            print("Komponente: ",self,ub)
             if is_valid_number(ub):
                 return ub ** 2
         except Exception as e:

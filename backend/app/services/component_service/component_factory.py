@@ -7,6 +7,7 @@ from app.services.component_service.EverythinForComponents.TMU_ConstList import 
 
 class ComponentFactory:
     COMPONENTS = {
+        1002: k.TK_ErmittelteMessabweichungME,
         1042: k.KomponenteA,
         1001: k.TK_KalibrierungME,
         1027: k.TK_Kalibrierung_EN,
@@ -21,6 +22,13 @@ class ComponentFactory:
         2222: d.TK_3d_Wi_WE,
         3333: d.TK_3d_Wi_WB,
         4444: d.TK_3d_Wi_DeltaEKMG,
+        1063: k.TK_Positioniergenauigkeit_Taster_X_Achse,
+        1064: k.TK_Ebenheit_Messplatte,
+        1065: k.TK_Kalibrierung_Ebenheit_Messplatte,
+        1025: k.TK_Aufloesung_ME_Einstell,
+        1016: k.TK_Korr_Zylin_GN_1_2,
+        1018: k.TK_Korr_Rundheit_EN_1_2,
+        1006: k.TK_Ebenheit_1_2_MO,
     }
 
     @staticmethod

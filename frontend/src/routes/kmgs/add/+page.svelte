@@ -1,6 +1,7 @@
 <script lang="ts">
     import type {ActionData, PageData} from './$types';
 
+    let aufgabe_modell = '';
     export let data: PageData;
     export let form: ActionData;
 </script>
@@ -9,8 +10,19 @@
 
 <form method="POST" class="space-y-4 max-w-md">
     <div>
-        <label for="methode" class="block font-medium">Methode (iGeometrie_EN)</label>
-        <input id="methode" name="methode" type="number" required class="w-full border rounded px-3 py-2" />
+        <label for="aufgabe_modell" class="block font-medium">Prozess</label>
+        <select
+                id="aufgabe_modell"
+                name="aufgabe_modell"
+                bind:value={aufgabe_modell}
+                required
+                class="w-full border rounded px-3 py-2"
+        >
+            <option value="" disabled selected>Bitte wählen</option>
+            <option value="1">Prüfprozess</option>
+            <option value="2">Kalibrierprozess</option>
+            <option value="3">3D-Prüfprozess</option>
+        </select>
     </div>
 
     <div>
@@ -18,10 +30,12 @@
         <input id="name" name="name" required class="w-full border rounded px-3 py-2" />
     </div>
 
-    <div>
-        <label for="aufgabe" class="block font-medium">Aufgabe (optional)</label>
-        <input id="aufgabe" name="aufgabe" type="number" class="w-full border rounded px-3 py-2" />
-    </div>
+    {#if aufgabe_modell === '3'}
+        <div>
+            <label for="aufgabe" class="block font-medium">Aufgabe</label>
+            <input id="aufgabe" name="aufgabe" required class="w-full border rounded px-3 py-2" />
+        </div>
+    {/if}
 
     <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
         Speichern

@@ -2,25 +2,24 @@ import type {Actions, PageServerLoad} from './$types';
 import {fail} from "@sveltejs/kit";
 
 export const load: PageServerLoad = async ({ params, fetch }) => {
-    const { kmgId } = params;
+    const { analyseprojektId } = params;
 
-    const response = await fetch(`http://localhost:9999/modells/${kmgId}/r`, {
+    const response = await fetch(`http://localhost:9999/anamu/${analyseprojektId}/r`, {
         method: 'GET',
         credentials: 'include'  // ← WICHTIG
     });
     const responseBody = await response.json();
     console.log(responseBody);
     return {
-        title: 'Messgerät:',
-        kmg: responseBody,
-        kmgId: kmgId,
+        title: 'Analyseprojekt:',
+        analyseprojekt: responseBody
     }
 }
 
 
 export const actions: Actions = {
-    default: async ({ params, request, fetch }) => {
-        const { kmgId } = params;
+    speichern: async ({ params, request, fetch }) => {
+        const { analyseprojektId } = params;
         const formData = await request.formData();
 
         function parseOptionalInt(key: string): number | undefined {
@@ -42,43 +41,22 @@ export const actions: Actions = {
         const name = parseOptionalString('name');
         if (name !== undefined) payload.name = name;
 
-        const geo_me = parseOptionalInt('geo_me');
-        if (geo_me !== undefined) payload.geo_me = geo_me;
+        const aenderungszustand = parseOptionalString('aenderungszustand');
+        if (aenderungszustand !== undefined) payload.aenderungszustand = aenderungszustand;
 
-        const geo_mo = parseOptionalInt('geo_mo');
-        if (geo_mo !== undefined) payload.geo_mo = geo_mo;
+        const identnr = parseOptionalString('identnr');
+        if (identnr !== undefined) payload.identnr = identnr;
 
-        const geo_bn = parseOptionalInt('geo_bn');
-        if (geo_bn !== undefined) payload.geo_bn = geo_bn;
-
-        const methode = parseOptionalInt('methode');
-        if (methode !== undefined) payload.methode = methode;
-
-        payload.tsk_ausenmessung = formData.has('tsk_ausenmessung') ? 1 : 0;
-        payload.tsk_innenmessung = formData.has('tsk_innenmessung') ? 1 : 0;
-        payload.tsk_tiefenmessung = formData.has('tsk_tiefenmessung') ? 1 : 0;
-        payload.tsk_hoehenmessung = formData.has('tsk_hoehenmessung') ? 1 : 0;
-        payload.tsk_stufenmessung = formData.has('tsk_stufenmessung') ? 1 : 0;
-
-        const aufgabe_modell = parseOptionalInt(formData.get('aufgabe_modell') as string);
-        if (aufgabe_modell !== undefined) payload.aufgabe_modell = aufgabe_modell;
-
-
-        const formel = parseOptionalString('formel');
-        if (formel !== undefined) payload.formel = formel;
-
-        const formeldesc = parseOptionalString('formeldesc');
-        if (formeldesc !== undefined) payload.formeldesc = formeldesc;
-
+        const remark = parseOptionalString('remark');
+        if (remark !== undefined) payload.remark = remark;
         console.log(payload);
         // Update an Backend senden
-        const res = await fetch(`http://localhost:9999/modells/${kmgId}/r`, {
+        const res = await fetch(`http://localhost:9999/anamu/${analyseprojektId}/r`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
             body: JSON.stringify(payload)
         });
-
         if (!res.ok) {
             const err = await res.json();
             return fail(res.status, {
@@ -91,7 +69,25 @@ export const actions: Actions = {
             success: true,
             message: result.detail
         };
+    },
+    berechnen: async ({ params,request }) => {
+        const { analyseprojektId } = params;
+        const cookieHeader = request.headers.get('cookie');
+        const res = await fetch(`http://localhost:9999/anamu/${analyseprojektId}/calc/r`, {
+            method: 'GET',
+            headers: {
+                // Sende den Cookie-Header mit an die API
+                cookie: cookieHeader ?? ''
+            }
+        });
+        const result = await res.json();
+        if (!res.ok) {
+            return fail(500, { error: 'Berechnung fehlgeschlagen.' });
+        }
+        console.log(result);
+        return { unsicherheit: result};
     }
 };
+
 
 

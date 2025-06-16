@@ -1,11 +1,13 @@
-from app.models.components import Component
-from app.models.modell import Modell
-from app.services.BaseCRUD import BaseCRUD
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.models.components import Component
+from app.models.modell import Modell
+from app.services.BaseCRUD import BaseCRUD
+
 ModellCRUD = BaseCRUD(Modell)
+ComponentCRUD = BaseCRUD(Component)
 
 async def get_all_modells(db: AsyncSession, user_id: int):
     return await ModellCRUD.get_all_by_user(db, user_id)
@@ -27,6 +29,11 @@ async def create_modell(db: AsyncSession, data: dict, user_id: int):
 
 async def update_modell(db: AsyncSession, id: int, data: dict, user_id: int):
     return await ModellCRUD.update(db, id, data, user_id)
+
+async def add_component(db: AsyncSession, id: int, data: dict, user_id: int):
+    data["fk_user_id"] = user_id
+    data["fk_modell"] = id
+    return await ComponentCRUD.create(db, data)
 
 async def delete_modell_with_components(db: AsyncSession, id: int, user_id: int):
     await ModellCRUD.get_by_id(db, id, user_id)  # Safety check

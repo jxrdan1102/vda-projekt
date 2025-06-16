@@ -1,12 +1,13 @@
 from datetime import datetime
 
+from pydantic import BaseModel
+
 from app.schemas.anakomp import Anakomp
 from app.schemas.anakomp import AnakompForAnamuR
 from app.schemas.anakonst import Anakonst
 from app.schemas.anakonst import AnakonstForAnamuR
 from app.schemas.modell import ModellForAnamuR
 from app.schemas.modell import ModellIDResponse
-from pydantic import BaseModel
 
 
 class AnamuModellidOnly(BaseModel):
@@ -16,11 +17,12 @@ class AnamuModellidOnly(BaseModel):
         from_attributes = True
 
 class AnamuBase(BaseModel):
+    id: int
     name: str
     fk_modell: int
     aenderungszustand: str
-    identnr: int
-    creation: datetime
+    identnr: int | None = None
+    creation: datetime | None = None
 
     class Config:
         from_attributes = True
@@ -33,9 +35,11 @@ class Anamu(AnamuBase):
     pass
 
 class AnamuGetIdR(BaseModel):
+    id: int
     name: str
     aenderungszustand: str
     identnr: int | None = None
+    remark: str | None = None
     modell: ModellForAnamuR
     anakomp: list[AnakompForAnamuR] | None = None
     anakonst: list[AnakonstForAnamuR] | None = None
@@ -48,6 +52,15 @@ class AnamuIdGet(BaseModel):
     aenderungszustand: str
     identnr: int
     modell: ModellIDResponse
+
+    class Config:
+        from_attributes = True
+
+class AnamuUpdate(BaseModel):
+    name: str | None = None
+    aenderungszustand: str | None = None
+    identnr: int | None = None
+    remark: str | None = None
 
     class Config:
         from_attributes = True

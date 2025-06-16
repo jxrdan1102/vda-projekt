@@ -10,6 +10,9 @@ declare global {
 		}
 		interface PageState {
 			newModell?: any;
+			newComponent?: any;
+			updateComp?: any
+			selectedConstant?: any
 		}
 		// interface Error {}
 		// interface Locals {}

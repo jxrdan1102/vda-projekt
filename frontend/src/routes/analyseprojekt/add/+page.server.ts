@@ -1,18 +1,31 @@
-import type {Actions} from './$types';
+import type {Actions, PageServerLoad} from './$types';
 import {fail} from '@sveltejs/kit';
 
+export const load: PageServerLoad = async ({ fetch }) => {
+    const res = await fetch('http://localhost:9999/modells/r', {
+        credentials: 'include'
+    });
 
+    if (!res.ok) {
+        return { models: [] };
+    }
+
+    const data = await res.json();
+    return {
+        models: data  // Passe ggf. an, falls du ein anderes Format bekommst
+    };
+};
 export const actions: Actions = {
     default: async ({ request, fetch }) => {
         const formData = await request.formData();
 
         const payload = {
-            aufgabe_modell: parseInt(formData.get('aufgabe_modell') as string),
             name: formData.get('name') as string,
-            aufgabe: formData.get('aufgabe') ? parseInt(formData.get('aufgabe') as string) : null
+            fk_modell: parseInt(formData.get('modell') as string),
+            aenderungszustand: formData.get('aenderungszustand') ? formData.get('aenderungszustand') as string : null
         };
-
-        const res = await fetch('http://localhost:9999/modells/r', {
+        console.log(payload);
+        const res = await fetch('http://localhost:9999/anamu/r', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

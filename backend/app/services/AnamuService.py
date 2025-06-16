@@ -33,7 +33,7 @@ async def get_anamu_by_id(db: AsyncSession, id: int, user_id: int):
 async def create_anamu_with_dependencies(db: AsyncSession, anamu: AnamuCreateR, user_id: int):
     # AnAMU anlegen
     data = anamu.model_dump()
-    data["fk_user"] = user_id
+    data["fk_user_id"] = user_id
     created_anamu = await AnamuCRUD.create(db, data)
 
     # Abgeleitete Daten erzeugen
@@ -70,6 +70,14 @@ async def add_anakomps(db: AsyncSession, fk_anamu: int, fk_modell: int) -> list[
     await db.commit()
     return anakomps
 
+async def update_anamu(db: AsyncSession, id: int, data: dict, user_id: int):
+    return await AnamuCRUD.update(db, id, data, user_id)
+
+async def get_anakomp(db: AsyncSession, id: int, user_id: int):
+    return await AnakompCRUD.get_by_id(db, id, user_id)
+
+async def get_anakonst(db: AsyncSession, id: int, user_id: int):
+    return await AnakonstCRUD.get_by_id(db, id, user_id)
 
 async def add_anakonsts(db: AsyncSession, fk_anamu: int, fk_modell: int) -> list[ANAKONST]:
     # Modell validieren
@@ -87,7 +95,7 @@ async def add_anakonsts(db: AsyncSession, fk_anamu: int, fk_modell: int) -> list
     if not components:
         raise HTTPException(status_code=404, detail="Keine Komponenten für Konstantenberechnung gefunden")
 
-    schema = TMU_ModellSchema(id=modell.id, aufgabe=modell.aufgabe)
+    schema = TMU_ModellSchema(id=modell.id, aufgabe=modell.aufgabe, AufgabeModell=modell.aufgabe_modell)
     tmodell = TMU_Modell(schema)
 
     for komp in components:
@@ -155,7 +163,7 @@ async def calc_uncertainty(db: AsyncSession, id: int, user_id: int):
             map_component_data(tcomponent, acomp)
 
     await tmodell.setConstValue(anamu.id, db)
-    print (tmodell.const_list)
+    print ("hier",tmodell.const_list)
     return tmodell.MUPruefverfahren_U()
 
 async def delete_anamu(db: AsyncSession, id: int, user_id: int):

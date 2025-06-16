@@ -16,12 +16,14 @@ class AnakompBase(BaseModel):
         from_attributes = True
 
 class AnakompForAnamuR(BaseModel):
+    id: int
     fk_mod_components: int
     remark: str | None = None
     terml0: float | None = None
     terml1: float | None = None
     wertart: int | None = None
     freigrad: int | None = None
+    frei_n_1: int | None = None
     verteilung: int | None = None
 
     class Config:
@@ -39,4 +41,5 @@ class AnakompUpdateR(BaseModel):
     terml1: float | None = None
     wertart: int | None = None
     freigrad: int | None = None
+    frei_n_1: int | None = None
     verteilung: int | None = None

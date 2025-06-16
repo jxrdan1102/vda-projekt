@@ -26,7 +26,7 @@ async def get_component_db(
     return await ComponentService.get_component_by_id(db, id, current_user.id)
 
 
-@router.put("/{id}")
+@router.post("/{id}")
 async def update_comp(
     id: int,
     comp_update: ComponentRefUpdate,
@@ -35,3 +35,7 @@ async def update_comp(
 ):
     update_data = comp_update.model_dump(exclude_unset=True)
     return await ComponentService.update_component(db, id, update_data, current_user.id)
+
+@router.delete("/{id}")
+async def delete_comp(id: int, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
+    return await ComponentService.delete_component(db, id, current_user.id)

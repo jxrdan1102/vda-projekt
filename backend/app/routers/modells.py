@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database.database import get_db
 from app.models.user import User
 from app.routers.auth import get_current_user
+from app.schemas.component import ComponentAddR
 from app.schemas.modell import ModellCreateR
 from app.schemas.modell import ModellGetAllR
 from app.schemas.modell import ModellGetIdR
@@ -30,7 +31,13 @@ async def update_modellr(id: int, modell: ModellUpdateR, db: AsyncSession = Depe
     await ModellService.update_modell(db, id, modell.model_dump(exclude_unset=True), current_user.id)
     return {"detail": "Modell wurde erfolgreich geändert"}
 
+@router.post("/{id}/addComponent")
+async def addComponent(id: int, component: ComponentAddR, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
+    await ModellService.add_component(db, id, component.model_dump(), current_user.id)
+    print (component.model_dump())
+    return {"detail": "Component wurde erfolgreich erstellt"}
 @router.delete("/{id}")
 async def delete_modell_by_id(id: int, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
     await ModellService.delete_modell_with_components(db, id, current_user.id)
     return {"detail": f"Modell mit ID {id} wurde gelöscht"}
+

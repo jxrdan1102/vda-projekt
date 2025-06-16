@@ -13,9 +13,13 @@ class BaseCRUD:
         return result.scalars().all()
 
     async def get_by_id(self, db: AsyncSession, id: int, user_id: int = None):
+        print ("test", id, user_id)
         stmt = select(self.model).where(self.model.id == id)
+        print ("test",stmt)
+        result = await db.execute(stmt)
         if user_id is not None:
             stmt = stmt.where(self.model.fk_user_id == user_id)
+        print ("nochmal",stmt)
         result = await db.execute(stmt)
         obj = result.scalar_one_or_none()
         if not obj:

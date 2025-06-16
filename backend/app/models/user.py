@@ -1,6 +1,7 @@
-from app.database.database import Base
 from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
+
+from app.database.database import Base
 
 
 class User(Base):
@@ -17,4 +18,8 @@ class User(Base):
     refresh_tokens = relationship("RefreshToken", back_populates="user")
     modells = relationship("Modell", back_populates="owner")
     anamu = relationship("ANAMU", back_populates="user")
+    anakomp = relationship("ANAKOMP", back_populates="user")
+    anakonst = relationship("ANAKONST", back_populates="user")
+
+
 

@@ -1,6 +1,7 @@
-from app.database.database import Base
 from sqlalchemy import DATETIME, Column, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
+
+from app.database.database import Base
 
 
 class ANAMU(Base):
@@ -36,7 +37,9 @@ class ANAKONST(Base):
     constnum = Column(Integer)
     constval = Column(Float)
     remark = Column(String(255))
+    fk_user_id = Column(Integer, ForeignKey("users.id"))
 
+    user = relationship("User", back_populates="anakonst")
     anamu = relationship("ANAMU", back_populates="anakonst")
 
 class ANAKOMP(Base):
@@ -54,6 +57,8 @@ class ANAKOMP(Base):
     verteilung = Column(Integer)
     messpunkt_anzahl = Column(Integer)
     anzahl_messungen = Column(Integer)
+    fk_user_id = Column(Integer, ForeignKey("users.id"))
 
+    user = relationship("User", back_populates="anakomp")
     komponente = relationship("Component", back_populates="anakomp")
     anamu = relationship("ANAMU", back_populates="anakomp")

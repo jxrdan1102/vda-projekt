@@ -62,25 +62,6 @@ class ModellUpdateR(BaseModel):
     class Config:
         from_attributes = True
 
-class ModellGetIdR(BaseModel):
-    name: str | None = None
-    geo_me: int | None = None # Messeinrichtung
-    geo_mo: int | None = None # Messobjekt
-    geo_bn: int | None = None # Einstellnormal
-    methode: int | None = None # Methode
-    tsk_ausenmessung: int | None = None
-    tsk_innenmessung: int | None = None
-    tsk_tiefenmessung: int | None = None
-    tsk_hoehenmessung: int | None = None
-    tsk_stufenmessung: int | None = None
-    formel: str | None = None
-    formeldesc: str | None = None
-
-    components: list[ComponentGetR] | None = None
-
-    class Config:
-        from_attributes = True
-
 class ModellCreate(BaseModel):
     name: str
     description: str | None = None
@@ -108,7 +89,6 @@ class ModellCreate(BaseModel):
 
     class Config:
         from_attributes = True
-
 
 class ModellUpdate(BaseModel):
     name: str | None = None
@@ -157,6 +137,27 @@ class ModellIDResponse(BaseModel):
         from_attributes = True
         arbitrary_types_allowed = True
         json_encoders = {TKompConstants: lambda v: v.name}
+
+
+class ModellGetIdR(BaseModel):
+    name: str | None = None
+    geo_me: int | None = None # Messeinrichtung
+    geo_mo: int | None = None # Messobjekt
+    geo_bn: int | None = None # Einstellnormal
+    methode: int | None = None # Methode
+    tsk_ausenmessung: int | None = None
+    tsk_innenmessung: int | None = None
+    tsk_tiefenmessung: int | None = None
+    tsk_hoehenmessung: int | None = None
+    tsk_stufenmessung: int | None = None
+    formel: str | None = None
+    formeldesc: str | None = None
+    aufgabe_modell: int
+
+    components: list[ComponentGetR] | None = None
+
+    class Config:
+        from_attributes = True
 
 
 class TMU_Modell_Pydantic(BaseModel):

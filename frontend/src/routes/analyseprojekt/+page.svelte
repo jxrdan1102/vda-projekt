@@ -27,39 +27,33 @@
     }
 </script>
 
-
-<style>
-    tbody tr:nth-child(odd) {
-        background-color: rgba(200, 200, 200, 0.3);
-    }
-</style>
-
 <div class="max-w-7xl mx-auto px-4 py-6">
     <!-- Page Header -->
     <div class="flex items-center gap-4 text-2xl font-semibold text-gray-600 mb-6">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
-            <path fill-rule="evenodd" d="M12 6.75a5.25 5.25 0 0 1 6.775-5.025.75.75 0 0 1 .313 1.248l-3.32 3.319c.063.475.276.934.641 1.299.365.365.824.578 1.3.64l3.318-3.319a.75.75 0 0 1 1.248.313 5.25 5.25 0 0 1-5.472 6.756c-1.018-.086-1.87.1-2.309.634L7.344 21.3A3.298 3.298 0 1 1 2.7 16.657l8.684-7.151c.533-.44.72-1.291.634-2.309A5.342 5.342 0 0 1 12 6.75ZM4.117 19.125a.75.75 0 0 1 .75-.75h.008a.75.75 0 0 1 .75.75v.008a.75.75 0 0 1-.75.75h-.008a.75.75 0 0 1-.75-.75v-.008Z" clip-rule="evenodd" />
-            <path d="m10.076 8.64-2.201-2.2V4.874a.75.75 0 0 0-.364-.643l-3.75-2.25a.75.75 0 0 0-.916.113l-.75.75a.75.75 0 0 0-.113.916l2.25 3.75a.75.75 0 0 0 .643.364h1.564l2.062 2.062 1.575-1.297Z" />
-            <path fill-rule="evenodd" d="m12.556 17.329 4.183 4.182a3.375 3.375 0 0 0 4.773-4.773l-3.306-3.305a6.803 6.803 0 0 1-1.53.043c-.394-.034-.682-.006-.867.042a.589.589 0 0 0-.167.063l-3.086 3.748Zm3.414-1.36a.75.75 0 0 1 1.06 0l1.875 1.876a.75.75 0 1 1-1.06 1.06L15.97 17.03a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+            <path d="M19.5 21a3 3 0 0 0 3-3v-4.5a3 3 0 0 0-3-3h-15a3 3 0 0 0-3 3V18a3 3 0 0 0 3 3h15ZM1.5 10.146V6a3 3 0 0 1 3-3h5.379a2.25 2.25 0 0 1 1.59.659l2.122 2.121c.14.141.331.22.53.22H19.5a3 3 0 0 1 3 3v1.146A4.483 4.483 0 0 0 19.5 9h-15a4.483 4.483 0 0 0-3 1.146Z" />
         </svg>
-        <span>Modelle</span>
+
+        <span>Analyseprojekte</span>
     </div>
 
     <!-- Filter Row -->
     <div class="grid grid-cols-5 gap-2 mb-4">
-        <input class="border rounded px-2 py-1" placeholder="Prozess" />
-        <input class="border rounded px-2 py-1" placeholder="Aufgabe" />
-        <input class="border rounded px-2 py-1" placeholder="Methode" />
-        <input class="border rounded px-2 py-1" placeholder="Messeinrichtung" />
-        <input class="border rounded px-2 py-1" placeholder="Messobjekt" />
+        <input class="border rounded px-2 py-1" placeholder="Projekt" />
+        <input class="border rounded px-2 py-1" placeholder="Änderungsstand" />
+        <input class="border rounded px-2 py-1" placeholder="Modell" />
+        <input class="border rounded px-2 py-1" placeholder="Identnummer" />
+        <input class="border rounded px-2 py-1" placeholder="Datum" />
     </div>
 
     <!-- Table Header -->
     <div class="bg-gray-200 border border-gray-300 rounded-t-md flex items-center font-semibold px-4 py-2">
-        <div class="w-1/2">Modell</div>
+        <div class="w-1/2">Analyseprojekt</div>
+        <div class="w-1/2">Änderungsstand</div>
+        <div class="w-1/2">Identnummer</div>
         <div class="w-1/2 flex justify-between items-center">
-            <span>Beschreibung</span>
-            <a href="/kmgs/add" on:click={onNewModellClick} title="Neues Modell hinzufügen">
+            <span>Datum</span>
+            <a href="/analyseprojekt/add" on:click={onNewModellClick} title="Neues Modell hinzufügen">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-green-600 hover:scale-110 transition-transform">
                     <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 9a.75.75 0 0 0-1.5 0v2.25H9a.75.75 0 0 0 0 1.5h2.25V15a.75.75 0 0 0 1.5 0v-2.25H15a.75.75 0 0 0 0-1.5h-2.25V9Z" clip-rule="evenodd" />
                 </svg>
@@ -69,11 +63,13 @@
 
     <!-- Table Body -->
     <div class="border border-t-0 border-gray-300 divide-y divide-gray-200">
-        {#each data.kmg as kmg}
-            <div class="flex px-4 py-1 hover:bg-gray-100 cursor-pointer" on:dblclick={() => goto(`/kmgs/${kmg.id}`)}>
-                <div class="w-1/2">{kmg.name}</div>
+        {#each data.analyseprojekt as analyseprojekt}
+            <div class="flex px-4 py-1 hover:bg-gray-100 cursor-pointer" on:dblclick={() => goto(`/analyseprojekt/${analyseprojekt.id}`)}>
+                <div class="w-1/2">{analyseprojekt.name}</div>
+                <div class="w-1/2">{analyseprojekt.aenderungszustand}</div>
+                <div class="w-1/2">{analyseprojekt.identnr}</div>
                 <div class="w-1/2 flex justify-between items-center">
-                    <span>{kmg.description}</span>
+                    <span>{analyseprojekt.creation}</span>
                     <div class="flex gap-3">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-5 h-5 text-gray-500 hover:text-blue-500 cursor-pointer">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16.5 8.25V6a2.25 2.25 0 0 0-2.25-2.25H6A2.25 2.25 0 0 0 3.75 6v8.25A2.25 2.25 0 0 0 6 16.5h2.25m8.25-8.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-7.5A2.25 2.25 0 0 1 8.25 18v-1.5m8.25-8.25h-6a2.25 2.25 0 0 0-2.25 2.25v6" />
@@ -88,7 +84,8 @@
     </div>
 </div>
 
+
 <!-- Modal -->
 <Modal open={modellDialogOpen} on:close={closeModal}>
-<NewModelPage data={$page.state.newModell} />
+    <NewModelPage data={$page.state.newModell} />
 </Modal>
