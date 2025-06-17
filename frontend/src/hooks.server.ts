@@ -6,7 +6,6 @@ import type {SerializeOptions} from "cookie";
 export const handleAuth: Handle = async ({ event, resolve }) => {
     let user = authenticateUser(event);
     event.locals.user = user;
-    console.log('was geht ab');
 
     if (!user) {
         const refreshToken = event.cookies.get('refresh_token');
@@ -70,9 +69,15 @@ export const handleAuth: Handle = async ({ event, resolve }) => {
 
 // 2. Protection-Handle: Routen schützen und Admin-Check
 export const handleProtect: Handle = async ({ event, resolve }) => {
-    if (event.url.pathname.startsWith('/modelle') && !event.locals.user) {
-        throw redirect(303, '/');
+
+    if (event.url.pathname.startsWith('/') && !event.locals.user && !event.url.pathname.includes("login")) {
+        const from = encodeURIComponent(event.url.pathname + event.url.search);
+        throw redirect(303, `/login?from=${from}`);
     }
+
+    if (event.url.pathname == '/') throw redirect(303, '/dashboard');
+
+
 
     if (event.url.pathname.startsWith('/admin')) {
         const res = await event.fetch('http://localhost:9999/auth/admin', {
@@ -82,7 +87,7 @@ export const handleProtect: Handle = async ({ event, resolve }) => {
         const isAdmin = res.ok && (await res.json()) === true;
 
         if (!isAdmin) {
-            throw redirect(303, '/');
+            throw redirect(303, '/login');
         }
     }
 

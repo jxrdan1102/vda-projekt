@@ -10,7 +10,7 @@
         <div class="text-2xl font-semibold tracking-wide">Kister Metrologie</div>
         <ul class="flex space-x-6 text-sm font-medium">
             <li>
-                <a href="/" class="hover:text-blue-200 transition">Dashboard</a>
+                <a href="/dashboard" class="hover:text-blue-200 transition">Dashboard</a>
             </li>
             <li>
                 <a href="/admin" class="hover:text-blue-200 transition">Admin</a>
