@@ -56,6 +56,7 @@ class ModellUpdateR(BaseModel):
     tsk_tiefenmessung: int | None = None
     tsk_hoehenmessung: int | None = None
     tsk_stufenmessung: int | None = None
+    description: str | None = None
     formel: str | None = None
     formeldesc: str | None = None
 

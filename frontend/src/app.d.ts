@@ -14,6 +14,7 @@ declare global {
 			updateComp?: any
 			selectedConstant?: any
 			kmgInfo?: any;
+			componentInfo?: any;
 		}
 		// interface Error {}
 		// interface Locals {}

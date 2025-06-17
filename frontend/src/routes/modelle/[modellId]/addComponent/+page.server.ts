@@ -1,11 +1,24 @@
-import type {Actions} from './$types';
-import {fail} from '@sveltejs/kit';
+import type {Actions, PageServerLoad} from './$types';
+import {fail, redirect} from "@sveltejs/kit";
 
+export const load: PageServerLoad = async ({ params, fetch }) => {
+
+    const response = await fetch(`http://localhost:9999/components`, {
+        method: 'GET',
+        credentials: 'include'  // ← WICHTIG
+    });
+    const responseBody = await response.json();
+    console.log(responseBody);
+    return {
+        title: 'Komponenten:',
+        komponenten: responseBody
+    }
+}
 
 export const actions: Actions = {
     default: async ({ request, fetch, params }) => {
         const formData = await request.formData();
-        const { kmgId } = params;
+        const { modellId } = params;
         function parseOptionalFloat(key: string): number | undefined {
             const val = formData.get(key);
             if (val === null || val === '') return undefined;
@@ -18,7 +31,7 @@ export const actions: Actions = {
             terml1: formData.get('terml1') ? parseOptionalFloat(formData.get('terml1') as string) : null
         };
 
-        const res = await fetch(`http://localhost:9999/modells/${kmgId}/addComponent`, {
+        const res = await fetch(`http://localhost:9999/modells/${modellId}/addComponent`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -35,6 +48,7 @@ export const actions: Actions = {
         }
 
         const result = await res.json();
+        throw redirect(303, `/modelle/${modellId}`)
         return {
             success: true,
             message: result.detail

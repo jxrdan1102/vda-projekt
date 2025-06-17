@@ -1,5 +1,5 @@
 import type {Actions, PageServerLoad} from './$types';
-import {fail} from '@sveltejs/kit';
+import {fail, redirect} from '@sveltejs/kit';
 
 export const load: PageServerLoad = async ({ params, fetch }) => {
     const { componentId } = params;
@@ -15,7 +15,7 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
 
 export const actions: Actions = {
     default: async ({ request, params, fetch }) => {
-        const { componentId } = params;
+        const { componentId, modellId } = params;
         const formData = await request.formData();
 
         function parseOptionalInt(key: string): number | undefined {
@@ -41,7 +41,9 @@ export const actions: Actions = {
         payload.frei_n_1 = parseOptionalInt('frei_n_1');
         payload.verteilung = parseOptionalInt('verteilung');
         payload.kflags = parseOptionalInt('kflags');
+        payload.modltxtid = formData.get('modltxtid')?.toString();
 
+        console.log("payload",payload)
         const res = await fetch(`http://localhost:9999/components/${componentId}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -55,6 +57,7 @@ export const actions: Actions = {
         }
 
         const result = await res.json();
+        throw redirect(303, `/modelle/${modellId}`);
         return {
             success: true,
             message: result.detail || 'Komponente gespeichert.'

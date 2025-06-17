@@ -1,5 +1,6 @@
-from app.services.component_service.EverythinForComponents.TMuKompRec import TMuKompRec
 from pydantic import BaseModel
+
+from app.services.component_service.EverythinForComponents.TMuKompRec import TMuKompRec
 
 
 class ComponentGetModell(BaseModel):
@@ -52,6 +53,8 @@ class ComponentRefUpdate(ComponentRefBase):
 class ComponentBack(BaseModel):
     data: TMuKompRec
     ConstNeeded: set[str]
+    name: str | None = None
+    id: int | None = None
 
     class Config:
         json_encoders = {str: lambda v: v.upper()}

@@ -3,6 +3,7 @@
     import {page} from '$app/stores';
     import Modal from "$lib/components/Modal.svelte";
     import NewCompPage from "../[modellId]/addComponent/+page.svelte";
+    import CompInfoPage from '../[modellId]/component-[componentId]/+page.svelte';
 
     export let data;
 
@@ -18,9 +19,10 @@
     let tsk_hoehenmessung = data.modell.tsk_hoehenmessung ?? 0;
     let tsk_stufenmessung = data.modell.tsk_stufenmessung ?? 0;
     let aufgabe_modell = data.modell.aufgabe_modell ?? 0;
+    let description = data.modell.description ?? '';
+    let formeldesc = data.modell.formeldesc ?? '';
 
     let formel = data.modell.formel ?? '';
-    let formeldesc = data.modell.formeldesc ?? '';
     let modellId = data.modellId;
     let message = '';
     let error = '';
@@ -31,6 +33,7 @@
     } | null = null;
     $: modellId = $page.params.modellId;
     $: componentDialogOpen = !!$page.state?.newComponent;
+    $: showComponent = !!$page.state?.componentInfo;
 
     async function onNewComponentClick(e: MouseEvent & { currentTarget: SVGElement }) {
         if (e.metaKey || e.ctrlKey) return;
@@ -41,6 +44,19 @@
 
         if (result.type === 'loaded' && result.status === 200) {
             pushState(href, { newComponent: result.data });
+        } else {
+            goto(href);
+        }
+    }
+    async function onOpenComponent(e: MouseEvent, compId: number) {
+        if (e.metaKey || e.ctrlKey) return;
+        e.preventDefault();
+
+        const href = `/modelle/${modellId}/component-${compId}`;
+        const result = await preloadData(href);
+
+        if (result.type === 'loaded' && result.status === 200) {
+            pushState(href, { componentInfo: result.data });
         } else {
             goto(href);
         }
@@ -85,31 +101,35 @@
 <section class="w-8xl space-y-4 text-sm font-sans text-gray-800 m-auto pt-5">
     <form method="POST" class="max-w-8xl space-y-6">
     <!-- Titel -->
-    <h2 class="text-base font-semibold border-b pb-1">{prozesstitel}</h2>
+
+    <h1 class="text-base font-semibold border-b pb-2">{prozesstitel}
+        <button type="submit" class="bg-gray-600 text-white text-sm px-3 py-1 rounded hover:bg-gray-700 float-right">
+            Speichern
+        </button>
+    </h1>
 
     <!-- Formulareingabe oben -->
-    <div class="flex border border-gray-300 rounded p-3 bg-gray-200">
-        <div class="mr-5 flex-grow-1">
+    <div class="flex gap-20 border rounded p-3 bg-gray-100">
+        <div class="mr-5">
         <div class="mb-3">
-            <label class="block text-gray-700 w-m">Modell</label>
-            <input type="text" bind:value={name} class="w-full border border-gray-400 px-2 py-1 bg-white" />
+            <label class="block text-gray-700 text-xs mb-1">Modell</label>
+            <input type="text" name="name" bind:value={name} class="w-full h-6 border border-gray-400 px-2 text-sm py-2 bg-white" />
         </div>
         <div>
-            <label class="block text-gray-700">Aufgabe</label>
+            <label class="block text-gray-700 text-xs mb-1">Aufgabe</label>
             <div class="flex flex-col gap-1 px-1">
-                <label><input type="checkbox" name="tsk_ausenmessung" bind:checked={tsk_ausenmessung}/> Außenmessung</label>
-                <label><input type="checkbox" name="tsk_innenmessung" bind:checked={tsk_innenmessung}/> Innenmessung</label>
-                <label><input type="checkbox" name="tsk_tiefenmessung" bind:checked={tsk_tiefenmessung}/> Tiefenmessung</label>
-                <label><input type="checkbox" name="tsk_hoehenmessung" bind:checked={tsk_hoehenmessung}/> Höhenmessung</label>
-                <label><input type="checkbox" name="tsk_stufenmessung" bind:checked={tsk_stufenmessung}/> Stufenmessung</label>
+                <label class="text-gray-700 text-xs object-bottom"><input type="checkbox" name="tsk_ausenmessung" class="h-4 w-4 text-gray-600 border-gray-400 rounded" bind:checked={tsk_ausenmessung}/> Außenmessung</label>
+                <label class="text-gray-700 text-xs object-bottom"><input type="checkbox" name="tsk_innenmessung" class="h-4 w-4 text-gray-600 border-gray-400 rounded" bind:checked={tsk_innenmessung}/> Innenmessung</label>
+                <label class="text-gray-700 text-xs object-bottom"><input type="checkbox" name="tsk_tiefenmessung" class="h-4 w-4 text-gray-600 border-gray-400 rounded" bind:checked={tsk_tiefenmessung}/> Tiefenmessung</label>
+                <label class="text-gray-700 text-xs object-bottom"><input type="checkbox" name="tsk_hoehenmessung" class="h-4 w-4 text-gray-600 border-gray-400 rounded" bind:checked={tsk_hoehenmessung}/> Höhenmessung</label>
+                <label class="text-gray-700 text-xs object-bottom"><input type="checkbox" name="tsk_stufenmessung" class="h-4 w-4 text-gray-600 border-gray-400 rounded" bind:checked={tsk_stufenmessung}/> Stufenmessung</label>
             </div>
         </div>
         </div>
-        <div class="flex-grow-1"></div>
-        <div class="flex-grow-1">
+        <div class="">
         <div class="mx-20 mb-3">
-            <label class="block text-gray-700">Methode</label>
-            <select id="methode" name="methode" bind:value={methode}  class="w-full border border-gray-400 px-2 py-1 bg-white">
+            <label class="block text-gray-700 text-xs mb-1">Methode</label>
+            <select id="methode" name="methode" bind:value={methode}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
                 <option value="" disabled>Bitte wählen</option>
                 <option value="1">Direkt</option>
                 <option value="2">Direkt mit Einstellung</option>
@@ -122,8 +142,8 @@
             <legend class="text-sm font-medium text-gray-600 px-2">Geometrie</legend>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
-                    <label class="block text-gray-700">Messeinrichtung</label>
-                    <select id="geo_me" name="geo_me" bind:value={geo_me}  class="w-full border border-gray-400 px-2 py-1 bg-white">
+                    <label class="block text-gray-700 text-xs mb-1">Messeinrichtung</label>
+                    <select id="geo_me" name="geo_me" bind:value={geo_me}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
                         <option value="" disabled>Bitte wählen</option>
                         <option value="1">Fläche</option>
                         <option value="2">Kugel</option>
@@ -132,8 +152,8 @@
                     </select>
                 </div>
                 <div>
-                    <label class="block text-gray-700">Messobjekt</label>
-                    <select id="geo_mo" name="geo_mo" bind:value={geo_mo}  class="w-full border border-gray-400 px-2 py-1 bg-white">
+                    <label class="block text-gray-700 text-xs mb-1">Messobjekt</label>
+                    <select id="geo_mo" name="geo_mo" bind:value={geo_mo}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
                         <option value="" disabled>Bitte wählen</option>
                         <option value="1">Fläche</option>
                         <option value="2">Kugel</option>
@@ -142,8 +162,8 @@
                     </select>
                 </div>
                 <div>
-                    <label class="block text-gray-700">Einstellnormal</label>
-                    <select id="geo_bn" name="geo_bn" bind:value={geo_bn}  class="w-full border border-gray-400 px-2 py-1 bg-white">
+                    <label class="block text-gray-700 text-xs mb-1">Einstellnormal</label>
+                    <select id="geo_bn" name="geo_bn" bind:value={geo_bn}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
                         <option value="" disabled >Bitte wählen</option>
                         <option value="1">Fläche</option>
                         <option value="2">Kugel</option>
@@ -154,22 +174,19 @@
             </div>
         </fieldset>
         </div>
-        <div class="flex-grow-1"></div>
-    </div>
-
-    <!-- Modellbeschreibung -->
-    <div class="grid grid-cols-1 gap-2 border border-gray-300 p-3 rounded bg-gray-200">
-        <div>
-            <label class="block text-gray-700">Beschreibung – Modell</label>
-            <input type="text"  class="w-full border border-gray-400 px-2 py-1 bg-white" />
-        </div>
-        <div>
-            <label class="block text-gray-700">Formel</label>
-            <input type="text" bind:value={formel} class="w-full border border-gray-400 px-2 py-1 bg-white font-mono" />
-        </div>
-        <div>
-            <label class="block text-gray-700">Beschreibung – Formel</label>
-            <textarea  class="w-full border border-gray-400 px-2 py-1 bg-white" rows="2"></textarea>
+        <div class="border-l p-3 pl-20 w-xl">
+            <div class="mb-1">
+                <label class="block text-gray-700 text-xs mb-1">Beschreibung – Modell</label>
+                <textarea bind:value={description} name="beschreibung" class="w-full h-10 border border-gray-400 px-2 text-sm py-0 bg-white" rows="2"></textarea>
+            </div>
+            <div class="mb-1">
+                <label class="block text-gray-700 text-xs mb-1">Formel</label>
+                <input type="text" bind:value={formel} name="formel" class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white" />
+            </div>
+            <div class="mb-1">
+                <label class="block text-gray-700 text-xs mb-1">Beschreibung – Formel</label>
+                <input type="text" bind:value={formeldesc} name="formeldesc" class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white" />
+            </div>
         </div>
     </div>
 
@@ -196,9 +213,9 @@
             </thead>
             <tbody>
             {#each data.modell.components as comp, i}
-                <tr class="{selectedRow === i ? 'bg-green-200' : 'hover:bg-gray-100'} cursor-pointer"
+                <tr class="{selectedRow === i ? 'bg-green-300' : 'hover:bg-green-200'} cursor-pointer"
                     on:click={() => selectedRow = i}
-                    on:dblclick={() => goto(`/modelle/${modellId}/component-${comp.id}`)}>
+                    on:dblclick={(e) => onOpenComponent(e, comp.id)}>
                     <td class="px-2 py-1">{i + 1}</td>
                     <td class="px-2 py-1">{comp.kompid}</td>
                     <td class="px-2 py-1">{comp.id}</td>
@@ -215,16 +232,18 @@
             </tbody>
         </table>
     </div>
-    <div class="flex">
-        <button type="submit" class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700">
-            Speichern
-        </button>
-    </div>
+
     </form>
 </section>
 
 <Modal open={componentDialogOpen} on:close={closeModal} >
     <div class="max-h-[80vh] overflow-y-auto p-4">
         <NewCompPage data={$page.state.newComponent} />
+    </div>
+</Modal>
+
+<Modal open={showComponent} on:close={closeModal} >
+    <div class="max-h-[80vh] overflow-y-auto p-4">
+        <CompInfoPage data={$page.state.componentInfo} />
     </div>
 </Modal>

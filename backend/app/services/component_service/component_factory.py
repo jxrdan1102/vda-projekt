@@ -39,6 +39,6 @@ class ComponentFactory:
     @staticmethod
     def get_all_components():
         return [
-            component_class(None, TMU_ConstList)
+            component_class(None, TMU_ConstList, 0)
             for component_class in ComponentFactory.COMPONENTS.values()
         ]

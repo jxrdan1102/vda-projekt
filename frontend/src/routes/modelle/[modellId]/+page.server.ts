@@ -63,6 +63,8 @@ export const actions: Actions = {
         const aufgabe_modell = parseOptionalInt(formData.get('aufgabe_modell') as string);
         if (aufgabe_modell !== undefined) payload.aufgabe_modell = aufgabe_modell;
 
+        const description = parseOptionalString('description');
+        if (description !== undefined) payload.description = description;
 
         const formel = parseOptionalString('formel');
         if (formel !== undefined) payload.formel = formel;

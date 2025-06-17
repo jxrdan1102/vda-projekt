@@ -115,7 +115,7 @@
 
 <section class="space-y-4 text-sm font-sans text-gray-800 m-auto pt-5">
     <form method="POST" action="?/speichern">
-        <h1 class="text-lg font-semibold border-b pb-1">Analyseprojekt
+        <h1 class="text-base font-semibold border-b pb-2">Analyseprojekt
             <button type="button" name="berechnen" on:click={() => goto(`/analyseprojekt/${analyseprojektId}/MU`) } class="bg-gray-600 text-white text-sm px-3 py-1 rounded hover:bg-gray-700 float-right">
                 Berechnen
             </button>

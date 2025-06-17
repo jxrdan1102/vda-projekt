@@ -14,7 +14,7 @@ router = APIRouter(prefix="/components", tags=["components"])
 @router.get("", response_model=list[ComponentBack])
 def get_components():
     components = ComponentFactory.get_all_components()
-    return [ComponentBack(data=k.data, ConstNeeded=k.ConstNeeded) for k in components]
+    return [ComponentBack(data=k.data, ConstNeeded=k.ConstNeeded, name=k.__class__.__name__, id=k.id) for k in components]
 
 
 @router.get("/{id}", response_model=ComponentGet)
