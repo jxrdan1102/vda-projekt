@@ -9,6 +9,6 @@ export const load: PageServerLoad = async ({ fetch }) => {
     console.log(responseBody);
     return {
         title: 'Modelle',
-        modell: responseBody
+        modelle: responseBody
     }
 }

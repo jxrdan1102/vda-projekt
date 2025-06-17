@@ -15,6 +15,7 @@ declare global {
 			selectedConstant?: any
 			kmgInfo?: any;
 			componentInfo?: any;
+			newModelPage?: any;
 		}
 		// interface Error {}
 		// interface Locals {}

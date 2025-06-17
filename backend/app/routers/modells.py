@@ -39,5 +39,6 @@ async def addComponent(id: int, component: ComponentAddR, db: AsyncSession = Dep
 @router.delete("/{id}")
 async def delete_modell_by_id(id: int, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
     await ModellService.delete_modell_with_components(db, id, current_user.id)
+    print ("testiei")
     return {"detail": f"Modell mit ID {id} wurde gelöscht"}
 
