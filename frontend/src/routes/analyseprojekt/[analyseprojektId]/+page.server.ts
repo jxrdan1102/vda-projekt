@@ -63,7 +63,6 @@ export const actions: Actions = {
                 error: err.detail || 'Fehler beim Speichern'
             });
         }
-
         const result = await res.json();
         return {
             success: true,
@@ -76,7 +75,6 @@ export const actions: Actions = {
         const res = await fetch(`http://localhost:9999/anamu/${analyseprojektId}/calc/r`, {
             method: 'GET',
             headers: {
-                // Sende den Cookie-Header mit an die API
                 cookie: cookieHeader ?? ''
             }
         });
