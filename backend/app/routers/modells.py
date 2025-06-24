@@ -5,7 +5,7 @@ from app.database.database import get_db
 from app.models.user import User
 from app.routers.auth import get_current_user
 from app.schemas.component import ComponentAddR
-from app.schemas.modell import ModellCreateR
+from app.schemas.modell import ModellCreateR, DuplicateRequest
 from app.schemas.modell import ModellGetAllR
 from app.schemas.modell import ModellGetIdR
 from app.schemas.modell import ModellUpdateR
@@ -23,8 +23,8 @@ async def get_modell_by_idr(id: int, db: AsyncSession = Depends(get_db), current
 
 @router.post("/r")
 async def create_modellr(modell: ModellCreateR, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
-    await ModellService.create_modell(db, modell.model_dump(), current_user.id)
-    return {"detail": "Modell wurde erfolgreich erstellt"}
+    modell = await ModellService.create_modell(db, modell.model_dump(), current_user.id)
+    return modell
 
 @router.post("/{id}/r")
 async def update_modellr(id: int, modell: ModellUpdateR, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
@@ -42,3 +42,8 @@ async def delete_modell_by_id(id: int, db: AsyncSession = Depends(get_db), curre
     print ("testiei")
     return {"detail": f"Modell mit ID {id} wurde gelöscht"}
 
+
+
+@router.post("/{id}/duplicate")
+async def duplicate_modell(id: int, req: DuplicateRequest, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
+    return await ModellService.duplicate_modell(db, id, current_user.id, req.name)

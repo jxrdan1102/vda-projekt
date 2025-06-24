@@ -1,6 +1,11 @@
 import base64
 from http.client import HTTPException
 
+from fastapi import APIRouter, Depends
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+
 from app.database.database import get_db
 from app.models import Component
 from app.models import Modell
@@ -8,10 +13,6 @@ from app.models.item import Item
 from app.models.user import User
 from app.routers.auth import get_current_user
 from app.schemas.item import ItemCreate, ItemUpdate
-from fastapi import APIRouter, Depends
-from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
 
 router = APIRouter(prefix="/items", tags=["items"])
 
@@ -151,7 +152,6 @@ async def importXMLModell(db: AsyncSession = Depends(get_db), current_user: User
                 if 'value' in field.attrib:
                     data[mapping[field_name]] = field.attrib['value']
                 elif field.text:
-                    # Base64-decode versuchen
                     try:
                         decoded = base64.b64decode(field.text.strip()).decode('latin-1')
                         data[mapping[field_name]] = decoded

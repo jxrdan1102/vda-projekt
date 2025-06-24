@@ -1,5 +1,7 @@
 from pydantic import BaseModel
 
+from app.schemas.component import ComponentGet
+
 
 class AnakompBase(BaseModel):
     fk_anamu: int | None = None
@@ -25,6 +27,7 @@ class AnakompForAnamuR(BaseModel):
     freigrad: int | None = None
     frei_n_1: int | None = None
     verteilung: int | None = None
+    komponente: ComponentGet  | None = None
 
     class Config:
         from_attributes = True

@@ -1,19 +1,22 @@
 <script lang="ts">
+    import {COMPONENTS} from "$lib/Mapping";
+
     export let data: { component: any };
 
     const comp = data.component;
 
-    let terml0: number = comp.terml0 ?? 0;
-    let terml1: number = comp.terml1 ?? 0;
-    let wertart: number = comp.wertart.toString() ?? 0;
-    let freigrad: number = comp.freigrad.toString() ?? 0;
-    let frei_n_1: number = comp.frei_n_1 ?? 0;
-    let verteilung: number = comp.verteilung.toString() ?? 0;
-    let remark: string  = comp.remark ?? "";
+    let terml0: number = comp.terml0 ?? '';
+    let terml1: number = comp.terml1 ?? '';
+    let wertart: string = comp.wertart != null ? comp.wertart.toString(): '';
+    let freigrad: string = comp.freigrad != null ? comp.freigrad.toString() : '';
+    let frei_n_1: number = comp.frei_n_1 ?? '';
+    let verteilung: string = comp.verteilung != null ? comp.verteilung.toString() : '';
+    let remark: string = comp.remark ?? "";
+
 </script>
 
 <form method="POST" class="text-sm bg-white space-y-3 max-w-md mx-auto">
-    <h2 class="text-base font-semibold text-gray-800 mb-2">Komponente #{comp.id}</h2>
+    <h2 class="text-base font-semibold text-gray-800 mb-2">{COMPONENTS[comp.komponente.kompid]}</h2>
 
     <div class="grid grid-cols-2 gap-2">
         <label class="flex flex-col">
@@ -34,10 +37,10 @@
                     id="wertart"
                     name="wertart"
                     bind:value={wertart}
-                    required
+
                     class="border px-2 py-1 text-sm"
             >
-                <option value="" disabled selected>Bitte wählen</option>
+                <option value="" disabled>Bitte wählen</option>
                 <option value="1">Halbweite</option>
                 <option value="2">Spannweite</option>
                 <option value="3">Standardabweichung</option>
@@ -50,10 +53,10 @@
                     id="freigrad"
                     name="freigrad"
                     bind:value={freigrad}
-                    required
+
                     class="border px-2 py-1 text-sm"
             >
-                <option value="" disabled selected>Bitte wählen</option>
+                <option value="" disabled>Bitte wählen</option>
                 <option value="1">Unbegrenzt</option>
                 <option value="2">N-1</option>
             </select>
@@ -71,10 +74,10 @@
                     id="verteilung"
                     name="verteilung"
                     bind:value={verteilung}
-                    required
+
                     class="border px-2 py-1 text-sm"
             >
-                <option value="" disabled selected>Bitte wählen</option>
+                <option value="" disabled>Bitte wählen</option>
                 <option value="1">Rechteckverteilung</option>
                 <option value="2">Normalverteilung</option>
                 <option value="3">Dreieckverteilung</option>

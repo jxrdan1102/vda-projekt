@@ -19,17 +19,31 @@ export const actions: Actions = {
     default: async ({ request, fetch, params }) => {
         const formData = await request.formData();
         const { modellId } = params;
+
+        function parseOptionalInt(key: string): number | undefined {
+            const val = formData.get(key);
+            if (val === null || val === '') return undefined;
+            const parsed = parseInt(val.toString());
+            return isNaN(parsed) ? undefined : parsed;
+        }
+
         function parseOptionalFloat(key: string): number | undefined {
             const val = formData.get(key);
             if (val === null || val === '') return undefined;
             const parsed = parseFloat(val.toString());
             return isNaN(parsed) ? undefined : parsed;
         }
-        const payload = {
-            kompid: parseInt(formData.get('kompid') as string),
-            terml0: formData.get('terml0') ? parseOptionalFloat(formData.get('terml0') as string) : null,
-            terml1: formData.get('terml1') ? parseOptionalFloat(formData.get('terml1') as string) : null
-        };
+        const payload : Record<string, any> = {};
+        payload.kompid = parseInt(formData.get('kompid')as string);
+        payload.terml0 = parseOptionalFloat('terml0');
+        payload.terml1 = parseOptionalFloat('terml1');
+        payload.wertart = parseOptionalInt('wertart');
+        payload.freigrad = parseOptionalInt('freigrad');
+        payload.frei_n_1 = parseOptionalInt('frei_n_1');
+        payload.verteilung = parseOptionalInt('verteilung');
+        payload.kflags = parseOptionalInt('kflags');
+        payload.modltxtid = formData.get('modltxtid')?.toString();
+        console.log(payload);
 
         const res = await fetch(`http://localhost:9999/modells/${modellId}/addComponent`, {
             method: 'POST',

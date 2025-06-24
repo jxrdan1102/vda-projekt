@@ -5,16 +5,16 @@
 
     let terml0: number = comp.terml0 ?? 0;
     let terml1: number = comp.terml1 ?? 0;
-    let wertart: number = comp.wertart ?? 0;
-    let freigrad: number = comp.freigrad ?? 0;
+    let wertart: string = comp.wertart != null ? comp.wertart.toString(): '';
+    let freigrad: string = comp.freigrad != null ? comp.freigrad.toString() : '';
     let frei_n_1: number = comp.frei_n_1 ?? 0;
-    let verteilung: number = comp.verteilung ?? 0;
+    let verteilung: string = comp.verteilung != null ? comp.verteilung.toString() : '';
     let kflags: number = comp.kflags ?? 0;
     let modltxtid: string = comp.modltxtid ?? '';
 </script>
 
 <form method="POST" class="text-sm bg-white space-y-3 max-w-md mx-auto">
-    <h2 class="text-base font-semibold text-gray-800 mb-2">Komponente hinzufügen</h2>
+    <h2 class="text-base font-semibold text-gray-800 mb-2">Komponente bearbeiten</h2>
 
     <div class="grid grid-cols-2 gap-2">
         <label class="flex flex-col">

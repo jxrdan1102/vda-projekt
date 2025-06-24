@@ -22,7 +22,7 @@ async def get_anamu_by_id(db: AsyncSession, id: int, user_id: int):
         .where(ANAMU.id == id, ANAMU.fk_user_id == user_id)
         .options(
             selectinload(ANAMU.modell),
-            selectinload(ANAMU.anakomp),
+            selectinload(ANAMU.anakomp).selectinload(ANAKOMP.komponente),
             selectinload(ANAMU.anakonst),
         )
     )
@@ -37,13 +37,13 @@ async def create_anamu_with_dependencies(db: AsyncSession, anamu: AnamuCreateR, 
     created_anamu = await AnamuCRUD.create(db, data)
 
     # Abgeleitete Daten erzeugen
-    await add_anakomps(db, created_anamu.id, created_anamu.fk_modell)
-    await add_anakonsts(db, created_anamu.id, created_anamu.fk_modell)
+    await add_anakomps(db, created_anamu.id, created_anamu.fk_modell, user_id)
+    await add_anakonsts(db, created_anamu.id, created_anamu.fk_modell, user_id)
     return created_anamu
 
 
 
-def build_anakomp(component: Component, fk_anamu: int) -> ANAKOMP:
+def build_anakomp(component: Component, fk_anamu: int, fk_user_id: int) -> ANAKOMP:
     return ANAKOMP(
         fk_anamu=fk_anamu,
         fk_mod_components=component.id,
@@ -52,19 +52,20 @@ def build_anakomp(component: Component, fk_anamu: int) -> ANAKOMP:
         verteilung=component.verteilung,
         wertart=component.wertart,
         freigrad=component.freigrad,
-        frei_n_1=component.frei_n_1
+        frei_n_1=component.frei_n_1,
+        fk_user_id=fk_user_id
     )
 
 
-async def add_anakomps(db: AsyncSession, fk_anamu: int, fk_modell: int) -> list[ANAKOMP]:
+async def add_anakomps(db: AsyncSession, fk_anamu: int, fk_modell: int , user_id: int) -> list[ANAKOMP]:
     stmt = select(Component).where(Component.fk_modell == fk_modell)
     result = await db.execute(stmt)
     components = result.scalars().all()
 
-    if not components:
-        raise HTTPException(status_code=404, detail="Keine Komponenten im Modell gefunden")
+    #if not components:
+     #   raise HTTPException(status_code=404, detail="Keine Komponenten im Modell gefunden")
 
-    anakomps = [build_anakomp(comp, fk_anamu) for comp in components]
+    anakomps = [build_anakomp(comp, fk_anamu, user_id) for comp in components]
 
     db.add_all(anakomps)
     await db.commit()
@@ -74,12 +75,19 @@ async def update_anamu(db: AsyncSession, id: int, data: dict, user_id: int):
     return await AnamuCRUD.update(db, id, data, user_id)
 
 async def get_anakomp(db: AsyncSession, id: int, user_id: int):
-    return await AnakompCRUD.get_by_id(db, id, user_id)
+    stmt = (
+        select(ANAKOMP)
+        .where(ANAKOMP.id == id, ANAKOMP.fk_user_id == user_id)
+        .options(selectinload(ANAKOMP.komponente))  # <- das hier
+    )
+    result = await db.execute(stmt)
+    anakomp = result.scalar_one_or_none()
+    return anakomp
 
 async def get_anakonst(db: AsyncSession, id: int, user_id: int):
     return await AnakonstCRUD.get_by_id(db, id, user_id)
 
-async def add_anakonsts(db: AsyncSession, fk_anamu: int, fk_modell: int) -> list[ANAKONST]:
+async def add_anakonsts(db: AsyncSession, fk_anamu: int, fk_modell: int, user_id) -> list[ANAKONST]:
     # Modell validieren
     stmt = select(Modell).where(Modell.id == fk_modell)
     result = await db.execute(stmt)
@@ -93,7 +101,7 @@ async def add_anakonsts(db: AsyncSession, fk_anamu: int, fk_modell: int) -> list
     components = result.all()
 
     if not components:
-        raise HTTPException(status_code=404, detail="Keine Komponenten für Konstantenberechnung gefunden")
+        return []
 
     schema = TMU_ModellSchema(id=modell.id, aufgabe=modell.aufgabe, AufgabeModell=modell.aufgabe_modell)
     tmodell = TMU_Modell(schema)
@@ -105,7 +113,7 @@ async def add_anakonsts(db: AsyncSession, fk_anamu: int, fk_modell: int) -> list
     if not constants:
         raise HTTPException(status_code=400, detail="Keine Konstanten benötigt laut TMU-Modell")
 
-    anakonsts = [ANAKONST(fk_anamu=fk_anamu, constnum=c.value, constval=None, remark=0) for c in constants]
+    anakonsts = [ANAKONST(fk_anamu=fk_anamu, constnum=c.value, constval=None, remark=0, fk_user_id=user_id) for c in constants]
 
     db.add_all(anakonsts)
     await db.commit()
@@ -171,3 +179,50 @@ async def delete_anamu(db: AsyncSession, id: int, user_id: int):
     await db.execute(delete(ANAKOMP).where(ANAKOMP.fk_anamu == id))
     await db.execute(delete(ANAKONST).where(ANAKONST.fk_anamu == id))
     return await AnamuCRUD.delete(db, id, user_id)
+
+
+async def duplicate_anamu(db: AsyncSession, id: int, user_id: int, new_name: str):
+    # Hole bestehendes AnAMU
+    old_anamu = await get_anamu_by_id(db, id, user_id)
+    if not old_anamu:
+        raise HTTPException(status_code=404, detail="Analyseprojekt nicht gefunden")
+
+    new_data = {
+        key: value
+        for key, value in old_anamu.__dict__.items()
+        if key not in ("id", "name", "_sa_instance_state", "anakomp", "anakonst")
+    }
+
+    # Überschreiben bzw. ergänzen
+    new_data["name"] = new_name
+    new_data["fk_user_id"] = user_id
+
+    new_anamu = await AnamuCRUD.create(db, new_data)
+
+    # Komponenten und Konstanten kopieren
+    anakomp_objs = [
+        ANAKOMP(
+            fk_anamu=new_anamu.id,
+            fk_mod_components=ak.fk_mod_components,
+            terml0=ak.terml0,
+            terml1=ak.terml1,
+            verteilung=ak.verteilung,
+            wertart=ak.wertart,
+            freigrad=ak.freigrad,
+            frei_n_1=ak.frei_n_1
+        ) for ak in old_anamu.anakomp
+    ]
+
+    anakonst_objs = [
+        ANAKONST(
+            fk_anamu=new_anamu.id,
+            constnum=ac.constnum,
+            constval=ac.constval,
+            remark=ac.remark
+        ) for ac in old_anamu.anakonst
+    ]
+
+    db.add_all(anakomp_objs + anakonst_objs)
+    await db.commit()
+
+    return {"detail": f"Analyseprojekt '{old_anamu.name}' wurde als '{new_name}' dupliziert", "id": new_anamu.id}

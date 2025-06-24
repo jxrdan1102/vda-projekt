@@ -5,6 +5,7 @@
     import NewModelPage from "./component-[anakompId]/+page.svelte";
     import NewConstPage from "./constant-[anakonstId]/+page.svelte";
     import KmgInfoPage from "./kmg/+page.svelte";
+    import {COMPONENTS, tcMapping} from "$lib/Mapping";
 
 
     export let data;
@@ -110,7 +111,32 @@
 
 
     let selectedRow: number | null = null;
+    const methodenMap: Record<number, string> = {
+        1: "Direkt",
+        2: "Direkt mit Einstellung",
+        3: "Substitution",
+        4: "Differenziell"
+    };
 
+    const geoMap: Record<number, string> = {
+        1: "Fläche",
+        2: "Kugel",
+        3: "Zylinder",
+        4: "Bohrung"
+    };
+    const aufgabenMap: Record<string, string> = {
+        tsk_ausenmessung: "Außenmessung",
+        tsk_innenmessung: "Innenmessung",
+        tsk_tiefenmessung: "Tiefenmessung",
+        tsk_hoehenmessung: "Höhenmessung",
+        tsk_stufenmessung: "Stufenmessung"
+    };
+    function getAktiveAufgabe(modell: Record<string, number>): string {
+        for (const key in aufgabenMap) {
+            if (Number(modell[key]) === 1) return aufgabenMap[key as keyof typeof aufgabenMap];
+        }
+        return "Unbekannt";
+    }
 </script>
 
 <section class="space-y-4 text-sm font-sans text-gray-800 m-auto pt-5">
@@ -158,12 +184,12 @@
         </div>
             <!-- Modellinformationen -->
             <div class="border p-4 rounded bg-gray-50 w-full md:w-1/2 space-y-2">
-                <h2 class="text-sm font-semibold border-b pb-1 text-gray-800"> Modell XY-2025</h2>
+                <h2 class="text-sm font-semibold border-b pb-1 text-gray-800"> {data.analyseprojekt.modell.name}</h2>
                 <div class="text-gray-800 text-sm space-y-1">
-                    <div><span class="font-semibold">Aufgabe:</span> Analyse von Vibrationsdaten</div>
-                    <div><span class="font-semibold">Methode:</span> FFT-Spektralanalyse</div>
-                    <div><span class="font-semibold">Messobjekt:</span> Elektromotor – Lagerseite</div>
-                    <div><span class="font-semibold">Messeinrichtung:</span> Beschleunigungssensor IEPE</div>
+                    <div><span class="font-semibold">Aufgabe:</span> {getAktiveAufgabe(data.analyseprojekt.modell)}</div>
+                    <div><span class="font-semibold">Methode:</span> {methodenMap[data.analyseprojekt.modell.methode]}</div>
+                    <div><span class="font-semibold">Messobjekt:</span> {geoMap[data.analyseprojekt.modell.geo_mo]}</div>
+                    <div><span class="font-semibold">Messeinrichtung:</span> {geoMap[data.analyseprojekt.modell.geo_me]}</div>
                 </div>
             </div>
         </div>
@@ -178,7 +204,7 @@
             <thead class="bg-gray-200 text-gray-700">
             <tr>
                 <th class="px-2 text-left"></th>
-                <th class="px-2 py-1 text-left">ID</th>
+                <th class="px-2 py-1 text-left">Komponente</th>
                 <th class="px-2 py-1 text-left">L0 längenunabhängiger Term</th>
                 <th class="px-2 py-1 text-left">L1 längenunabhängiger Term</th>
                 <th class="px-2 py-1 text-left">Verteilung</th>
@@ -192,7 +218,7 @@
                     on:click={() => selectedRow = i}
                     on:dblclick={() => onUpdateCompClick(comp.id)}>
                     <td class="px-2">{i + 1}</td>
-                    <td class="px-2 py-1">{comp.id}</td>
+                    <td class="px-2 py-1">{COMPONENTS[comp.komponente.kompid]}</td>
                     <td class="px-2 py-1">{comp.terml0}</td>
                     <td class="px-2 py-1">{comp.terml1}</td>
                     <td class="px-2 py-1">{getVerteilungText(comp.verteilung)}</td>
@@ -211,7 +237,7 @@
                 <div
                         class="bg-white border border-gray-300 rounded px-3 py-1 cursor-pointer hover:shadow"
                         on:dblclick={() => onConstClick(konst.id)}>
-                    <p><strong>Konstante #{konst.id}</strong></p>
+                    <p><strong>{tcMapping[konst.constnum]}</strong></p>
                     <p>Wert: {konst.constval}</p>
                 </div>
             {/each}

@@ -1,5 +1,5 @@
 import type {Actions, PageServerLoad} from './$types';
-import {fail} from '@sveltejs/kit';
+import {fail, redirect} from '@sveltejs/kit';
 
 export const load: PageServerLoad = async ({ fetch }) => {
     const res = await fetch('http://localhost:9999/modells/r', {
@@ -40,11 +40,7 @@ export const actions: Actions = {
                 error: err.detail || 'Fehler beim Speichern'
             });
         }
-
-        const result = await res.json();
-        return {
-            success: true,
-            message: result.detail
-        };
+        let projekt = await res.json();
+        throw redirect(303, `http://localhost:5173/analyseprojekt/${projekt.id}`);
     }
 };

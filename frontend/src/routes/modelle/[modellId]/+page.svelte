@@ -4,23 +4,26 @@
     import Modal from "$lib/components/Modal.svelte";
     import NewCompPage from "../[modellId]/addComponent/+page.svelte";
     import CompInfoPage from '../[modellId]/component-[componentId]/+page.svelte';
+    import {COMPONENTS} from "$lib/Mapping.js";
 
     export let data;
 
     // Lokale reactive Variablen
-    let name = data.modell.name ?? '';
-    let geo_me = data.modell.geo_me.toString() ?? null;
-    let geo_mo = data.modell.geo_mo.toString() ?? null;
-    let geo_bn = data.modell.geo_bn.toString() ?? null;
-    let methode = data.modell.methode.toString() ?? null;
-    let tsk_ausenmessung = data.modell.tsk_ausenmessung ?? 0;
-    let tsk_innenmessung = data.modell.tsk_innenmessung ?? 0;
-    let tsk_tiefenmessung = data.modell.tsk_tiefenmessung ?? 0;
-    let tsk_hoehenmessung = data.modell.tsk_hoehenmessung ?? 0;
-    let tsk_stufenmessung = data.modell.tsk_stufenmessung ?? 0;
-    let aufgabe_modell = data.modell.aufgabe_modell ?? 0;
-    let description = data.modell.description ?? '';
-    let formeldesc = data.modell.formeldesc ?? '';
+    let name: string = data.modell?.name ?? '';
+    let geo_me: string | null = data.modell?.geo_me != null ? data.modell.geo_me.toString() : null;
+    let geo_mo: string | null = data.modell?.geo_mo != null ? data.modell.geo_mo.toString() : null;
+    let geo_bn: string | null = data.modell?.geo_bn != null ? data.modell.geo_bn.toString() : null;
+    let methode: string | null = data.modell?.methode != null ? data.modell.methode.toString() : null;
+
+    let tsk_ausenmessung: number = data.modell?.tsk_ausenmessung ?? 0;
+    let tsk_innenmessung: number = data.modell?.tsk_innenmessung ?? 0;
+    let tsk_tiefenmessung: number = data.modell?.tsk_tiefenmessung ?? 0;
+    let tsk_hoehenmessung: number = data.modell?.tsk_hoehenmessung ?? 0;
+    let tsk_stufenmessung: number = data.modell?.tsk_stufenmessung ?? 0;
+    let aufgabe_modell: number = data.modell?.aufgabe_modell ?? 0;
+
+    let description: string = data.modell?.description ?? '';
+    let formeldesc: string = data.modell?.formeldesc ?? '';
 
     let formel = data.modell.formel ?? '';
     let modellId = data.modellId;
@@ -217,7 +220,7 @@
                     on:click={() => selectedRow = i}
                     on:dblclick={(e) => onOpenComponent(e, comp.id)}>
                     <td class="px-2 py-1">{i + 1}</td>
-                    <td class="px-2 py-1">{comp.kompid}</td>
+                    <td class="px-2 py-1">{COMPONENTS[comp.kompid]}</td>
                     <td class="px-2 py-1">{comp.id}</td>
                     <td class="px-2 py-1">{comp.modltxtid}</td>
                     <td class="float-right px-1">

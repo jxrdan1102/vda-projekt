@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional, List
 
 from pydantic import BaseModel
 
@@ -65,6 +66,23 @@ class AnamuUpdate(BaseModel):
     class Config:
         from_attributes = True
 
+class DuplicateAnamu(BaseModel):
+    name: str
+
+class AnamuOut(BaseModel):
+    id: int
+    name: str
+    fk_modell: int
+    aenderungszustand: str
+    identnr: Optional[int] = None
+    remark: Optional[str] = None
+    creation: Optional[datetime] = None
+    modell: ModellForAnamuR
+    anakomp: Optional[List[AnakompForAnamuR]] = None
+    anakonst: Optional[List[AnakonstForAnamuR]] = None
+
+    class Config:
+        from_attributes = True
 class AnamuCreate(AnamuBase):
     partno: int
     remark: int

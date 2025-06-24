@@ -11,7 +11,7 @@ class KomponenteA(TMU_Komponente):
 
     def __init__(self, modell, const_list, lfdnr):
         try:
-            super().__init__(modell, 12, const_list, "notthere")
+            super().__init__(modell, 1042, const_list, "notthere")
             self.const_list = const_list
             self.archiv = False
             self.lfdnr = lfdnr

@@ -46,7 +46,37 @@
             alert('Löschen fehlgeschlagen');
         }
     }
+    let showDuplicateModal = false;
+    let duplicateModelId: number | null = null;
+    let duplicateName = "";
+
+    function openDuplicateModal(id: number) {
+        duplicateModelId = id;
+        duplicateName = "";
+        showDuplicateModal = true;
+    }
+
+    async function confirmDuplicate() {
+        if (!duplicateModelId) return;
+
+        const res = await fetch(`http://localhost:9999/modells/${duplicateModelId}/duplicate`, {
+            method: "POST",
+            credentials: 'include',
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({name: duplicateName}),
+        });
+
+        if (res.ok) {
+            const result = await res.json();
+            console.log("Duplikat erstellt:", result);
+            // Optional: Liste aktualisieren
+            showDuplicateModal = false;
+        } else {
+            alert("Fehler beim Duplizieren");
+        }
+    }
 </script>
+
 
 
 <style>
@@ -96,7 +126,7 @@
                 <div class="w-1/2 flex justify-between items-center">
                     <span>{modell.description}</span>
                     <div class="flex gap-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-5 h-5 text-gray-500 hover:text-blue-500 cursor-pointer">
+                        <svg xmlns="http://www.w3.org/2000/svg" on:click={() => openDuplicateModal(modell.id)} fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-5 h-5 text-gray-500 hover:text-blue-500 cursor-pointer">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16.5 8.25V6a2.25 2.25 0 0 0-2.25-2.25H6A2.25 2.25 0 0 0 3.75 6v8.25A2.25 2.25 0 0 0 6 16.5h2.25m8.25-8.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-7.5A2.25 2.25 0 0 1 8.25 18v-1.5m8.25-8.25h-6a2.25 2.25 0 0 0-2.25 2.25v6" />
                         </svg>
                         <svg xmlns="http://www.w3.org/2000/svg" on:click={() => deleteModell(modell.id)} fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-5 h-5 text-red-500 hover:text-red-700 cursor-pointer">
@@ -109,6 +139,36 @@
     </div>
 </div>
 
+{#if showDuplicateModal}
+    <div class="fixed inset-0 flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl p-6 shadow-xl w-full max-w-md">
+            <h2 class="text-xl font-semibold mb-4">Modell duplizieren</h2>
+
+            <label class="block text-sm font-medium text-gray-700 mb-1">Neuer Modellname</label>
+            <input
+                    type="text"
+                    bind:value={duplicateName}
+                    class="w-full border border-gray-300 rounded px-3 py-2 mb-4 focus:outline-none focus:ring focus:border-blue-500"
+                    placeholder="z. B. Mein Modell (Kopie)"
+            />
+
+            <div class="flex justify-end gap-3">
+                <button
+                        on:click={() => (showDuplicateModal = false)}
+                        class="px-4 py-2 text-gray-600 hover:text-gray-800"
+                >
+                    Abbrechen
+                </button>
+                <button
+                        on:click={confirmDuplicate}
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+                >
+                    Kopieren
+                </button>
+            </div>
+        </div>
+    </div>
+{/if}
 <!-- Modal -->
 <Modal open={modellDialogOpen} on:close={closeModal}>
     <NewModelPage data={$page.state.newModell} />

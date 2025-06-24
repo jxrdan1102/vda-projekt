@@ -1,4 +1,5 @@
 <script lang="ts">
+    import {tcMapping} from "$lib/Mapping";
 
     export let data: { constant: any };
 
@@ -11,7 +12,7 @@
     }
 </script>
 <form method="POST" class="mx-auto rounded bg-white">
-    <h2 class="text-l font-bold text-black-800 mb-1">Konstante #{constant.id}</h2>
+    <h2 class="text-l font-bold text-black-800 mb-1">{tcMapping[constant.constnum]}</h2>
 
     <input type="number" name="constval" bind:value={constval} step="any" class="w-full border rounded px-2 py-1" />
 

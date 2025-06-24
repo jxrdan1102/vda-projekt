@@ -12,6 +12,9 @@ from app.services.component_service.EverythinForComponents.TMU_ConstList import 
 )
 
 
+class DuplicateRequest(BaseModel):
+    name: str
+
 class ModellGetAllR(BaseModel):
     id: int
     name: str
@@ -37,10 +40,15 @@ class ModellCreateR(BaseModel):
 
 class ModellForAnamuR(BaseModel):
     name: str
-    aufgabe: int
-    methode: int
-    geo_me: int
-    geo_mo: int
+    aufgabe: int | None = None
+    methode: int | None = None
+    geo_me: int | None = None
+    geo_mo: int | None = None
+    tsk_innenmessung: int | None = None
+    tsk_ausenmessung: int | None = None
+    tsk_tiefennmessung: int | None = None
+    tsk_hoehenmessung: int | None = None
+    tsk_stufenmessung: int | None = None
 
     class Config:
         from_attributes = True

@@ -8,7 +8,7 @@ from app.models.user import User
 from app.routers.auth import get_current_user
 from app.schemas.anakomp import AnakompUpdateR, AnakompForAnamuR
 from app.schemas.anakonst import AnakonstUpdateR, AnakonstForAnamuR
-from app.schemas.anamu import AnamuCreateR, AnamuUpdate
+from app.schemas.anamu import AnamuCreateR, AnamuUpdate, DuplicateAnamu
 from app.schemas.anamu import AnamuGetIdR
 from app.schemas.anamu import AnamuGetR
 from app.services import AnamuService
@@ -31,8 +31,8 @@ async def get_anamu_by_idr(id: int, db: AsyncSession = Depends(get_db), current_
 
 @router.post("/r")
 async def create_anamur(anamu: AnamuCreateR, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
-    await AnamuService.create_anamu_with_dependencies(db, anamu, current_user.id)
-    return {"detail": "Analyseprojekt wurde erfolgreich erstellt"}
+    anamu = await AnamuService.create_anamu_with_dependencies(db, anamu, current_user.id)
+    return anamu
 
 @router.post("/{id}/r")
 async def update_anamu(id: int, anamu: AnamuUpdate, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
@@ -66,3 +66,7 @@ async def calc_uncertainty_route(id: int, db: AsyncSession = Depends(get_db), cu
 async def delete_anamu_by_id(id: int, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
     await AnamuService.delete_anamu(db, id, current_user.id)
     return {"detail": f"Analyseprojekt mit ID {id} wurde gelöscht"}
+
+@router.post("/{id}/duplicate")
+async def duplicate_anamu(id: int, req: DuplicateAnamu, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
+    return await AnamuService.duplicate_anamu(db, id, current_user.id, req.name)

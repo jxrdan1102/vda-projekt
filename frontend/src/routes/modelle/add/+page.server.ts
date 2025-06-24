@@ -1,11 +1,10 @@
 import type {Actions} from './$types';
-import {fail} from '@sveltejs/kit';
+import {fail, redirect} from '@sveltejs/kit';
 
 
 export const actions: Actions = {
-    default: async ({ request, fetch }) => {
+    default: async ({ request, fetch, params }) => {
         const formData = await request.formData();
-
         const payload = {
             aufgabe_modell: parseInt(formData.get('aufgabe_modell') as string),
             name: formData.get('name') as string,
@@ -20,18 +19,13 @@ export const actions: Actions = {
             credentials: 'include',
             body: JSON.stringify(payload)
         });
-
+        let modell = await res.json();
         if (!res.ok) {
             const err = await res.json();
             return fail(res.status, {
                 error: err.detail || 'Fehler beim Speichern'
             });
         }
-
-        const result = await res.json();
-        return {
-            success: true,
-            message: result.detail
-        };
+    throw redirect(303, `http://localhost:5173/modelle/${modell.id}`);
     }
 };

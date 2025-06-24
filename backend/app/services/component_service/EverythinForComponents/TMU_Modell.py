@@ -61,7 +61,7 @@ class TMU_3DElement(Enum):
 
 
 class TMU_ModellSchema(BaseModel):
-    aufgabe: int
+    aufgabe: int | None = None
     id: int
     mit_berechnung_toleranzfaktor: bool = False
     const_list: TMU_ConstList = Field(default_factory=TMU_ConstList)
@@ -109,10 +109,10 @@ class TMU_ModellSchema(BaseModel):
     def convert_geometrie_enum(cls, value):
         # Mapping-Tabelle
         mapping = {
-            0: TMU_AufgabeModell.aPruefprozess,
-            1: TMU_AufgabeModell.aKalibrierprozess,
-            2: TMU_AufgabeModell.a3D_Pruefprozess,
-            3: TMU_AufgabeModell.aUnbekannt,
+            1: TMU_AufgabeModell.aPruefprozess,
+            2: TMU_AufgabeModell.aKalibrierprozess,
+            3: TMU_AufgabeModell.a3D_Pruefprozess,
+            0: TMU_AufgabeModell.aUnbekannt,
         }
         if isinstance(value, int):
             try:

@@ -10,6 +10,7 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
     }
 
     const component = await res.json();
+    console.log(component);
     return { component };
 };
 

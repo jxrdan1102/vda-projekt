@@ -7,7 +7,7 @@
 
 <nav class="bg-green-600 text-black px-6 py-4 shadow-md">
     <div class="max-w-8xl mx-auto flex justify-between items-center text-white">
-        <div class="text-2xl font-semibold tracking-wide">Kister Metrologie</div>
+        <div class="text-2xl font-semibold tracking-wide">Kistner Metrologie</div>
         <ul class="flex space-x-6 text-sm font-medium">
             <li>
                 <a href="/dashboard" class="hover:text-blue-200 transition">Dashboard</a>
