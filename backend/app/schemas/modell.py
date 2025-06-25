@@ -19,6 +19,7 @@ class ModellGetAllR(BaseModel):
     id: int
     name: str
     description: str | None = None
+    aufgabe_modell: int | None = None
 
     class Config:
         from_attributes = True
@@ -64,6 +65,22 @@ class ModellUpdateR(BaseModel):
     tsk_tiefenmessung: int | None = None
     tsk_hoehenmessung: int | None = None
     tsk_stufenmessung: int | None = None
+    Bezug1: str | None = None
+    Bezug2: str | None = None
+    Element1: str | None = None
+    Element2: str | None = None
+    punktmuster: int | None = None
+    taster: int | None = None
+    merkmal: int | None = None
+    element: int | None = None
+    punktmusterB1: int | None = None
+    tasterschaft1: int | None = None
+    tasterschaft2: int | None = None
+    punktmusterR1: int | None = None
+    punktmusterR2: int | None = None
+    taster1: int | None = None
+    taster2: int | None = None
+    abstand: int | None = None
     description: str | None = None
     formel: str | None = None
     formeldesc: str | None = None
@@ -118,8 +135,25 @@ class ModellUpdate(BaseModel):
     tsk_tiefenmessung: int | None = None
     tsk_hoehenmessung: int | None = None
     tsk_stufenmessung: int | None = None
+    taster: int | None = None
+    merkmal: int | None = None
+    element: int | None = None
+    punktmusterB1: int | None = None
+    tasterschaft1: int | None = None
+    tasterschaft2: int | None = None
+    punktmusterR1: int | None = None
+    punktmusterR2: int | None = None
+    taster1: int | None = None
+    taster2: int | None = None
+    abstand: int | None = None
+    Bezug1: str | None = None
+    Bezug2: str | None = None
+    Element1: str | None = None
+    Element2: str | None = None
+    punktmuster: int | None = None
     formel: str | None = None
     formeldesc: str | None = None
+    aufgabe_modell: int
 
     components: list[ComponentRefCreate] | None = None  # Beziehung zur Component-Klasse
 
@@ -132,7 +166,6 @@ class ModellNameDescription(ModellBase):
     description: str
 
     class Config:
-        from_attributes = True
         from_attributes = True
 
 
@@ -154,11 +187,29 @@ class ModellGetIdR(BaseModel):
     geo_mo: int | None = None # Messobjekt
     geo_bn: int | None = None # Einstellnormal
     methode: int | None = None # Methode
+    aufgabe: int | None = None
     tsk_ausenmessung: int | None = None
     tsk_innenmessung: int | None = None
     tsk_tiefenmessung: int | None = None
     tsk_hoehenmessung: int | None = None
     tsk_stufenmessung: int | None = None
+    taster: int | None = None
+    merkmal: int | None = None
+    element: int | None = None
+    punktmusterB1: int | None = None
+    tasterschaft1: int | None = None
+    tasterschaft2: int | None = None
+    punktmusterR1: int | None = None
+    punktmusterR2: int | None = None
+    taster1: int | None = None
+    taster2: int | None = None
+    abstand: int | None = None
+
+    Bezug1: str | None = None
+    Bezug2: str | None = None
+    Element1: str | None = None
+    Element2: str | None = None
+    punktmuster: int | None = None
     formel: str | None = None
     formeldesc: str | None = None
     aufgabe_modell: int

@@ -27,6 +27,9 @@ class AnakompForAnamuR(BaseModel):
     freigrad: int | None = None
     frei_n_1: int | None = None
     verteilung: int | None = None
+    messpunkt_anzahl: int | None = None
+    anzahl_messungen: int | None = None
+    berechnen: int | None = None
     komponente: ComponentGet  | None = None
 
     class Config:
@@ -44,5 +47,8 @@ class AnakompUpdateR(BaseModel):
     terml1: float | None = None
     wertart: int | None = None
     freigrad: int | None = None
+    messpunkt_anzahl: int | None = None
+    anzahl_messungen: int | None = None
     frei_n_1: int | None = None
     verteilung: int | None = None
+    berechnen: int | None = None

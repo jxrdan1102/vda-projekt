@@ -57,6 +57,7 @@ class ANAKOMP(Base):
     verteilung = Column(Integer)
     messpunkt_anzahl = Column(Integer)
     anzahl_messungen = Column(Integer)
+    berechnen = Column(Integer)
     fk_user_id = Column(Integer, ForeignKey("users.id"))
 
     user = relationship("User", back_populates="anakomp")

@@ -33,8 +33,21 @@
     {#if aufgabe_modell === '3'}
         <div>
             <label for="aufgabe" class="block font-medium">Aufgabe</label>
-            <input id="aufgabe" name="aufgabe" required class="w-full border rounded px-3 py-2" />
-        </div>
+            <select
+                    id="aufgabe"
+                    name="aufgabe"
+                    required
+                    class="w-full border rounded px-3 py-2"
+            >
+                <option value="" disabled selected>Bitte wählen</option>
+                <option value="1">Durchmesser</option>
+                <option value="2">Abstand</option>
+                <option value="3">Richtung</option>
+                <option value="4">Koaxialität</option>
+                <option value="5">Form</option>
+                <option value="6">Winkel</option>
+                <option value="7">Position</option>
+            </select>        </div>
     {/if}
 
     <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">

@@ -28,6 +28,7 @@ async def create_modellr(modell: ModellCreateR, db: AsyncSession = Depends(get_d
 
 @router.post("/{id}/r")
 async def update_modellr(id: int, modell: ModellUpdateR, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
+    print(modell.model_dump(exclude_unset=True))
     await ModellService.update_modell(db, id, modell.model_dump(exclude_unset=True), current_user.id)
     return {"detail": "Modell wurde erfolgreich geändert"}
 

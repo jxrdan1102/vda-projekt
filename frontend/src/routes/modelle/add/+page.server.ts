@@ -26,6 +26,9 @@ export const actions: Actions = {
                 error: err.detail || 'Fehler beim Speichern'
             });
         }
+        if (payload.aufgabe_modell === 3) {
+            throw redirect(303, `http://localhost:5173/modelle/3D-${modell.id}`);
+        }
     throw redirect(303, `http://localhost:5173/modelle/${modell.id}`);
     }
 };

@@ -446,3 +446,58 @@ class TK_3d_Wi_DeltaEKMG(TMU_3dKomponente_Richtung):
 
     def archiv_data_bval(self):
         return 1.0
+
+    MU_NAN = float('nan')
+
+class TK_3d_Dw(TMU_3DKomponente):
+    def __init__(self, modell, const_list):
+        super().__init__(modell, 1301, const_list, "D<sub>W</sub>")
+        self.fields_to_edit = ['EF_Term0', 'EF_Kennwertart', 'EF_MPAnzahl']
+
+        if self.modell.Element1_3d != 4:  # Annahme: Vergleich als String oder Enum
+            self.ConstNeeded += [TKompConstants['TC_3d_KMG_A'],TKompConstants['TC_3d_DUME_alpha']]
+        else:
+            self.ConstNeeded += [TKompConstants['TC_3d_KMG_A']]
+
+    def b_val(self) -> float:
+        if self.archiv:
+            return self.arch_data.BVAL
+
+        Element = self.modell.Element1_3d
+        n = self.messpunkt_anzahl
+        faktor = MU_NAN
+
+        if self.data.KennwertArt.name == 'M3D_MethodeA':
+            if Element in [3, 4, 5]:
+                faktor = 1
+        else:
+            if n is not None and n > 3:
+                if Element in [3, 5]:
+                    faktor = 1
+                elif Element == 4:
+                    if n in [4, 5, 6]:
+                        faktor = 1
+                    elif n > 6:
+                        faktor = 1.5
+
+        if n is not None and n > 0 and not math.isnan(faktor):
+            return faktor * math.sqrt(4 / n)
+        else:
+            return MU_NAN
+
+    def g_val(self) -> float:
+        Phi = self.modell.const_list.const_map[TKompConstants.TC_3d_DUME_alpha]
+        if Phi == 0 or math.isnan(Phi):
+            Phi = 360
+            return 20631 * (Phi ** -1.6878)
+
+    def EffektiverFreiheitsgrad(self) -> float:
+        if self.archiv:
+            return self.arch_data.FreiEff
+
+        if self.data.KennwertArt.name == 'M3D_MethodeB':
+            return self.messpunkt_anzahl - 1
+
+        return self.AnzahlMessungen * abs(
+            self.messpunkt_anzahl - self.MindestPunktAnzahl(self.modell.Element1_3d)
+        )

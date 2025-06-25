@@ -1,6 +1,7 @@
-from app.database.database import Base
 from sqlalchemy import DATETIME, Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
+
+from app.database.database import Base
 
 
 class Modell(Base):
@@ -35,6 +36,18 @@ class Modell(Base):
     winkelE2 = Column(Integer)
     winkelB1 = Column(Integer)
     winkelB2 = Column(Integer)
+    taster = Column(Integer)
+    merkmal = Column(Integer)
+    element = Column(Integer)
+    punktmusterB1 = Column(Integer)
+    tasterschaft1 = Column(Integer)
+    tasterschaft2 = Column(Integer)
+    punktmusterR1 = Column(Integer)
+    punktmusterR2 = Column(Integer)
+    taster1 = Column(Integer)
+    taster2 = Column(Integer)
+    abstand = Column(Integer)
+
     formel = Column(String(512))
     formeldesc = Column(String(512))
 

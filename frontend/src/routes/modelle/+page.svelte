@@ -75,6 +75,11 @@
             alert("Fehler beim Duplizieren");
         }
     }
+    function goToModell(id: number, prozess: number) {
+        console.log("einzigartig",prozess);
+        if (prozess === 3) goto(`http://localhost:5173/modelle/3D-${id}`)
+        else goto(`http://localhost:5173/modelle/${id}`)
+    }
 </script>
 
 
@@ -121,7 +126,7 @@
     <!-- Table Body -->
     <div class="border border-t-0 border-gray-300 divide-y divide-gray-200">
         {#each data.modelle as modell}
-            <div class="flex px-4 py-1 hover:bg-gray-100 cursor-pointer" on:dblclick={() => goto(`/modelle/${modell.id}`)}>
+            <div class="flex px-4 py-1 hover:bg-gray-100 cursor-pointer" on:dblclick={() => goToModell(modell.id,modell.aufgabe_modell)}>
                 <div class="w-1/2">{modell.name}</div>
                 <div class="w-1/2 flex justify-between items-center">
                     <span>{modell.description}</span>
