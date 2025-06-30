@@ -2,12 +2,16 @@
     import {goto, preloadData, pushState} from "$app/navigation";
     import {page} from '$app/stores';
     import Modal from "$lib/components/Modal.svelte";
-    import NewCompPage from "../[modellId]/addComponent/+page.svelte";
-    import CompInfoPage from '../[modellId]/component-[componentId]/+page.svelte';
+    import NewCompPage from "../3D-[modellId]/addComponent/+page.svelte";
+    import CompInfoPage from '../3D-[modellId]/component-[componentId]/+page.svelte';
     import {COMPONENTS} from "$lib/Mapping.js";
 
     export let data;
-
+    const ModelTextLabels: Record<number, string> = {
+        0: '',
+        1: 'Das ist eine tolle Komponente',
+        2: 'Diese Komponente ist sehr nützlich',
+    };
     // Lokale reactive Variablen
     let name: string = data.modell?.name ?? '';
     let Bezug1: string | null = data.modell?.Bezug1 ?? null;
@@ -475,12 +479,11 @@
 
                     <div>
                         <label class="block text-gray-700 text-xs mb-1">Element</label>
-                        <select id="element" name="element" bind:value={element}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                        <select id="Element1" name="Element1" bind:value={Element1}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
                             <option value="" disabled>Bitte wählen</option>
-                            <option value=1>Gerade</option>
-                            <option value=2>Ebene</option>
-                            <option value=3>Zylinder</option>
-                            <option value=6>Kegel</option>
+                            <option value='Kreis'>Kreis</option>
+                            <option value='Halbkugel'>Halbkugel</option>
+                            <option value='Zylinder'>Zylinder</option>
                         </select>
                     </div>
                 </div>
@@ -489,7 +492,7 @@
         <div class="border-l p-3 pl-20 w-xl">
             <div class="mb-1">
                 <label class="block text-gray-700 text-xs mb-1">Beschreibung – Modell</label>
-                <textarea bind:value={description} name="beschreibung" class="w-full h-10 border border-gray-400 px-2 text-sm py-0 bg-white" rows="2"></textarea>
+                <textarea bind:value={description} name="description" class="w-full h-10 border border-gray-400 px-2 text-sm py-0 bg-white" rows="2"></textarea>
             </div>
             <div class="mb-1">
                 <label class="block text-gray-700 text-xs mb-1">Formel</label>
@@ -531,7 +534,7 @@
                     <td class="px-2 py-1">{i + 1}</td>
                     <td class="px-2 py-1">{COMPONENTS[comp.kompid]}</td>
                     <td class="px-2 py-1">{comp.id}</td>
-                    <td class="px-2 py-1">{comp.modltxtid}</td>
+                    <td class="px-2 py-1">{ModelTextLabels[comp.modltxtid] ?? ''}</td>
                     <td class="float-right px-1">
                         <button type="button" on:click={() => deleteComponent(comp.id)}>
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-5 h-5 text-red-500 hover:text-red-700 cursor-pointer">

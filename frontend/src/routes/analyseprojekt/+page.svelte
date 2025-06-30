@@ -76,6 +76,11 @@
             alert("Fehler beim Duplizieren");
         }
     }
+
+    function goToProjekt (id: number, prozess: number) {
+        if (prozess === 3) goto(`http://localhost:5173/analyseprojekt/3D-${id}`)
+        else goto(`http://localhost:5173/analyseprojekt/${id}`)
+    }
 </script>
 
 <div class="max-w-7xl mx-auto px-4 py-6">
@@ -115,7 +120,7 @@
     <!-- Table Body -->
     <div class="border border-t-0 border-gray-300 divide-y divide-gray-200">
         {#each data.analyseprojekt as analyseprojekt}
-            <div class="flex px-4 py-1 hover:bg-gray-100 cursor-pointer" on:dblclick={() => goto(`/analyseprojekt/${analyseprojekt.id}`)}>
+            <div class="flex px-4 py-1 hover:bg-gray-100 cursor-pointer" on:dblclick={() => goToProjekt(analyseprojekt.id, analyseprojekt.modell.aufgabe_modell)}>
                 <div class="w-1/2">{analyseprojekt.name}</div>
                 <div class="w-1/2">{analyseprojekt.aenderungszustand}</div>
                 <div class="w-1/2">{analyseprojekt.identnr}</div>

@@ -1,4 +1,5 @@
 import math
+from enum import Enum
 from functools import cached_property
 from math import pi, sqrt
 
@@ -7,6 +8,15 @@ from app.services.component_service.EverythinForComponents.TMuKompRec import TMu
 from app.services.component_service.component_abstract import MU_NAN
 from app.services.component_service.componente3D import TMU_3DKomponente
 
+
+class TMU_3DAufgabe(Enum):
+    aDurchmesser = 1
+    aAbstand = 2
+    aRichtung = 3
+    aKoaxialitaet = 4
+    aForm = 5
+    aWinkel = 6
+    aPosition = 7
 
 class TMU_3dKomponente_Richtung(TMU_3DKomponente):
     def __init__(self, modell, komp_id, const_list, formel):
@@ -223,15 +233,7 @@ class TK_3d_Wi_WB(TMU_3dKomponente_Richtung):
         self.result = None
         self.ConstNeeded += [TKompConstants["TC_3d_Ri_LMB"], TKompConstants["TC_3d_Koax_LB"], TKompConstants["TC_3d_KMG_A"],]
         self.MU_NAN = float("nan")
-        self.data = TMuKompRec(
-            TermL0=0.15,
-            TermL1=0,
-            Verteilung="V_Rechteck",
-            KennwertArt="M3D_MethodeB",
-            Freiheitsgrad="FG_unbegrenzt",
-            FreiN_minus_1=0,
-            Flags=1,
-        )
+        self.data = TMuKompRec(TermL0=0.15,TermL1=0,Verteilung="V_Rechteck",KennwertArt="M3D_MethodeB",Freiheitsgrad="FG_unbegrenzt",FreiN_minus_1=0,Flags=1,)
         self.addConstNeededToModell()
 
     def in_grad(self, bog: float) -> float:
@@ -450,32 +452,35 @@ class TK_3d_Wi_DeltaEKMG(TMU_3dKomponente_Richtung):
     MU_NAN = float('nan')
 
 class TK_3d_Dw(TMU_3DKomponente):
-    def __init__(self, modell, const_list):
+    def __init__(self, modell, const_list,lfdnr):
         super().__init__(modell, 1301, const_list, "D<sub>W</sub>")
         self.fields_to_edit = ['EF_Term0', 'EF_Kennwertart', 'EF_MPAnzahl']
+        self.lfdnr = lfdnr
+        self.data = TMuKompRec(TermL0=0.15,TermL1=0,Verteilung="V_Rechteck",KennwertArt="M3D_MethodeB",Freiheitsgrad="FG_unbegrenzt",FreiN_minus_1=0,Flags=1,)
 
-        if self.modell.Element1_3d != 4:  # Annahme: Vergleich als String oder Enum
+        if self.modell.Element1 != 4:  # Annahme: Vergleich als String oder Enum
             self.ConstNeeded += [TKompConstants['TC_3d_KMG_A'],TKompConstants['TC_3d_DUME_alpha']]
         else:
             self.ConstNeeded += [TKompConstants['TC_3d_KMG_A']]
+        self.addConstNeededToModell()
 
     def b_val(self) -> float:
         if self.archiv:
             return self.arch_data.BVAL
 
-        Element = self.modell.Element1_3d
+        Element = self.modell.Element1
         n = self.messpunkt_anzahl
         faktor = MU_NAN
 
         if self.data.KennwertArt.name == 'M3D_MethodeA':
-            if Element in [3, 4, 5]:
+            if Element in ['Kreis', 'Halbkugel', 'Zylinder']:
                 faktor = 1
         else:
             if n is not None and n > 3:
-                if Element in [3, 5]:
+                if Element in ['Kreis', 'Zylinder']:
                     faktor = 1
-                elif Element == 4:
-                    if n in [4, 5, 6]:
+                elif Element == 'Halbkugel':
+                    if n in [4,5,6]:
                         faktor = 1
                     elif n > 6:
                         faktor = 1.5
@@ -489,7 +494,7 @@ class TK_3d_Dw(TMU_3DKomponente):
         Phi = self.modell.const_list.const_map[TKompConstants.TC_3d_DUME_alpha]
         if Phi == 0 or math.isnan(Phi):
             Phi = 360
-            return 20631 * (Phi ** -1.6878)
+        return 20631 * (Phi ** -1.6878)
 
     def EffektiverFreiheitsgrad(self) -> float:
         if self.archiv:
@@ -498,6 +503,413 @@ class TK_3d_Dw(TMU_3DKomponente):
         if self.data.KennwertArt.name == 'M3D_MethodeB':
             return self.messpunkt_anzahl - 1
 
-        return self.AnzahlMessungen * abs(
-            self.messpunkt_anzahl - self.MindestPunktAnzahl(self.modell.Element1_3d)
+        return self.anzahl_messungen * abs(
+            self.messpunkt_anzahl - self.mindestpunkt_anzahl(self.modell.Element1)
         )
+
+
+class TK_3dA_DeltaDT(TMU_3DKomponente):
+    def __init__(self, modell, const_list, lfdnr):
+        super().__init__(modell, 1320, const_list, "&Delta;D<sub>T</sub>")
+        self.fields_to_edit = ['EF_Term0', 'EF_Kennwertart', 'EF_MPAnzahl']
+        self.ConstNeeded += []
+        self.data = TMuKompRec(TermL0=0.15,TermL1=0,Verteilung="V_Rechteck",KennwertArt="M3D_MethodeB",Freiheitsgrad="FG_unbegrenzt",FreiN_minus_1=0,Flags=1,)
+        self.addConstNeededToModell()
+
+        self.lfdnr = lfdnr
+    def sensititivty_c1(self) -> float:
+        if self.archiv:
+            return self.arch_data.SensC1
+        else:
+            result = 1.0
+
+            el1 = self.modell.Element1
+            el2 = self.modell.Element2
+            taster_anzahl = self.modell.taster #aufpassen
+
+            if taster_anzahl == 2:
+                if el1 in ['Punkt', 'Gerade', 'Ebene'] and el2 in ['Punkt', 'Gerade', 'Ebene']:
+                    result = 0.5
+            elif taster_anzahl == 1:
+                if el1 in ['Punkt', 'Gerade', 'Ebene'] and el2 in ['Halbkugel', 'Zylinder', 'Kegel']:
+                    result = 0.5
+
+            return result
+
+    def b_val(self) -> float:
+        if self.archiv:
+            return self.arch_data.BVAL
+
+        faktor = MU_NAN
+        n = self.messpunkt_anzahl
+
+        if self.data.KennwertArt.name == 'M3D_MethodeA':
+            faktor = 1
+        elif n is not None and n >= 4:
+            if n in [4, 5, 6]:
+                faktor = 1
+            else:
+                faktor = 1.5
+
+        if n is not None and n > 0 and not math.isnan(faktor):
+            return faktor * math.sqrt(4 / n)
+        return MU_NAN
+
+    def EffektiverFreiheitsgrad(self) -> float:
+        if self.archiv:
+            return self.arch_data.FreiEff
+
+        n = self.messpunkt_anzahl
+
+        if self.data.KennwertArt.name == 'M3D_MethodeB':
+            result = n - 1
+        else:
+            result = self.anzahl_messungen * (n - 4)
+
+        if not math.isnan(result):
+            return abs(result)
+        return MU_NAN
+
+class TK_3d_DeltaDC(TMU_3DKomponente):
+    def __init__(self, modell, const_list, lfdnr):
+        super().__init__(modell, 1303, const_list, "&Delta;D<sub>C</sub>")
+        self.fields_to_edit = []
+        self.ConstNeeded += [TKompConstants["TC_3d_KMG_Uc"]]
+        self.result = None  # optional, falls Ergebnis gecached wird
+        self.data = TMuKompRec(TermL0=0.15,TermL1=0,Verteilung="V_Rechteck",KennwertArt="M3D_MethodeB",Freiheitsgrad="FG_unbegrenzt",FreiN_minus_1=0,Flags=1,)
+        self.addConstNeededToModell()
+
+        self.lfdnr = lfdnr
+    def standard_unsicherheit_su(self) -> float:
+        try:
+            if self.archiv:
+                return self.arch_data.AVAL
+            else:
+                uc = self.modell.const_list.const_map[TKompConstants.TC_3d_KMG_Uc]
+                if not math.isnan(uc):
+                    return uc / 2
+        except Exception as e:
+            print(f"Fehler in standard_unsicherheit_su (DeltaDC): {e}")
+        return MU_NAN
+
+
+
+class TK_3d_DeltaLkmg(TMU_3DKomponente):
+    def __init__(self, modell, const_list, lfdnr):
+        super().__init__(modell, 1304, const_list, "&Delta;L<sub>KMG</sub>")
+        self.fields_to_edit = []
+        self.lfdnr = lfdnr
+        self.data = TMuKompRec(TermL0=0.15,TermL1=0,Verteilung="V_Rechteck",KennwertArt="M3D_MethodeB",Freiheitsgrad="FG_unbegrenzt",FreiN_minus_1=0,Flags=1,)
+
+        self.ConstNeeded += [
+            TKompConstants["TC_3D_NennLaenge_LD"],
+            TKompConstants["TC_3d_KMG_K"]
+        ]
+
+        if self.modell.element in [3, 6]:
+            self.ConstNeeded += [TKompConstants["TC_3d_DUME_L"]]
+        self.addConstNeededToModell()
+
+    def standard_unsicherheit_su(self) -> float:
+        try:
+            if self.archiv:
+                return self.arch_data.AVAL
+            else:
+                d = self.modell.const_list.const_map[TKompConstants.TC_3D_NennLaenge_LD]
+                k = self.modell.const_list.const_map[TKompConstants.TC_3d_KMG_K]
+
+                if not math.isnan(d) and not math.isnan(k) and k != 0:
+                    return d / k
+        except Exception as e:
+            print(f"Fehler in standard_unsicherheit_su (DeltaLkmg): {e}")
+        return MU_NAN
+
+    def b_val(self) -> float:
+        if self.archiv:
+            return self.arch_data.BVAL
+        return 0.5
+
+
+class TK_3dA_LalphaM(TMU_3DKomponente):
+    def __init__(self, modell, const_list, lfdnr):
+        super().__init__(modell, 1323, const_list, "&Delta;L<sub>&alpha;M</sub>")
+        self.fields_to_edit = []
+        self.lfdnr = lfdnr
+        self.data = TMuKompRec(TermL0=0.15,TermL1=0,Verteilung="V_Rechteck",KennwertArt="M3D_MethodeB",Freiheitsgrad="FG_unbegrenzt",FreiN_minus_1=0,Flags=1,)
+
+
+        aufgabe = TMU_3DAufgabe(self.modell.aufgabe).name
+        if aufgabe == "aDurchmesser":
+            self.ConstNeeded += [TKompConstants["TC_3D_NennLaenge_LD"]]
+        elif aufgabe == "aAbstand":
+            self.ConstNeeded += [TKompConstants["TC_3d_ABST_L"]]
+
+        self.ConstNeeded += [
+            TKompConstants["TC_3d_KMG_alphaM"],
+            TKompConstants["TC_3d_KMG_Tm"]
+        ]
+        self.addConstNeededToModell()
+
+    def sensititivty_c1(self) -> float:
+        try:
+            if self.archiv:
+                return self.arch_data.SensC1
+            else:
+                aufgabe = TMU_3DAufgabe(self.modell.aufgabe).name
+                d = None
+                if aufgabe == "aDurchmesser":
+                    d = self.modell.const_list.const_map[TKompConstants.TC_3D_NennLaenge_LD]
+                elif aufgabe == "aAbstand":
+                    d = self.modell.const_list.const_map[TKompConstants.TC_3d_ABST_L]
+
+                tm = self.modell.const_list.const_map[TKompConstants.TC_3d_KMG_Tm]
+
+                if not math.isnan(d) and not math.isnan(tm):
+                    return abs(1000 * d * (tm - 20))
+        except Exception as e:
+            print(f"Fehler in sensitivity_c1 (LalphaM): {e}")
+        return MU_NAN
+
+    def standard_unsicherheit_su(self) -> float:
+        try:
+            if self.archiv:
+                return self.arch_data.AVAL
+            else:
+                alpha_m = self.modell.const_list.const_map[TKompConstants.TC_3d_KMG_alphaM]
+                if not math.isnan(alpha_m):
+                    return alpha_m * 10**-6 / (5 * math.sqrt(3))
+        except Exception as e:
+            print(f"Fehler in standard_unsicherheit_su (LalphaM): {e}")
+        return MU_NAN
+
+
+class TK_3dA_LalphaW(TMU_3DKomponente):
+    def __init__(self, modell, const_list, lfdnr):
+        super().__init__(modell, 1324, const_list, "&Delta;L<sub>&alpha;W</sub>")
+        self.fields_to_edit = []
+        self.lfdnr = lfdnr
+        self.data = TMuKompRec(TermL0=0.15,TermL1=0,Verteilung="V_Rechteck",KennwertArt="M3D_MethodeB",Freiheitsgrad="FG_unbegrenzt",FreiN_minus_1=0,Flags=1,)
+
+        aufgabe = TMU_3DAufgabe(self.modell.aufgabe).name
+        if aufgabe == "aDurchmesser":
+            self.ConstNeeded += [TKompConstants["TC_3D_NennLaenge_LD"]]
+        elif aufgabe == "aAbstand":
+            self.ConstNeeded += [TKompConstants["TC_3d_ABST_L"]]
+
+        self.ConstNeeded += [
+            TKompConstants["TC_3d_KMG_Tw"],
+            TKompConstants["TC_3d_KMG_alphaW"]
+        ]
+        self.addConstNeededToModell()
+
+    def sensititivty_c1(self) -> float:
+        try:
+            if self.archiv:
+                return self.arch_data.SensC1
+            else:
+                aufgabe = TMU_3DAufgabe(self.modell.aufgabe).name
+                d = None
+                if aufgabe == "aDurchmesser":
+                    d = self.modell.const_list.const_map[TKompConstants.TC_3D_NennLaenge_LD]
+                elif aufgabe == "aAbstand":
+                    d = self.modell.const_list.const_map[TKompConstants.TC_3d_ABST_L]
+
+                tw = self.modell.const_list.const_map[TKompConstants.TC_3d_KMG_Tw]
+
+                if not math.isnan(d) and not math.isnan(tw):
+                    return abs(1000 * d * (tw - 20))
+        except Exception as e:
+            print(f"Fehler in sensitivity_c1 (LalphaW): {e}")
+        return MU_NAN
+
+    def standard_unsicherheit_su(self) -> float:
+        try:
+            if self.archiv:
+                return self.arch_data.AVAL
+            else:
+                alpha_w = self.modell.const_list.const_map[TKompConstants.TC_3d_KMG_alphaW]
+                if not math.isnan(alpha_w):
+                    return alpha_w * 1e-6 / (5 * math.sqrt(3))
+        except Exception as e:
+            print(f"Fehler in standard_unsicherheit_su (LalphaW): {e}")
+        return MU_NAN
+
+
+class TK_3dA_LtM(TMU_3DKomponente):
+    def __init__(self, modell, const_list, lfdnr):
+        super().__init__(modell, 1325, const_list, "&Delta;L<sub>tM</sub>")
+        self.fields_to_edit = []
+        self.lfdnr = lfdnr
+        self.data = TMuKompRec(TermL0=0.15,TermL1=0,Verteilung="V_Rechteck",KennwertArt="M3D_MethodeB",Freiheitsgrad="FG_unbegrenzt",FreiN_minus_1=0,Flags=1,)
+
+        aufgabe = TMU_3DAufgabe(self.modell.aufgabe).name
+        if aufgabe == "aDurchmesser":
+            self.ConstNeeded += [TKompConstants["TC_3D_NennLaenge_LD"]]
+        elif aufgabe == "aAbstand":
+            self.ConstNeeded += [TKompConstants["TC_3d_ABST_L"]]
+
+        self.ConstNeeded += [
+            TKompConstants["TC_3d_KMG_alphaM"],
+            TKompConstants["TC_3d_KMG_deltaTm"]
+        ]
+        self.addConstNeededToModell()
+
+    def sensititivty_c1(self) -> float:
+        try:
+            if self.archiv:
+                return self.arch_data.SensC1
+            else:
+                aufgabe = TMU_3DAufgabe(self.modell.aufgabe).name
+                d = None
+                if aufgabe == "aDurchmesser":
+                    d = self.modell.const_list.const_map[TKompConstants.TC_3D_NennLaenge_LD]
+                elif aufgabe == "aAbstand":
+                    d = self.modell.const_list.const_map[TKompConstants.TC_3d_ABST_L]
+
+                alpha_m = self.modell.const_list.const_map[TKompConstants.TC_3d_KMG_alphaM]
+
+                if not math.isnan(d) and not math.isnan(alpha_m):
+                    return abs(1000 * d * (alpha_m * 1e-6))
+        except Exception as e:
+            print(f"Fehler in sensitivity_c1 (LtM): {e}")
+        return MU_NAN
+
+    def standard_unsicherheit_su(self) -> float:
+        try:
+            if self.archiv:
+                return self.arch_data.AVAL
+            else:
+                delta_tm = self.modell.const_list.const_map[TKompConstants.TC_3d_KMG_deltaTm]
+                if not math.isnan(delta_tm):
+                    return delta_tm / math.sqrt(3)
+        except Exception as e:
+            print(f"Fehler in standard_unsicherheit_su (LtM): {e}")
+        return MU_NAN
+
+
+class TK_3dA_LtW(TMU_3DKomponente):
+    def __init__(self, modell, const_list, lfdnr):
+        super().__init__(modell, 1326, const_list, "&Delta;L<sub>tW</sub>")
+        self.fields_to_edit = []
+        self.lfdnr = lfdnr
+        self.data = TMuKompRec(TermL0=0.15,TermL1=0,Verteilung="V_Rechteck",KennwertArt="M3D_MethodeB",Freiheitsgrad="FG_unbegrenzt",FreiN_minus_1=0,Flags=1,)
+
+        aufgabe = TMU_3DAufgabe(self.modell.aufgabe).name
+        if aufgabe == "aDurchmesser":
+            self.ConstNeeded += [TKompConstants["TC_3D_NennLaenge_LD"]]
+        elif aufgabe == "aAbstand":
+            self.ConstNeeded += [TKompConstants["TC_3d_ABST_L"]]
+
+        self.ConstNeeded += [
+            TKompConstants["TC_3d_KMG_alphaW"],
+            TKompConstants["TC_3d_KMG_deltaTw"]
+        ]
+        self.addConstNeededToModell()
+
+    def sensititivty_c1(self) -> float:
+        try:
+            if self.archiv:
+                return self.arch_data.SensC1
+            else:
+                aufgabe = TMU_3DAufgabe(self.modell.aufgabe).name
+                d = (
+                    self.modell.const_list.const_map[TKompConstants.TC_3D_NennLaenge_LD]
+                    if aufgabe == "aDurchmesser"
+                    else self.modell.const_list.const_map[TKompConstants.TC_3d_ABST_L]
+                )
+                alpha_w = self.modell.const_list.const_map[TKompConstants.TC_3d_KMG_alphaW]
+
+                if not math.isnan(d) and not math.isnan(alpha_w):
+                    return abs(1000 * d * (alpha_w * 1e-6))
+        except Exception as e:
+            print(f"Fehler in sensitivity_c1 (LtW): {e}")
+        return MU_NAN
+
+    def standard_unsicherheit_su(self) -> float:
+        try:
+            if self.archiv:
+                return self.arch_data.AVAL
+            else:
+                delta_tw = self.modell.const_list.const_map[TKompConstants.TC_3d_KMG_deltaTw]
+                if not math.isnan(delta_tw):
+                    return abs(delta_tw / math.sqrt(3))
+        except Exception as e:
+            print(f"Fehler in standard_unsicherheit_su (LtW): {e}")
+        return MU_NAN
+
+
+class TK_3d_Delta_L_t(TMU_3DKomponente):
+    def __init__(self, modell, const_list, lfdnr):
+        super().__init__(modell, 1377, const_list, "&Delta;L<sub>t</sub>")
+        self.fields_to_edit = []
+        self.lfdnr = lfdnr
+        self.data = TMuKompRec(TermL0=0.15,TermL1=0,Verteilung="V_Rechteck",KennwertArt="M3D_MethodeB",Freiheitsgrad="FG_unbegrenzt",FreiN_minus_1=0,Flags=1,)
+
+        aufgabe = TMU_3DAufgabe(modell.aufgabe).name
+        if aufgabe == "aDurchmesser":
+            self.ConstNeeded += [TKompConstants["TC_3D_NennLaenge_LD"]]
+        elif aufgabe == "aAbstand":
+            self.ConstNeeded += [TKompConstants["TC_3d_ABST_L"]]
+
+        self.ConstNeeded += [
+            TKompConstants["TC_3d_KMG_alphaW"],
+            TKompConstants["TC_3d_KMG_alphaM"],
+            TKompConstants["TC_3d_KMG_Tw"],
+            TKompConstants["TC_3d_KMG_Tm"]
+        ]
+
+        self.addConstNeededToModell()
+
+    def sensititivty_c1(self) -> float:
+        try:
+            if self.archiv:
+                return self.arch_data.SensC1
+            else:
+                aufgabe = TMU_3DAufgabe(self.modell.aufgabe).name
+                d = (
+                    self.modell.const_list.const_map[TKompConstants.TC_3D_NennLaenge_LD]
+                    if aufgabe == "aDurchmesser"
+                    else self.modell.const_list.const_map[TKompConstants.TC_3d_ABST_L]
+                )
+                if not math.isnan(d):
+                    return abs(1000 * d * math.sqrt(2))  # Änderung vom 25.02.2013
+        except Exception as e:
+            print(f"Fehler in sensitivity_c1 (Delta_L_t): {e}")
+        return MU_NAN
+
+    def standard_unsicherheit_su(self) -> float:
+        try:
+            if self.archiv:
+                return self.arch_data.AVAL
+
+            alpha_w = self.modell.const_list.const_map[TKompConstants.TC_3d_KMG_alphaW]
+            alpha_m = self.modell.const_list.const_map[TKompConstants.TC_3d_KMG_alphaM]
+            temp_w = self.modell.const_list.const_map[TKompConstants.TC_3d_KMG_Tw]
+            temp_m = self.modell.const_list.const_map[TKompConstants.TC_3d_KMG_Tm]
+
+            if all(not math.isnan(x) for x in [alpha_w, alpha_m, temp_w, temp_m]):
+                alpha_w *= 1e-6
+                alpha_m *= 1e-6
+
+                alpha = (alpha_w + alpha_m) / 2
+                delta_alpha = (alpha_w - alpha_m) / 2
+                alpha_max = max(alpha_w, alpha_m)
+
+                theta_w = temp_w - 20
+                theta_m = temp_m - 20
+                theta = (theta_w + theta_m) / 2
+                delta_theta = (theta_w - theta_m) / 2
+                theta_max = max(abs(theta_w), abs(theta_m))
+
+                u_theta_max = theta_max / math.sqrt(3)
+                u_alpha_max = max(alpha_w / 5, alpha_m / 5)
+
+                result = math.sqrt(
+                    (alpha**2 + delta_alpha**2) * u_theta_max**2 +
+                    (theta**2 + delta_theta**2) * u_alpha_max**2
+                )
+                return result
+        except Exception as e:
+            print(f"Fehler in standard_unsicherheit_su (Delta_L_t): {e}")
+        return MU_NAN
+

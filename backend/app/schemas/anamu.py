@@ -29,6 +29,7 @@ class AnamuBase(BaseModel):
         from_attributes = True
 
 class AnamuGetR(AnamuBase):
+    modell: ModellForAnamuR
     pass
 
 

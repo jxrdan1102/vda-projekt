@@ -16,6 +16,7 @@ class ComponentRefBase(BaseModel):
     lfdnr: int | None = None
     kompid: int | None = None
     modltxtid: int | None = None
+    messpunkt_anzahl: int | None = None
     terml0: float | None = None
     terml1: float | None = None
     wertart: int | None = None
@@ -51,8 +52,8 @@ class ComponentRefUpdate(ComponentRefBase):
 
 
 class ComponentBack(BaseModel):
-    data: TMuKompRec
-    ConstNeeded: set[str]
+    data: TMuKompRec | None = None
+    ConstNeeded: set[str] | None = None
     name: str | None = None
     id: int | None = None
 

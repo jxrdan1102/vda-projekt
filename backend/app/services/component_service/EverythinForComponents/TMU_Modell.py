@@ -88,6 +88,17 @@ class TMU_ModellSchema(BaseModel):
     winkelE2: int | None = None
     winkelB1: int | None = None
     winkelB2: int | None = None
+    taster: int | None = None
+    merkmal: int | None = None
+    element: int | None = None
+    punktmusterB1: int | None = None
+    tasterschaft1: int | None = None
+    tasterschaft2: int | None = None
+    punktmusterR1: int | None = None
+    punktmusterR2: int | None = None
+    taster1: int | None = None
+    taster2: int | None = None
+    abstand: int | None = None
     archiv: bool = False
     formel_anteil: str = ""
     formel_beschreibung: str = ""
@@ -166,6 +177,17 @@ class TMU_Modell(list[TMU_Komponente]):
         self.winkelE2 = schema.winkelE2
         self.winkelB1 = schema.winkelB1
         self.winkelB2 = schema.winkelB2
+        self.taster = schema.taster
+        self.merkmal = schema.merkmal
+        self.element = schema.element
+        self.punktmusterB1 = schema.punktmusterB1
+        self.tasterschaft1 = schema.tasterschaft1
+        self.tasterschaft2 = schema.tasterschaft2
+        self.punktmusterR1 = schema.punktmusterR1
+        self.punktmusterR2 = schema.punktmusterR2
+        self.taster1 = schema.taster1
+        self.taster2 = schema.taster2
+        self.abstand = schema.abstand
 
 
     @classmethod

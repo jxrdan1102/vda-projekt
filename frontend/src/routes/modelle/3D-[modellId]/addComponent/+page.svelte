@@ -5,15 +5,12 @@
     let kompid: number | null = null;
 
     let terml0: number;
-    let terml1: number;
     let wertart: number;
-    let freigrad: number;
-    let frei_n_1: number;
-    let verteilung: number;
-    let kflags: number;
-    let modltxtid: string;
-</script>
+    let kflags: number = 1;
+    let modltxtid: number;
+    let messpunkt_anzahl: number;
 
+</script>
 <form method="POST" class="text-sm bg-white space-y-3 max-w-md mx-auto">
     <h2 class="text-base font-semibold text-gray-800 mb-2">Komponente hinzufügen</h2>
 
@@ -28,14 +25,14 @@
         </select>
         </label>
     <label class="flex flex-col">
-        <span class="text-gray-600">Term L0</span>
+        <span class="text-gray-600">Standardabweichung</span>
         <input type="number" name="terml0" bind:value={terml0} step="any"
                class="border px-2 py-1 text-sm" />
     </label>
 
     <label class="flex flex-col">
-        <span class="text-gray-600">Term L1</span>
-        <input type="number" name="terml1" bind:value={terml1} step="any"
+        <span class="text-gray-600">Anzahl Messpunkte</span>
+        <input type="number" name="messpunkt_anzahl" bind:value={messpunkt_anzahl} step="any"
                class="border px-2 py-1 text-sm" />
     </label>
 
@@ -49,48 +46,12 @@
                 class="border px-2 py-1 text-sm"
         >
             <option value="" disabled selected>Bitte wählen</option>
-            <option value="1">Halbweite</option>
-            <option value="2">Spannweite</option>
-            <option value="3">Standardabweichung</option>
+            <option value="4">A</option>
+            <option value="5">B</option>
         </select>
     </label>
 
-    <label class="flex flex-col">
-        <span class="text-gray-600">Freiheitsgrad</span>
-        <select
-                id="freigrad"
-                name="freigrad"
-                bind:value={freigrad}
-                required
-                class="border px-2 py-1 text-sm"
-        >
-            <option value="" disabled selected>Bitte wählen</option>
-            <option value="1">Unbegrenzt</option>
-            <option value="2">N-1</option>
-        </select>
-    </label>
 
-    <label class="flex flex-col">
-        <span class="text-gray-600">Frei n-1</span>
-        <input type="number" name="frei_n_1" bind:value={frei_n_1}
-               class="border px-2 py-1 text-sm" />
-    </label>
-
-    <label class="flex flex-col">
-        <span class="text-gray-600">Verteilung</span>
-        <select
-                id="verteilung"
-                name="verteilung"
-                bind:value={verteilung}
-                required
-                class="border px-2 py-1 text-sm"
-        >
-            <option value="" disabled selected>Bitte wählen</option>
-            <option value="1">Rechteckverteilung</option>
-            <option value="2">Normalverteilung</option>
-            <option value="3">Dreieckverteilung</option>
-        </select>
-    </label>
         <label class="flex flex-col">
             <span class="text-gray-600">Häufigkeit</span>
             <input type="number" name="kflags" bind:value={kflags}
@@ -100,8 +61,11 @@
 
     <div>
         <label class="block text-gray-600 mb-1">Beschreibung</label>
-        <input type="text" name="modltxtid" bind:value={modltxtid}
-               class="w-full border px-2 py-1 text-sm" />
+        <select name="modltxtid" bind:value={modltxtid} class="w-full border px-2 py-1 text-sm">
+            <option value={0} selected> Bitte wählen</option>
+            <option value={1}>Das ist eine tolle Komponente</option>
+            <option value={2}>Diese Komponente ist sehr nützlich</option>
+        </select>
     </div>
 
     <div class="flex justify-end pt-2">

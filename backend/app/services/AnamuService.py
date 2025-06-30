@@ -226,3 +226,14 @@ async def duplicate_anamu(db: AsyncSession, id: int, user_id: int, new_name: str
     await db.commit()
 
     return {"detail": f"Analyseprojekt '{old_anamu.name}' wurde als '{new_name}' dupliziert", "id": new_anamu.id}
+
+async def get_all_anamus(db: AsyncSession, user_id: int):
+    stmt = (
+        select(ANAMU)
+        .where(ANAMU.fk_user_id == user_id)
+        .options(
+            selectinload(ANAMU.modell),
+        )
+    )
+    result = await db.execute(stmt)
+    return result.scalars().all()

@@ -100,6 +100,12 @@
             alert('Löschen fehlgeschlagen');
         }
     }
+
+    const ModelTextLabels: Record<number, string> = {
+        0: '',
+        1: 'Das ist eine tolle Komponente',
+        2: 'Diese Komponente ist sehr nützlich',
+    };
 </script>
 <section class="w-8xl space-y-4 text-sm font-sans text-gray-800 m-auto pt-5">
     <form method="POST" class="max-w-8xl space-y-6">
@@ -222,7 +228,7 @@
                     <td class="px-2 py-1">{i + 1}</td>
                     <td class="px-2 py-1">{COMPONENTS[comp.kompid]}</td>
                     <td class="px-2 py-1">{comp.id}</td>
-                    <td class="px-2 py-1">{comp.modltxtid}</td>
+                    <td class="px-2 py-1">{ModelTextLabels[comp.modltxtid] ?? ''}</td>
                     <td class="float-right px-1">
                         <button type="button" on:click={() => deleteComponent(comp.id)}>
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-5 h-5 text-red-500 hover:text-red-700 cursor-pointer">

@@ -29,6 +29,16 @@ class ComponentFactory:
         1016: k.TK_Korr_Zylin_GN_1_2,
         1018: k.TK_Korr_Rundheit_EN_1_2,
         1006: k.TK_Ebenheit_1_2_MO,
+        1301: d.TK_3d_Dw,
+        1320: d.TK_3dA_DeltaDT,
+        1303: d.TK_3d_DeltaDC,
+        1304: d.TK_3d_DeltaLkmg,
+        1323: d.TK_3dA_LalphaM,
+        1324: d.TK_3dA_LalphaW,
+        1325: d.TK_3dA_LtM,
+        1326: d.TK_3dA_LtW,
+        1377: d.TK_3d_Delta_L_t,
+
     }
 
     @staticmethod

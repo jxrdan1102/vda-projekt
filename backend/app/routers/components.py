@@ -11,11 +11,14 @@ from app.services.component_service.component_factory import ComponentFactory
 router = APIRouter(prefix="/components", tags=["components"])
 
 
+#@router.get("", response_model=list[ComponentBack])
+#def get_components():
+#    components = ComponentFactory.get_all_components()
+#    return [ComponentBack(data=k.data, ConstNeeded=k.ConstNeeded, name=k.__class__.__name__, id=k.id) for k in components]
+
 @router.get("", response_model=list[ComponentBack])
 def get_components():
-    components = ComponentFactory.get_all_components()
-    return [ComponentBack(data=k.data, ConstNeeded=k.ConstNeeded, name=k.__class__.__name__, id=k.id) for k in components]
-
+    return [ComponentBack(name=cls.__name__, id=comp_id) for comp_id, cls in ComponentFactory.COMPONENTS.items()]
 
 @router.get("/{id}", response_model=ComponentGet)
 async def get_component_db(

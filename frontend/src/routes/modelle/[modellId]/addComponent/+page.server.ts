@@ -42,7 +42,7 @@ export const actions: Actions = {
         payload.frei_n_1 = parseOptionalInt('frei_n_1');
         payload.verteilung = parseOptionalInt('verteilung');
         payload.kflags = parseOptionalInt('kflags');
-        payload.modltxtid = formData.get('modltxtid')?.toString();
+        payload.modltxtid = parseOptionalInt('modltxtid');
         console.log(payload);
 
         const res = await fetch(`http://localhost:9999/modells/${modellId}/addComponent`, {

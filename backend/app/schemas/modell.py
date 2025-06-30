@@ -35,6 +35,9 @@ class ModellCreateR(BaseModel):
     aufgabe_modell: int # Prozess
     name: str
     aufgabe: int | None = None
+    gegenstand: int | None = 0
+    einstellmass: int | None = 0
+    methode: int | None = 0
 
     class Config:
         from_attributes = True
@@ -43,6 +46,7 @@ class ModellForAnamuR(BaseModel):
     name: str
     aufgabe: int | None = None
     methode: int | None = None
+    aufgabe_modell: int | None = None
     geo_me: int | None = None
     geo_mo: int | None = None
     tsk_innenmessung: int | None = None
@@ -210,6 +214,7 @@ class ModellGetIdR(BaseModel):
     Element1: str | None = None
     Element2: str | None = None
     punktmuster: int | None = None
+    description: str | None = None
     formel: str | None = None
     formeldesc: str | None = None
     aufgabe_modell: int

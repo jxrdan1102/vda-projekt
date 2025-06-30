@@ -36,14 +36,11 @@ export const actions: Actions = {
         const payload : Record<string, any> = {};
         payload.kompid = parseInt(formData.get('kompid')as string);
         payload.terml0 = parseOptionalFloat('terml0');
-        payload.terml1 = parseOptionalFloat('terml1');
         payload.wertart = parseOptionalInt('wertart');
-        payload.freigrad = parseOptionalInt('freigrad');
-        payload.frei_n_1 = parseOptionalInt('frei_n_1');
-        payload.verteilung = parseOptionalInt('verteilung');
+        payload.messpunkt_anzahl = parseOptionalInt('messpunkt_anzahl');
         payload.kflags = parseOptionalInt('kflags');
-        payload.modltxtid = formData.get('modltxtid')?.toString();
-        console.log(payload);
+        payload.modltxtid = parseOptionalInt('modltxtid')
+        console.log("Honig",payload);
 
         const res = await fetch(`http://localhost:9999/modells/${modellId}/addComponent`, {
             method: 'POST',

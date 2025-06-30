@@ -16,9 +16,9 @@ export const load: PageServerLoad = async ({ fetch }) => {
     };
 };
 export const actions: Actions = {
-    default: async ({ request, fetch }) => {
+    default: async ({ request, fetch, params }) => {
         const formData = await request.formData();
-
+        const aufgabeModell = parseInt(formData.get('aufgabe_modell') as string);
         const payload = {
             name: formData.get('name') as string,
             fk_modell: parseInt(formData.get('modell') as string),
@@ -41,6 +41,10 @@ export const actions: Actions = {
             });
         }
         let projekt = await res.json();
+        console.log("Hierrrr",aufgabeModell);
+        if (aufgabeModell == 3) {
+            throw redirect(303, `http://localhost:5173/analyseprojekt/3D-${projekt.id}`);
+        }
         throw redirect(303, `http://localhost:5173/analyseprojekt/${projekt.id}`);
     }
 };

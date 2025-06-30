@@ -11,7 +11,7 @@
     let frei_n_1: number;
     let verteilung: number;
     let kflags: number;
-    let modltxtid: string;
+    let modltxtid: number;
 </script>
 
 <form method="POST" class="text-sm bg-white space-y-3 max-w-md mx-auto">
@@ -100,8 +100,11 @@
 
     <div>
         <label class="block text-gray-600 mb-1">Beschreibung</label>
-        <input type="text" name="modltxtid" bind:value={modltxtid}
-               class="w-full border px-2 py-1 text-sm" />
+        <select name="modltxtid" bind:value={modltxtid} class="w-full border px-2 py-1 text-sm">
+        <option value={0}> Bitte wählen</option>
+        <option value={1}>Das ist eine tolle Komponente</option>
+        <option value={2}>Diese Komponente ist sehr nützlich</option>
+        </select>
     </div>
 
     <div class="flex justify-end pt-2">

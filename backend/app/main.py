@@ -16,7 +16,7 @@ app.include_router(auth.router)
 app.include_router(KMG.router)
 
 table = Table(
-    "C:\\Program Files (x86)\\Kistner Messtechnik\\QUEEN VDA5 GUM\\MUDB\\modkomp.DB"
+    "C:\\Program Files (x86)\\Kistner Messtechnik\\QUEEN VDA5 GUM\\MUDB\\anakonst.DB"
 )
 
 fieldnames = list(table.fields.keys())

@@ -10,7 +10,7 @@
     let frei_n_1: number = comp.frei_n_1 ?? 0;
     let verteilung: string = comp.verteilung != null ? comp.verteilung.toString() : '';
     let kflags: number = comp.kflags ?? 0;
-    let modltxtid: string = comp.modltxtid ?? '';
+    let modltxtid: number | null = comp.modltxtid ?? 0;
 </script>
 
 <form method="POST" class="text-sm bg-white space-y-3 max-w-md mx-auto">
@@ -90,8 +90,11 @@
 
     <div>
         <label class="block text-gray-600 mb-1">Beschreibung</label>
-        <input type="text" name="modltxtid" bind:value={modltxtid}
-               class="w-full border px-2 py-1 text-sm" />
+        <select name="modltxtid" bind:value={modltxtid} class="w-full border px-2 py-1 text-sm">
+            <option value={0} disabled>Bitte wählen</option>  <!-- für leer -->
+            <option value={1}>Das ist eine tolle Komponente</option>
+            <option value={2}>Diese Komponente ist sehr nützlich</option>
+        </select>
     </div>
 
     <div class="flex justify-end pt-2">
