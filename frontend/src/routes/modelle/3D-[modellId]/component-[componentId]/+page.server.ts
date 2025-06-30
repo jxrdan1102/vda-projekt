@@ -36,11 +36,10 @@ export const actions: Actions = {
         const payload: Record<string, any> = {};
 
         payload.terml0 = parseOptionalFloat('terml0');
-        payload.terml1 = parseOptionalFloat('terml1');
         payload.wertart = parseOptionalInt('wertart');
-        payload.freigrad = parseOptionalInt('freigrad');
-        payload.frei_n_1 = parseOptionalInt('frei_n_1');
-        payload.verteilung = parseOptionalInt('verteilung');
+        payload.messpunkt_anzahl = parseOptionalInt('messpunkt_anzahl');
+        payload.anzahl_messungen = parseOptionalInt('anzahl_messungen');
+        payload.remark = formData.get('remark')?.toString();
         payload.kflags = parseOptionalInt('kflags');
         payload.modltxtid = formData.get('modltxtid')?.toString();
 

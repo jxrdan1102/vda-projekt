@@ -486,6 +486,7 @@ class TK_3d_Dw(TMU_3DKomponente):
                         faktor = 1.5
 
         if n is not None and n > 0 and not math.isnan(faktor):
+            print(faktor * math.sqrt(4 / n))
             return faktor * math.sqrt(4 / n)
         else:
             return MU_NAN
@@ -494,6 +495,7 @@ class TK_3d_Dw(TMU_3DKomponente):
         Phi = self.modell.const_list.const_map[TKompConstants.TC_3d_DUME_alpha]
         if Phi == 0 or math.isnan(Phi):
             Phi = 360
+        print("Phi:",20631 * (Phi ** -1.6878))
         return 20631 * (Phi ** -1.6878)
 
     def EffektiverFreiheitsgrad(self) -> float:

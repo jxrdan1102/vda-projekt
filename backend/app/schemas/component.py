@@ -17,6 +17,7 @@ class ComponentRefBase(BaseModel):
     kompid: int | None = None
     modltxtid: int | None = None
     messpunkt_anzahl: int | None = None
+    anzahl_messungen: int | None = None
     terml0: float | None = None
     terml1: float | None = None
     wertart: int | None = None
