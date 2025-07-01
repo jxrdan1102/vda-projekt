@@ -71,6 +71,8 @@ class ModellUpdateR(BaseModel):
     tsk_stufenmessung: int | None = None
     Bezug1: str | None = None
     Bezug2: str | None = None
+    winkelE1: int | None = None
+    winkelE2: int | None = None
     Element1: str | None = None
     Element2: str | None = None
     punktmuster: int | None = None
@@ -200,6 +202,8 @@ class ModellGetIdR(BaseModel):
     taster: int | None = None
     merkmal: int | None = None
     element: int | None = None
+    winkelE1 : int | None = None
+    winkelE2 : int | None = None
     punktmusterB1: int | None = None
     tasterschaft1: int | None = None
     tasterschaft2: int | None = None

@@ -86,7 +86,7 @@ export const actions: Actions = {
 
         const formeldesc = parseOptionalString('formeldesc');
         if (formeldesc !== undefined) payload.formeldesc = formeldesc;
-
+        console.log("Taster 1: ",parseOptionalInt("taster"));
         const optionalIntFields = [
             'taster', 'merkmal', 'element',
             'punktmusterB1', 'tasterschaft1', 'tasterschaft2',

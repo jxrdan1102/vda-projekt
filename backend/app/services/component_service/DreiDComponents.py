@@ -330,7 +330,7 @@ class TK_3d_Wi_WB(TMU_3dKomponente_Richtung):
                 if self.data.KennwertArt.name == "M3D_MethodeB":
                     return max(0, self.messpunkt_anzahl - 1)
                 else:
-                    return max(0, self.messpunkt_anzahl - self.mindest_punkt_anzahl())
+                    return max(0, self.messpunkt_anzahl - self.mindestpunkt_anzahl())
         except Exception as e:
             print(f"Fehler in effektiver_freiheitsgrad: {e}")
             return self.MU_NAN
@@ -363,11 +363,11 @@ class TK_3d_Wi_WB(TMU_3dKomponente_Richtung):
             print(f"Fehler in archiv_data_frei_eff: {e}")
             return 1.0
 
-    def mindest_punkt_anzahl(self):
+    def mindestpunkt_anzahl(self):
         try:
             return 2
         except Exception as e:
-            print(f"Fehler in mindest_punkt_anzahl: {e}")
+            print(f"Fehler in mindestpunkt_anzahl: {e}")
             return 2
 
 class TK_3d_Wi_DeltaEKMG(TMU_3dKomponente_Richtung):
@@ -915,3 +915,704 @@ class TK_3d_Delta_L_t(TMU_3DKomponente):
             print(f"Fehler in standard_unsicherheit_su (Delta_L_t): {e}")
         return MU_NAN
 
+
+
+class TK_3dA_DeltaLKMG(TMU_3DKomponente):
+    def __init__(self, modell, const_list, lfdnr):
+        super().__init__(modell, 1322, const_list, "&Delta;L<sub>KMG</sub>")
+        self.fields_to_edit = []
+        self.data = TMuKompRec(TermL0=0.15,TermL1=0,Verteilung="V_Rechteck",KennwertArt="M3D_MethodeB",Freiheitsgrad="FG_unbegrenzt",FreiN_minus_1=0,Flags=1,)
+        self.lfdnr = lfdnr
+        self.ConstNeeded += [TKompConstants["TC_3d_ABST_L"], TKompConstants["TC_3d_KMG_K"]]
+        self.addConstNeededToModell()
+
+
+    def b_val(self) -> float:
+        if self.archiv:
+            return self.arch_data.bval
+        else:
+            return 0.5
+
+    def standard_unsicherheit_su(self) -> float:
+        if self.archiv:
+            return self.arch_data.aval
+        l = self.modell.const_list.const_map[TKompConstants.TC_3d_ABST_L]
+        k = self.modell.const_list.const_map[TKompConstants.TC_3d_KMG_K]
+
+        if not math.isnan(l) and not math.isnan(k) and k != 0:
+            return l / k
+
+        return float('nan')
+
+
+
+class TK_3dA_X1(TMU_3DKomponente):
+    def __init__(self, modell, const_list, lfdnr):
+        super().__init__(modell, 1312, const_list, "X<sub>E</sub>")
+        self.fields_to_edit = ["EF_Term0", "EF_Kennwertart", "EF_MPAnzahl"]
+        self.lfdnr = lfdnr
+        self.data = TMuKompRec(TermL0=0.15,TermL1=0,Verteilung="V_Rechteck",KennwertArt="M3D_MethodeB",Freiheitsgrad="FG_unbegrenzt",FreiN_minus_1=0,Flags=1,)
+
+        if modell.Element1 in [
+            "Kreis", "Halbkugel", "Zylinder", "Kegel"
+        ]:
+            self.ConstNeeded.append(TKompConstants["TC_3d_DUME_alpha"])
+            self.addConstNeededToModell()
+
+    def b_val(self) -> float:
+        if self.archiv:
+            return self.arch_data.bval
+
+        result = float("nan")
+        e = self.modell.Element1
+        if e in ["Punkt", "Gerade", "Ebene", "Kreis", "Halbkugel", "Zylinder", "Kegel"]:
+            mpa = self.mindestpunkt_anzahl(e)
+            if self.messpunkt_anzahl >= mpa:
+                if e == "Halbkugel":
+                    if self.modell.antastung_taster1 == 2:
+                        if self.messpunkt_anzahl == 5:
+                            result = 1.12 * math.sqrt(2 / self.messpunkt_anzahl)
+                        elif self.messpunkt_anzahl == 6:
+                            result = 0.87 * math.sqrt(2 / self.messpunkt_anzahl)
+                        elif self.messpunkt_anzahl > 6:
+                            result = 1.8 * math.sqrt(2 / self.messpunkt_anzahl)
+                    elif self.modell.antastung_taster1 == 1:
+                        if self.messpunkt_anzahl in [5, 6]:
+                            result = 0.71 * math.sqrt(2 / self.messpunkt_anzahl)
+                        elif self.messpunkt_anzahl > 6:
+                            result = 1.3 * math.sqrt(2 / self.messpunkt_anzahl)
+                else:
+                    if e in ["Punkt", "Gerade", "Ebene"]:
+                        result = math.sqrt(1 / self.messpunkt_anzahl)
+                    elif e in ["Kreis", "Zylinder", "Kegel"]:
+                        result = math.sqrt(2 / self.messpunkt_anzahl)
+        return result
+
+    def g_val(self) -> float:
+        phi = self.modell.const_list.const_map.get(TKompConstants["TC_3d_DUME_alpha"], math.nan)
+        if math.isnan(phi) or phi == 0:
+            phi = 360
+
+        result = float("nan")
+        e = self.modell.Element1
+
+        if e in ["Punkt", "Gerade", "Ebene", "Kreis", "Halbkugel", "Zylinder", "Kegel"]:
+            if self.data.KennwertArt.name == "M3D_MethodeA":
+                if e in ["Punkt", "Gerade", "Ebene"]:
+                    result = 1
+                elif e in ["Halbkugel", "Kreis", "Zylinder", "Kegel"]:
+                    result = 20631 * pow(phi, -1.6878)
+            elif self.data.KennwertArt.name == "M3D_MethodeB":
+                mpa = self.mindestpunkt_anzahl(e)
+                if self.messpunkt_anzahl >= mpa:
+                    if e == "Halbkugel":
+                        if self.modell.antastung_taster1 in [1, 2]:
+                            if self.messpunkt_anzahl in [4, 5, 6]:
+                                result = 1
+                            elif self.messpunkt_anzahl > 6:
+                                result = (
+                                    20631 * pow(phi, -1.6878)
+                                    if not math.isnan(phi)
+                                    else float("nan")
+                                )
+                    else:
+                        if e in ["Punkt", "Gerade", "Ebene"]:
+                            result = 1
+                        elif e in ["Kreis", "Zylinder", "Kegel"]:
+                            result = (
+                                20631 * pow(phi, -1.6878)
+                                if not math.isnan(phi)
+                                else float("nan")
+                            )
+        return result
+
+    def effektiver_freiheitsgrad(self) -> float:
+        if self.archiv:
+            result = self.arch_data.frei_eff
+        else:
+            if self.data.KennwertArt.name == "M3D_MethodeB":
+                result = self.messpunkt_anzahl - 1
+            else:
+                result = self.anzahl_messungen * (
+                    self.messpunkt_anzahl
+                    - self.mindestpunkt_anzahl(self.modell.Element1)
+                )
+        return abs(result) if not math.isnan(result) else result
+
+
+
+
+class TK_3dA_W1(TMU_3DKomponente):
+    def __init__(self, modell, const_list ,lfdnr):
+        super().__init__(modell, 1313, const_list, "W<sub>E</sub>")
+        if modell.abstand != 2:
+            self.ConstNeeded += [
+                TKompConstants["TC_3d_ABST_LM1"],
+                TKompConstants["TC_3d_ABST_LE1"]
+            ]
+        self.data = TMuKompRec(TermL0=0.15,TermL1=0,Verteilung="V_Rechteck",KennwertArt="M3D_MethodeB",Freiheitsgrad="FG_unbegrenzt",FreiN_minus_1=0,Flags=1,)
+
+        self.lfdnr = lfdnr
+        self.fields_to_edit = []
+        self.addConstNeededToModell()
+
+    def sensititivty_c1(self) -> float:
+        if self.archiv:
+            return self.arch_data.sensc1
+
+        if self.modell.abstand == 2:
+            return 0
+
+        lme = self.modell.const_list.const_map(TKompConstants["TC_3d_ABST_LM1"])
+        lse = self.modell.const_list.const_map(TKompConstants["TC_3d_ABST_LE1"])
+
+        if not math.isnan(lme) and not math.isnan(lse) and lme != 0:
+            return lse / lme
+
+        return float("nan")
+
+    @property
+    def messpunkt_anzahl(self) -> int:
+        if not math.isnan(self.sensititivty_c1()):
+            x1_komp = self.modell.find_komponente_by_id(1312)
+            if x1_komp is not None:
+                return x1_komp.messpunkt_anzahl
+        return 0
+
+    @property
+    def anzahl_messungen(self) -> int:
+        if not math.isnan(self.sensititivty_c1()):
+            x1_komp = self.modell.find_komponente_by_id(1312)
+            if x1_komp is not None:
+                return x1_komp.anzahl_messungen
+        return 0
+
+    def b_val(self) -> float:
+        if self.archiv:
+            return self.arch_data.bval
+
+        if math.isnan(self.sensititivty_c1()):
+            return float("nan")
+
+        if self.data.KennwertArt.name == "M3D_MethodeA":
+            return 1
+
+        result = 0.0
+        n = self.messpunkt_anzahl
+        if n == 0:
+            return result
+
+        e = self.modell.Element1
+        winkel = self.modell.winkelE1
+
+        if e in ["Gerade", "Ebene"]:
+            if winkel == 2:
+                result = math.sqrt(4 / n)
+            elif winkel == 1:
+                result = math.sqrt((12 * (n - 1)) / (n * (n + 1)))
+            elif e == "Ebene" and winkel == 3:
+                result = math.sqrt(8 / n)
+
+        if e == "Zylinder":
+            if winkel == 2:
+                result = math.sqrt(8 / n)
+            elif winkel == 1:
+                result = math.sqrt((24 * (n - 1)) / (n * (n + 1)))
+
+        return result
+
+    def standard_unsicherheit_su(self) -> float:
+        if self.archiv:
+            return self.arch_data.aval
+
+        if not math.isnan(self.sensititivty_c1()):
+            x1_komp = self.modell.find_komponente_by_id(1312)
+            if x1_komp is not None:
+                return x1_komp.standard_unsicherheit_su()
+
+        return float("nan")
+
+    def effektiver_freiheitsgrad(self) -> float:
+        if self.archiv:
+            return abs(self.arch_data.frei_eff)
+
+        if self.data.KennwertArt.name == "M3D_MethodeB":
+            return abs(self.messpunkt_anzahl - 1)
+
+        n = self.messpunkt_anzahl
+        m = self.anzahl_messungen
+        mpa = self.mindestpunkt_anzahl(self.modell.Element1)
+        return abs(m * (n - mpa))
+
+
+
+class TK_3dA_DeltaXT1(TMU_3DKomponente):
+    def __init__(self, modell, const_list, lfdnr):
+        super().__init__(modell, 1314, const_list, "ΔX<sub>TE</sub>")
+        self.lfdnr = lfdnr
+        self.data = TMuKompRec(TermL0=0.15,TermL1=0,Verteilung="V_Rechteck",KennwertArt="M3D_MethodeB",Freiheitsgrad="FG_unbegrenzt",FreiN_minus_1=0,Flags=1,)
+        self.fields_to_edit = []
+        self.addConstNeededToModell()
+
+
+    def b_val(self) -> float:
+        if self.archiv:
+            return self.arch_data.BVAL
+
+        if self.sensititivty_c1() != MU_NAN:
+            n = self.messpunkt_anzahl
+            if n >= 3:
+                if self.data.KennwertArt.name == "M3D_MethodeA":
+                    return 1
+                else:
+                    if self.modell.tasterschaft1 == 2:
+                        # Taster 1/E Schaft parallel
+                        if n == 5:
+                            return 1.12
+                        elif n == 6:
+                            return 0.87
+                        else:
+                            return 1.8
+                    elif self.modell.tasterschaft1 == 1:
+                        # Taster 1/E Schaft senkrecht
+                        if n in (5, 6):
+                            return 0.71
+                        else:
+                            return 1.3
+        return MU_NAN
+
+    def effektiver_freiheitsgrad(self) -> float:
+        if self.archiv:
+            return self.arch_data.FreiEff
+
+        if self.data.KennwertArt.name == "M3D_MethodeB":
+            result = self.messpunkt_anzahl - 1
+        else:
+            result = self.anzahl_messungen * (self.messpunkt_anzahl - self.mindestpunkt_anzahl(self.modell.Element1))
+
+        if result != MU_NAN:
+            return abs(result)
+        return MU_NAN
+
+
+
+
+class TK_3dA_DeltaRT1(TMU_3DKomponente):
+    def __init__(self, modell, const_list, lfdnr):
+        super().__init__(modell, 1315,const_list, "ΔD<sub>EE</sub>")
+        self.fields_to_edit = []
+        self.lfdnr = lfdnr
+        self.data = TMuKompRec(TermL0=0.15,TermL1=0,Verteilung="V_Rechteck",KennwertArt="M3D_MethodeB",Freiheitsgrad="FG_unbegrenzt",FreiN_minus_1=0,Flags=1,)
+        self.fields_to_edit = []
+        self.addConstNeededToModell()
+
+    def sensititivty_c1(self) -> float:
+        if self.archiv:
+            return self.arch_data.sens_c1
+        else:
+            if self.modell.taster == 1:
+                if self.modell.Element1 in ("Punkt", "Gerade", "Ebene"):
+                    if self.modell.Element2 in ("Punkt", "Gerade", "Ebene"):
+                        return 1.0
+                    else:
+                        return 0.5
+            elif self.modell.taster == 2:
+                if self.modell.Element1 in ("Punkt", "Gerade", "Ebene"):
+                    return 0.5
+            return 0.0
+
+
+    @property
+    def messpunkt_anzahl(self) -> int:
+        xt1 = self.modell.find_component_by_id(1314)
+        return xt1.messpunkt_anzahl if xt1 else 0
+
+    @property
+    def anzahl_messungen(self) -> int:
+        xt1 = self.modell.find_component_by_id(1314)
+        return xt1.anzahl_messungen if xt1 else 0
+
+    def standard_unsicherheit_su(self) -> float:
+        if self.archiv:
+            return self.arch_data.aval
+        xt1 = self.modell.find_component_by_id(1314)
+        return xt1.standard_unsicherheit_su() if xt1 else MU_NAN
+
+    def b_val(self) -> float:
+        if self.archiv:
+            return self.arch_data.bval
+        else:
+            if self.data.kennwert_art == "methode_a":
+                return 1.0
+            elif self.messpunkt_anzahl >= 5:
+                return 1.0
+            else:
+                return MU_NAN
+
+    def effektiver_freiheitsgrad(self) -> float:
+        if self.archiv:
+            return self.arch_data.frei_eff
+        else:
+            if self.data.kennwert_art == "methode_b":
+                val = self.messpunkt_anzahl - 1
+            else:
+                val = self.anzahl_messungen * (self.messpunkt_anzahl - 4)
+            return abs(val) if val != MU_NAN else MU_NAN
+
+
+
+class TK_3dA_X2(TMU_3DKomponente):
+    def __init__(self, modell, const_list ,lfdnr):
+        super().__init__(modell, 1316, const_list, "X<sub>B</sub>")
+        self.fields_to_edit = ["Term0", "Kennwertart", "MPAnzahl"]
+        self.lfdnr = lfdnr
+        self.data = TMuKompRec(TermL0=0.15, TermL1=0, Verteilung="V_Rechteck", KennwertArt="M3D_MethodeB",
+                               Freiheitsgrad="FG_unbegrenzt", FreiN_minus_1=0, Flags=1, )
+        if self.modell.Element2 in ["Kreis", "Halbkugel", "Zylinder", "Kegel"]:
+            self.ConstNeeded += [TKompConstants["TC_3d_DUME_alpha"]]
+        self.addConstNeededToModell()
+
+    def b_val(self) -> float:
+        if self.archiv:
+            return self.arch_data.bval
+        if self.modell.Element2 in {"Punkt", "Gerade", "Ebene", "Kreis", "Zylinder", "Kegel", "Halbkugel"}:
+            mpa = self.modell.mindestpunkt_anzahl(self.modell.Element2)
+            if self.messpunkt_anzahl >= mpa:
+                if self.modell.Element2 == "Halbkugel":
+                    if self.modell.tasterschaft2 == 2:  # Schaft parallel
+                        match self.messpunkt_anzahl:
+                            case 4:
+                                return MU_NAN
+                            case 5:
+                                return 1.12 * math.sqrt(2 / self.messpunkt_anzahl)
+                            case 6:
+                                return 0.87 * math.sqrt(2 / self.messpunkt_anzahl)
+                            case _:
+                                return 1.8 * math.sqrt(2 / self.messpunkt_anzahl)
+                    elif self.modell.tasterschaft2 == 1:
+                        match self.messpunkt_anzahl:
+                            case 5 | 6:
+                                return 0.71 * math.sqrt(2 / self.messpunkt_anzahl)
+                            case _:
+                                return 1.3 * math.sqrt(2 / self.messpunkt_anzahl)
+                else:
+                    if self.modell.Element2 in {"Punkt", "Gerade", "Ebene"}:
+                        return math.sqrt(1 / self.messpunkt_anzahl)
+                    elif self.modell.Element2 in {"Kreis", "Zylinder", "Kegel"}:
+                        return math.sqrt(2 / self.messpunkt_anzahl)
+        return MU_NAN
+
+    def g_val(self) -> float:
+        phi = self.modell.const_list.const_map(TKompConstants["TC_3d_DUME_alpha"])
+        if phi == 0 or phi == MU_NAN:
+            phi = 360
+
+        if self.modell.Element2 in {"Punkt", "Gerade", "Ebene", "Kreis", "Zylinder", "Kegel", "Halbkugel"}:
+            if self.data.KennwertArt.name == "M3D_MethodeA":
+                if self.modell.Element2 in {"Punkt", "Gerade", "Ebene"}:
+                    return 1.0
+                elif self.modell.Element2 in {"Halbkugel", "Kreis", "Zylinder", "Kegel"}:
+                    return 20631 * phi**-1.6878 if phi != MU_NAN else MU_NAN
+            else:
+                mpa = self.modell.mindestpunkt_anzahl(self.modell.Element2_3D)
+                if self.messpunkt_anzahl >= mpa:
+                    if self.modell.tasterschaft2 == 2:
+                        if self.messpunkt_anzahl in {4, 5, 6}:
+                            return 1.0
+                        else:
+                            return 20631 * phi**-1.6878 if phi != MU_NAN else MU_NAN
+                    elif self.modell.methode_3d_antastung_taster2 == 1:
+                        if self.messpunkt_anzahl in {5, 6}:
+                            return 1.0
+                        else:
+                            return 20631 * phi**-1.6878 if phi != MU_NAN else MU_NAN
+        return MU_NAN
+
+    def effektiver_freiheitsgrad(self) -> float:
+        if self.archiv:
+            return self.arch_data.frei_eff
+        else:
+            if self.data.KennwertArt.name == "M3D_MethodeB":
+                val = self.messpunkt_anzahl - 1
+            else:
+                val = self.anzahl_messungen * abs(self.messpunkt_anzahl - self.modell.mindestpunkt_anzahl(self.modell.Element1_3D))
+            return abs(val) if val != MU_NAN else MU_NAN
+
+
+
+class TK_3dA_W2(TMU_3DKomponente):
+    def __init__(self, modell, const_list ,lfdnr):
+        super().__init__(modell, 1317, const_list, "W<sub>B</sub>")
+        self.ConstNeeded += [TKompConstants["TC_3d_ABST_LM2"], TKompConstants["TC_3d_ABST_LE2"]]
+        self.lfdnr = lfdnr
+        self.data = TMuKompRec(TermL0=0.15,TermL1=0,Verteilung="V_Rechteck",KennwertArt="M3D_MethodeB",Freiheitsgrad="FG_unbegrenzt",FreiN_minus_1=0,Flags=1,)
+        self.fields_to_edit = []
+        self.addConstNeededToModell()
+
+    def sensititivty_c1(self) -> float:
+        if self.archiv:
+            return self.arch_data.sens_c1
+        if (self.modell.abstand == 1 and
+            self.modell.Element2 in {"Gerade", "Ebene", "Zylinder", "Kegel"}):
+            lm2 = self.modell.const_list.const_map(TKompConstants["TC_3d_ABST_LM2"])
+            le2 = self.modell.const_list.const_map(TKompConstants["TC_3d_ABST_LE2"])
+            if lm2 != MU_NAN and le2 != MU_NAN and lm2 != 0:
+                return le2 / lm2
+        return MU_NAN
+
+    @property
+    def messpunkt_anzahl(self) -> int:
+        x2 = self.modell.find_komponente_by_id(1316)  # ID von X2
+        return x2.messpunkt_anzahl if x2 else 0
+
+    @property
+    def anzahl_messungen(self) -> int:
+        x2 = self.modell.find_komponente_by_id(1316)
+        return x2.anzahl_messungen if x2 else 0
+
+    def b_val(self) -> float:
+        if self.archiv:
+            return self.arch_data.bval
+
+        c1 = self.sensititivty_c1()
+        if c1 == MU_NAN:
+            return MU_NAN
+
+        if self.data.KennwertArt.name == "M3D_MethodeA":
+            return 1.0
+        else:
+            n = self.messpunkt_anzahl
+            if n <= 0:
+                return MU_NAN
+
+            e = self.modell.Element2
+            winkel = self.modell.winkelE2
+
+            if e in {"Gerade", "Ebene"}:
+                if winkel == 2:  # Messpunkte an den Enden
+                    return math.sqrt(4 / n)
+                elif winkel == 1:  # Gleichmäßig verteilt
+                    return math.sqrt((12 * (n - 1)) / (n * (n + 1)))
+            if e == "Ebene" and winkel == 3:  # kreisförmig
+                return math.sqrt(8 / n)
+            if e == "Zylinder":
+                if winkel == 2:  # 2 Radialschnitte mit je n/2 Punkten
+                    return math.sqrt(8 / n)
+                elif winkel == 1:
+                    return math.sqrt((24 * (n - 1)) / (n * (n + 1)))
+
+        return MU_NAN
+
+    def standard_unsicherheit_su(self) -> float:
+        if self.archiv:
+            return self.arch_data.aval
+
+        if self.sensititivty_c1() != MU_NAN:
+            x2 = self.modell.find_komponente_by_id(1316)
+            if x2:
+                return x2.standard_unsicherheit_su()
+        return MU_NAN
+
+    def effektiver_freiheitsgrad(self) -> float:
+        if self.archiv:
+            return self.arch_data.frei_eff
+
+        if self.data.KennwertArt.name == "M3D_MethodeB":
+            return abs(self.messpunkt_anzahl - 1)
+
+        e = self.modell.Element2
+        n = self.messpunkt_anzahl
+        m = self.anzahl_messungen
+
+        if e == "Punkt":
+            return m * abs(n - 1)
+        elif e == "Gerade":
+            return m * abs(n - 2)
+        elif e == "Ebene":
+            return m * abs(n - 3)
+
+        return 0.0
+
+
+
+
+
+class TK_3dA_DeltaXT2(TMU_3DKomponente):
+    def __init__(self, modell, const_list, lfdnr):
+        super().__init__( modell, 1318, const_list, 'ΔX<sub>TB</sub>')
+        self.fields_to_edit = ['Term0', 'Kennwertart', 'MPAnzahl']
+        self.lfdnr = lfdnr
+        self.data = TMuKompRec(TermL0=0.15,TermL1=0,Verteilung="V_Rechteck",KennwertArt="M3D_MethodeB",Freiheitsgrad="FG_unbegrenzt",FreiN_minus_1=0,Flags=1,)
+        self.addConstNeededToModell()
+
+    def b_val(self):
+        if self.archiv:
+            return self.arch_data.BVAL
+        if self.sensititivty_c1() is None:
+            return float('nan')
+
+        n = self.messpunkt_anzahl
+        if n < 3:
+            return float('nan')
+
+        if self.data.KennwertArt.name == "M3D_MethodeA":
+            return 1.0
+        else:
+            taster = self.modell.tasterschaft2
+            if taster == 2:  # Schaft parallel
+                if n == 5:
+                    return 1.12
+                elif n == 6:
+                    return 0.87
+                else:
+                    return 1.8
+            elif taster == 1:  # Schaft senkrecht
+                if n in (5, 6):
+                    return 0.71
+                else:
+                    return 1.3
+        return float('nan')
+
+    def effektiver_freiheitsgrad(self):
+        if self.archiv:
+            return self.arch_data.FreiEff
+
+        n = self.messpunkt_anzahl
+        m = self.anzahl_messungen
+        if self.data.KennwertArt == "M3D_MethodeB":
+            result = n - 1
+        elif self.data.KennwertArt == "M3D_MethodeA" and n > 2:
+            result = m * (n - 4)
+        else:
+            result = float('nan')
+
+        return abs(result) if result is not None else float('nan')
+
+
+
+
+class TK_3dA_DeltaRT2(TMU_3DKomponente):
+    def __init__(self, modell, const_list, lfdnr):
+        super().__init__(modell, 1319, const_list, "ΔD<sub>EB</sub>")
+        self.lfdnr = lfdnr
+        self.data = TMuKompRec(TermL0=0.15,TermL1=0,Verteilung="V_Rechteck",KennwertArt="M3D_MethodeB",Freiheitsgrad="FG_unbegrenzt",FreiN_minus_1=0,Flags=1,)
+        self.fields_to_edit = []
+        self.addConstNeededToModell()
+
+    def sensititivty_c1(self):
+        if self.archiv:
+            return self.arch_data.SensC1
+
+        result = 0.0
+
+        if self.modell.taster1 == 1:
+            if self.modell.Element1 in {"Punkt", "Gerade", "Ebene"}:
+                if self.modell.Element2 in {"Punkt", "Gerade", "Ebene"}:
+                    result = 1.0
+                else:
+                    result = 0.5  # Kreis, Halbkugel, Zylinder, Kegel
+        elif self.modell.taster1 == 2:
+            if self.modell.Element2 in {"Punkt", "Gerade", "Ebene"}:
+                result = 0.5  # egal welches toleriertes Element
+            # sonst bleibt 0
+
+        return result
+
+    def b_val(self):
+        if self.archiv:
+            return self.arch_data.BVAL
+
+        if self.data.KennwertArt == "M3D_MethodeA":  # Methode A
+            return 1.0
+        else:  # Methode B
+            if self.messpunkt_anzahl in (5, 6):
+                return 1.0
+            elif self.messpunkt_anzahl > 6:
+                return 1.5
+            else:
+                return 0.0
+
+    def effektiver_freiheitsgrad(self):
+        if self.archiv:
+            result = self.arch_data.FreiEff
+        else:
+            if self.data.KennwertArt == "M3D_MethodeB":  # Methode B
+                result = self.messpunkt_anzahl - 1
+            else:  # Methode A
+                result = self.anzahl_messungen * (self.messpunkt_anzahl - 4)
+
+        if result != MU_NAN:
+            return abs(result)
+        return result
+
+
+
+class TK_3dA_DeltaDC(TMU_3DKomponente):
+    def __init__(self, modell, const_list, lfdnr):
+        super().__init__(modell, 1321, const_list, "ΔD<sub>C</sub>")
+        self.ConstNeeded += [TKompConstants["TC_3d_KMG_Uc"]]
+        self.lfdnr = lfdnr
+        self.data = TMuKompRec(TermL0=0.15, TermL1=0, Verteilung="V_Rechteck", KennwertArt="M3D_MethodeB",
+                               Freiheitsgrad="FG_unbegrenzt", FreiN_minus_1=0, Flags=1, )
+        self.fields_to_edit = []
+        self.addConstNeededToModell()
+
+    def sensititivty_c1(self):
+        if self.archiv:
+            return self.arch_data.SensC1
+        else:
+            if self.modell.taster1 == 1:
+                return 1.0  # Verwendung desselben Tasters
+            else:
+                return 0.5  # verschiedene Taster
+
+    def standard_unsicherheit_su(self):
+        if self.archiv:
+            return self.arch_data.AVAL
+        else:
+            result = MU_NAN
+            if self.sensititivty_c1() != MU_NAN:
+                result = self.modell.const_list.const_map(TKompConstants["TC_3d_KMG_Uc"]) / 2.0
+            return result
+
+
+
+class TK_3dA_DeltaXTR(TMU_3DKomponente):
+    def __init__(self, modell, const_list, lfdnr):
+        super().__init__(modell, 1368, const_list, "ΔX<sub>TR</sub>")
+        self.fields_to_edit = []
+        self.ConstNeeded += [
+            TKompConstants["TC_3d_KMG_LT"],
+            TKompConstants["TC_3D_ABST_LTE"],
+            TKompConstants["TC_3D_ABST_LTB"],
+            TKompConstants["TC_3d_KMG_MpeML"]
+        ]
+        self.lfdnr = lfdnr
+        self.data = TMuKompRec(TermL0=0.15, TermL1=0, Verteilung="V_Rechteck", KennwertArt="M3D_MethodeB",
+                               Freiheitsgrad="FG_unbegrenzt", FreiN_minus_1=0, Flags=1, )
+        self.addConstNeededToModell()
+
+    def ist_zahl(self, x):
+        return x is not None and not (isinstance(x, float) and math.isnan(x))
+
+    def standard_unsicherheit_su(self):
+        if self.archiv:
+            return self.arch_data.AVAL
+        else:
+            result = MU_NAN
+            mpe_ml = self.modell.const_list.const_map(TKompConstants["TC_3d_KMG_MpeML"])
+            if mpe_ml != MU_NAN:
+                lt = self.modell.const_list.const_map(TKompConstants["TC_3d_KMG_LT"])
+                lte = self.modell.const_list.const_map(TKompConstants["TC_3D_ABST_LTE"])
+                ltb = self.modell.const_list.const_map(TKompConstants["TC_3D_ABST_LTB"])
+
+                if self.ist_zahl(lte) and self.ist_zahl(ltb) and self.ist_zahl(lt) and lt != 0:
+                    result = (lte + ltb) * mpe_ml / (lt * 2.0)
+
+            return result
+
+    def b_val(self):
+        if self.archiv:
+            return self.arch_data.BVAL
+        else:
+            return 0.5

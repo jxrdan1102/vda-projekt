@@ -20,7 +20,7 @@
         <select id="kompid" name="kompid" bind:value={kompid} required class="border px-2 py-1 text-sm">
             <option value="" disabled selected>Bitte Komponente wählen</option>
             {#each komponenten as komponente}
-                <option value={komponente.id}>{komponente.name}</option>
+                <option value={komponente.id}>{komponente.id}: {komponente.name}</option>
             {/each}
         </select>
         </label>
@@ -42,7 +42,7 @@
                 id="wertart"
                 name="wertart"
                 bind:value={wertart}
-                required
+
                 class="border px-2 py-1 text-sm"
         >
             <option value="" disabled selected>Bitte wählen</option>

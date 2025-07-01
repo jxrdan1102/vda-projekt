@@ -424,50 +424,55 @@
                         <label class="block text-gray-700 text-xs mb-1">Abstand</label>
                         <select id="abstand" name="abstand" bind:value={abstand}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
                             <option value="" disabled>Bitte wählen</option>
-                            <option value="Gerade">in der Nullebene des Koordinatensystems</option>
-                            <option value="Ebene">im Schwerpunkt</option>
+                            <option value={1}>in der Nullebene des Koordinatensystems</option>
+                            <option value={2}>im Schwerpunkt</option>
                         </select>
                     </div>
                     <div>
                         <label class="block text-gray-700 text-xs mb-1">Taster</label>
                         <select id="taster" name="taster" bind:value={taster}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
                             <option value="" disabled>Bitte wählen</option>
-                            <option value="1">derselbe Taster</option>
-                            <option value="2">verschiedene Taster</option>
+                            <option value={1}>derselbe Taster</option>
+                            <option value={2}>verschiedene Taster</option>
                         </select>
                     </div>
                     <div>
                         <label class="block text-gray-700 text-xs mb-1">Winkel zu Element 1</label>
                         <select id="winkelE1" name="winkelE1" bind:value={winkelE1}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
                             <option value="" disabled>Bitte wählen</option>
-                            <option value="1">in Reihe oder im Raster</option>
-                            <option value="2">an den Enden Taster</option>
-                            <option value="3">kreisförmig</option>
+                            <option value={1}>in Reihe oder im Raster</option>
+                            <option value={2}>an den Enden Taster</option>
+                            <option value={3}>kreisförmig</option>
+                            <option value={4}>gleichmäßig verteilt</option>
+                            <option value={5}>zwei Radialschnitte</option>
+
                         </select>
                     </div>
                     <div>
                         <label class="block text-gray-700 text-xs mb-1">Winkel zu Element 2</label>
                         <select id="winkelE2" name="winkelE2" bind:value={winkelE2}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
                             <option value="" disabled>Bitte wählen</option>
-                            <option value="1">in Reihe oder im Raster</option>
-                            <option value="2">an den Enden Taster</option>
-                            <option value="3">kreisförmig</option>
+                            <option value={1}>in Reihe oder im Raster</option>
+                            <option value={2}>an den Enden Taster</option>
+                            <option value={3}>kreisförmig</option>
+                            <option value={4}>gleichmäßig verteilt</option>
+                            <option value={5}>zwei Radialschnitte</option>
                         </select>
                     </div>
                     <div>
                         <label class="block text-gray-700 text-xs mb-1">Tasterschaft 1</label>
                         <select id="tasterschaft1" name="tasterschaft1" bind:value={tasterschaft1}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
                             <option value="" disabled>Bitte wählen</option>
-                            <option value=1>senkrecht</option>
-                            <option value=2>parallel zu Auswerterichtung</option>
+                            <option value={1}>senkrecht</option>
+                            <option value={2}>parallel zu Auswerterichtung</option>
                         </select>
                     </div>
                     <div>
                         <label class="block text-gray-700 text-xs mb-1">Tasterschaft 2</label>
                         <select id="tasterschaft2" name="tasterschaft2" bind:value={tasterschaft2}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
                             <option value="" disabled>Bitte wählen</option>
-                            <option value=1>senkrecht</option>
-                            <option value=2>parallel zu Auswerterichtung</option>
+                            <option value={1}>senkrecht</option>
+                            <option value={2}>parallel zu Auswerterichtung</option>
                         </select>
                     </div>
                 </div>

@@ -289,6 +289,8 @@ class TMU_Modell(list[TMU_Komponente]):
     def Merkmal_3d(self):
         return self.iGeometrie_ME
 
+    def find_komponente_by_id(self, id_: int):
+        return next((komp for komp in self if komp.id == id_), None)
     def SummeDerVarianzen(self):
         v = 0
         valid = False

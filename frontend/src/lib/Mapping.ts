@@ -20,7 +20,23 @@ export const COMPONENTS: Record<number, string> = {
     1025: "TK_Aufloesung_ME_Einstell",
     1016: "TK_Korr_Zylin_GN_1_2",
     1018: "TK_Korr_Rundheit_EN_1_2",
-    1006: "TK_Ebenheit_1_2_MO"
+    1006: "TK_Ebenheit_1_2_MO",
+    1312: "TK_3dA_X1",
+    1313: "TK_3dA_W1",
+    1314: "TK_3dA_DeltaXT1",
+    1315: "TK_3dA_DeltaRT1",
+    1316: "TK_3dA_X2",
+    1317: "TK_3dA_W2",
+    1318: "TK_3dA_DeltaXT2",
+    1319: "TK_3dA_DeltaRT2",
+    1321: "TK_3dA_DeltaDC",
+    1322: "TK_3dA_DeltaLKMG",
+    1368: "TK_3dA_DeltaXTR",
+    1323: "TK_3dA_LalphaM",
+    1324: "TK_3dA_LalphaW",
+    1325: "TK_3dA_LtM",
+    1326: "TK_3dA_LtW",
+    1377: "TK_3d_Delta_L_t",
 };
 
 export const tcMapping: Record<number, string> = {

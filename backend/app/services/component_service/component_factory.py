@@ -38,6 +38,17 @@ class ComponentFactory:
         1325: d.TK_3dA_LtM,
         1326: d.TK_3dA_LtW,
         1377: d.TK_3d_Delta_L_t,
+        1312: d.TK_3dA_X1,
+        1313: d.TK_3dA_W1,
+        1314: d.TK_3dA_DeltaXT1,
+        1315: d.TK_3dA_DeltaRT1,
+        1316: d.TK_3dA_X2,
+        1317: d.TK_3dA_W2,
+        1318: d.TK_3dA_DeltaXT2,
+        1319: d.TK_3dA_DeltaRT2,
+        1321: d.TK_3dA_DeltaDC,
+        1322: d.TK_3dA_DeltaLKMG,
+        1368: d.TK_3dA_DeltaXTR,
 
     }
 

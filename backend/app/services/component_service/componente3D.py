@@ -143,13 +143,13 @@ class TMU_3DKomponente(TMU_Komponente):
     def mindestpunkt_anzahl(self, element: str) -> int:
         try:
             mapping = {
-                "E3D_Punkt": 1,
-                "E3D_Gerade": 2,
-                "E3D_Ebene": 3,
-                "E3D_Kreis": 3,
-                "E3D_Halbkugel": 4,
-                "E3D_Zylinder": 5,
-                "E3D_Kegel": 6,
+                "Punkt": 1,
+                "Gerade": 2,
+                "Ebene": 3,
+                "Kreis": 4,
+                "Halbkugel": 5,
+                "Zylinder": 6,
+                "Kegel": 7,
             }
             return mapping.get(element, 0)
         except Exception as e:
