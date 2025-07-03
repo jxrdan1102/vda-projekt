@@ -200,6 +200,9 @@ class TMU_Modell(list[TMU_Komponente]):
     async def setConstValue(self,anamu_id, db: AsyncSession):
         await self.const_list.load_constants(anamu_id,db)
 
+    async def setKMGConstValue(self, anamu_id, db: AsyncSession):
+        await self.const_list.load_constants(anamu_id, db)
+
     def addComponent(self, component_id: int,lfdnr):
         self.append(ComponentFactory.get_component(self, component_id,lfdnr))
 
@@ -289,8 +292,10 @@ class TMU_Modell(list[TMU_Komponente]):
     def Merkmal_3d(self):
         return self.iGeometrie_ME
 
-    def find_komponente_by_id(self, id_: int):
-        return next((komp for komp in self if komp.id == id_), None)
+    def find_komponente_by_id(self, id_list: list[int]):
+        for c in self:
+            if c.id in id_list:
+                return c
     def SummeDerVarianzen(self):
         v = 0
         valid = False
@@ -308,12 +313,14 @@ class TMU_Modell(list[TMU_Komponente]):
     def V_eff(self):
         result = MU_NAN
         valid = False
+        for c in self:
+            print("Ausgabe3: ", c.messpunkt_anzahl)
         if self.AufgabeModell == "a3D_Pruefprozess":
             SummeEFG = 0
             U = self.StandardUnsicherheit_Uy()
             for item in self:
                 if isinstance(item, TMU_Komponente):
-                    vi = item.EffektiverFreiheitsgrad
+                    vi = item.effektiver_freiheitsgrad
                     if vi != MU_NAN:
                         SummeEFG += vi
             if (U + SummeEFG) == 0:
@@ -326,6 +333,10 @@ class TMU_Modell(list[TMU_Komponente]):
             SummeUB = 0
             for item in self:
                 if isinstance(item, TMU_Komponente):
+                    if hasattr(item, 'setMesspunktAnzahl'):
+                        item.setMesspunktAnzahl()
+                    if hasattr(item, 'setAnzahlMessungen'):
+                        item.setAnzahlMessungen()
                     ubi = item.unsicherheitsbeitrag
                     vi = item.effektiver_freiheitsgrad
                     if not math.isnan(ubi) and not math.isnan(vi):
@@ -408,6 +419,8 @@ class TMU_Modell(list[TMU_Komponente]):
         return result
 
     def MUPruefverfahren_U(self):
+        for c in self:
+            print("Ausgabe1: ", c.id, " ",c.messpunkt_anzahl)
         k = self.Erweiterungsfaktor_k()
         uy = self.StandardUnsicherheit_Uy()
         if k != MU_NAN and uy != MU_NAN:

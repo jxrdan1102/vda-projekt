@@ -45,6 +45,7 @@ class AnamuGetIdR(BaseModel):
     modell: ModellForAnamuR
     anakomp: list[AnakompForAnamuR] | None = None
     anakonst: list[AnakonstForAnamuR] | None = None
+    fk_kmg: int | None = None
 
     class Config:
         from_attributes = True
@@ -54,7 +55,7 @@ class AnamuIdGet(BaseModel):
     aenderungszustand: str
     identnr: int
     modell: ModellIDResponse
-
+    fk_kmg: int | None = None
     class Config:
         from_attributes = True
 
@@ -63,6 +64,7 @@ class AnamuUpdate(BaseModel):
     aenderungszustand: str | None = None
     identnr: int | None = None
     remark: str | None = None
+    fk_kmg: int | None = None
 
     class Config:
         from_attributes = True

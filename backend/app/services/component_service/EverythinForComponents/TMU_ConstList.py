@@ -4,6 +4,7 @@ from pydantic import BaseModel, field_validator
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models import KMG
 from app.models.ANAMU import ANAKONST
 
 
@@ -244,6 +245,34 @@ class TMU_ConstList(BaseModel):
             except ValueError:
                 print(f"Unbekannter constnum {const.constnum} → nicht im Enum enthalten")
 
+
+
+
+    async def load_kmg_constants(self, anamu_id: int, db: AsyncSession):
+        stmt = select(KMG).where(KMG.fk_anamu == anamu_id)
+        result = await db.execute(stmt)
+        kmg = result.scalar_one_or_none()
+
+        if not kmg:
+            print("Kein KMG gefunden für ANAMU", anamu_id)
+            return
+
+        for enum_key, attr_name in KMG_ENUM_MAPPING.items():
+            value = getattr(kmg, attr_name, None)
+            if value is not None:
+                self.const_map[enum_key] = value
+                print(f"Setze Konstante {enum_key.name} ({enum_key.value}) = {value}")
+            else:
+                print(f"Attribut {attr_name} nicht vorhanden oder leer im KMG")
+
     class Config:
         use_enum_values = False
         json_encoders = {TKompConstants: lambda v: v.name}
+KMG_ENUM_MAPPING = {
+    TKompConstants.TC_3d_KMG_A: "kmg_a",
+    TKompConstants.TC_3d_KMG_K: "kmg_k",
+    TKompConstants.TC_3d_KMG_Uc: "kmg_uc",
+    TKompConstants.TC_3d_KMG_alphaM: "kmg_alpha_m",
+    TKompConstants.TC_3d_KMG_LT: "kmg_lt",
+    TKompConstants.TC_3d_KMG_MpeML: "kmg_mpeml",
+}

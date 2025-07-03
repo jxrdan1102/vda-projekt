@@ -24,11 +24,34 @@ async def get_anamu_by_id(db: AsyncSession, id: int, user_id: int):
             selectinload(ANAMU.modell),
             selectinload(ANAMU.anakomp).selectinload(ANAKOMP.komponente),
             selectinload(ANAMU.anakonst),
+            selectinload(ANAMU.kmg),
         )
     )
     result = await db.execute(stmt)
-    return result.scalar_one_or_none()
+    anamu = result.scalar_one_or_none()
+    if anamu:
+        patch_konstanten_values(anamu)
+    return anamu
 
+CONSTNUM_KMG_MAPPING = {
+    102: "kmg_a",
+    103: "kmg_k",
+    104: "kmg_uc",
+    105: "kmg_lt",
+    141: "kmg_alpham",
+    161: "kmg_mpeml",
+}
+def patch_konstanten_values(anamu: ANAMU) -> ANAMU:
+    if not anamu.kmg:
+        return anamu
+
+    for konst in anamu.anakonst:
+        attr_name = CONSTNUM_KMG_MAPPING.get(konst.constnum)
+        if attr_name:
+            kmg_value = getattr(anamu.kmg, attr_name, None)
+            if kmg_value is not None:
+                konst.constval = kmg_value
+    return anamu
 
 async def create_anamu_with_dependencies(db: AsyncSession, anamu: AnamuCreateR, user_id: int):
     # AnAMU anlegen
@@ -92,7 +115,7 @@ async def add_anakonsts(db: AsyncSession, fk_anamu: int, fk_modell: int, user_id
     stmt = select(Modell).where(Modell.id == fk_modell)
     result = await db.execute(stmt)
     modell = result.scalar_one_or_none()
-
+    print (" hoffentlich ",modell.Element1)
     if modell is None:
         raise HTTPException(status_code=404, detail="Modell nicht gefunden")
 
@@ -103,7 +126,7 @@ async def add_anakonsts(db: AsyncSession, fk_anamu: int, fk_modell: int, user_id
     if not components:
         return []
 
-    schema = TMU_ModellSchema(id=modell.id, aufgabe=modell.aufgabe, AufgabeModell=modell.aufgabe_modell)
+    schema = TMU_ModellSchema(id=modell.id, aufgabe=modell.aufgabe, AufgabeModell=modell.aufgabe_modell, Element1=modell.Element1, Element2=modell.Element2 )
     tmodell = TMU_Modell(schema)
 
     for komp in components:
@@ -153,8 +176,11 @@ async def calc_uncertainty(db: AsyncSession, id: int, user_id: int):
     tschema = TMU_ModellSchema.model_validate(modell)
     tmodell = TMU_Modell(tschema)
 
+
+
     components_map = {m.lfdnr: m for m in modell.components}
     anakomps_map = {a.fk_mod_components: a for a in anamu.anakomp}
+
 
     for component in modell.components:
         tmodell.addComponent(component.kompid, component.lfdnr)
@@ -171,6 +197,10 @@ async def calc_uncertainty(db: AsyncSession, id: int, user_id: int):
             map_component_data(tcomponent, acomp)
 
     await tmodell.setConstValue(anamu.id, db)
+    if modell.aufgabe_modell == 3:
+        print("KMG Konstanten")
+        await tmodell.setKMGConstValue(anamu.id, db)
+
     print ("hier",tmodell.const_list)
     return tmodell.MUPruefverfahren_U()
 

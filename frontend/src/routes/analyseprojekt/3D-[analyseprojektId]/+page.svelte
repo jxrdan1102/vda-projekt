@@ -97,7 +97,7 @@
     }
 
     function closeModal() {
-        history.back();
+        goto(`/analyseprojekt/3D-${analyseprojektId}`);
     }
 
     type EditFields = {
@@ -138,6 +138,11 @@
             if (Number(modell[key]) === 1) return aufgabenMap[key as keyof typeof aufgabenMap];
         }
         return "Unbekannt";
+    }
+    const kmgConstnums = new Set([102, 103, 104, 105, 141, 161]);
+
+    function isKMG(konst: number) {
+        return kmgConstnums.has(konst);
     }
 </script>
 
@@ -235,8 +240,10 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 lg:grid-cols-4 lg:grid-cols-5 gap-3">
             {#each analyseprojekt.anakonst as konst}
                 <div
-                        class="bg-white border border-gray-300 rounded px-3 py-1 cursor-pointer hover:shadow"
-                        on:dblclick={() => onConstClick(konst.id)}>
+                        class="bg-white border border-gray-300 rounded px-3 py-1
+                       cursor-pointer hover:shadow
+                       {isKMG(konst.constnum) ? 'opacity-70 cursor-not-allowed' : ''}"
+                        on:dblclick={!isKMG(konst.constnum) ? () => onConstClick(konst.id) : null}>
                     <p><strong>{tcMapping[konst.constnum]}</strong></p>
                     <p>Wert: {konst.constval}</p>
                 </div>
@@ -256,5 +263,5 @@
 </Modal>
 
 <Modal open={showKmg} on:close={closeModal}>
-    <KmgInfoPage data={$page.state.kmgInfo} />
+    <KmgInfoPage data={$page.state.kmgInfo} fk_kmg={analyseprojekt.fk_kmg} />
 </Modal>

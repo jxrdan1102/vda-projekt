@@ -1,7 +1,12 @@
 <script lang="ts">
+    import {fail} from "@sveltejs/kit";
+    import {page} from "$app/stores";
+    import {get} from "svelte/store";
+
+    export let fk_kmg;
     export let data: { kmg: any[] };
     const kmg = data.kmg;
-
+    const analyseprojektId = get(page).params.analyseprojektId;
     let selectedKMG: any = kmg.length > 0 ? kmg[0] : null;
     let isCreatingNew = false;
 
@@ -13,6 +18,22 @@
     let kmg_uc = 0;
     let kmg_alpham = 0;
     let kmg_mpeml = 0;
+
+    async function handleAuswaehlen(id: number) {
+        const payload: Record<string, any> = {};
+        payload.fk_kmg = id;
+        const res = await fetch(`http://localhost:9999/anamu/${analyseprojektId}/r`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+            const err = await res.json();
+            return fail(res.status, { error: err.detail || 'Fehler beim Erstellen des KMGs.' });
+        }
+    }
 
     function selectKMG(item: any) {
         selectedKMG = item;
@@ -49,7 +70,7 @@
             <button on:click={startNewKMG} class="bg-indigo-600 text-white text-xs px-3 py-1.5 rounded-md shadow-sm hover:bg-indigo-500 transition">+ Neu</button>
         </div>
         {#each kmg as item (item.id)}
-            <div class="relative border rounded-lg p-3 bg-white hover:bg-gray-50 cursor-pointer transition shadow-sm" class:selected={selectedKMG?.id === item.id}>
+            <div class:currentlySelected={item.id === fk_kmg} class="relative border rounded-lg p-3 bg-white hover:bg-gray-50 cursor-pointer transition shadow-sm" class:selected={selectedKMG?.id === item.id}>
                 <div on:click={() => selectKMG(item)} class="pr-5">
                     <div class="font-medium text-gray-900">{item.kmg_ident}</div>
                     <div class="text-gray-500 text-xs truncate">{item.kmg_bez}</div>
@@ -59,6 +80,13 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                           d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
                 </svg>
+
+                <div class="mt-2 flex justify-end gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" on:click|stopPropagation={() => handleAuswaehlen(item.id)} stroke-width="1.5" stroke="currentColor" class="absolute bottom-2 right-2 size-4 hover:text-green-500">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                        </svg>
+                </div>
+
             </div>
 
         {/each}
@@ -128,5 +156,10 @@
     .selected {
         background-color: #eef2ff;
         border-color: #6366f1;
+    }
+
+    .currentlySelected {
+        background-color: #c3d0ff;  /* kräftigeres Blau */
+        border-color: #4f57e0;      /* etwas dunkleres kräftiges Blau */
     }
 </style>

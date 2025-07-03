@@ -21,7 +21,12 @@ export const actions: Actions = {
             if (value === null || value === '') return undefined;
             return value.toString();
         }
-
+        function parseOptionalInt(key: string): number | undefined {
+            const value = formData.get(key);
+            if (value === null || value === '') return undefined;
+            const parsed = parseInt(value.toString());
+            return isNaN(parsed) ? undefined : parsed;
+        }
         function parseOptionalFloat(key: string): number | undefined {
             const val = formData.get(key);
             if (val === null || val === '') return undefined;
@@ -30,9 +35,15 @@ export const actions: Actions = {
         }
 
         const payload: Record<string, any> = {};
-
-        payload.constval = parseOptionalFloat('constval');
-        console.log(payload);
+        payload.kmg_ident = parseOptionalInt('kmg_ident');
+        payload.kmg_bez = parseOptionalString('kmg_bez');
+        payload.kmg_a = parseOptionalFloat('kmg_a');
+        payload.kmg_k = parseOptionalFloat('kmg_k');
+        payload.kmg_uc = parseOptionalFloat('kmg_uc');
+        payload.kmg_lt = parseOptionalFloat('kmg_lt');
+        payload.kmg_alpham = parseOptionalFloat('kmg_alpham');
+        payload.kmg_mpeml = parseOptionalFloat('kmg_mpeml');
+        console.log("Senden",payload);
         const res = await fetch(`http://localhost:9999/kmgs`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -42,7 +53,7 @@ export const actions: Actions = {
 
         if (!res.ok) {
             const err = await res.json();
-            return fail(res.status, { error: err.detail || 'Fehler beim Speichern der Konstante.' });
+            return fail(res.status, { error: err.detail || 'Fehler beim Erstellen des KMGs.' });
         }
 
         throw redirect(303, `/analyseprojekt/3D-${params.analyseprojektId}`);

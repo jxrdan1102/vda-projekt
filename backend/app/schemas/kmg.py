@@ -4,14 +4,14 @@ from pydantic import BaseModel
 
 
 class KMGBase(BaseModel):
-    kmg_ident: int
-    kmg_bez: str
-    kmg_a: float
-    kmg_k: float
-    kmg_lt: float
-    kmg_uc: float
-    kmg_alpham: float
-    kmg_mpeml: float
+    kmg_ident: int | None = None
+    kmg_bez: str | None = None
+    kmg_a: float | None = None
+    kmg_k: float | None = None
+    kmg_lt: float | None = None
+    kmg_uc: float | None = None
+    kmg_alpham: float | None = None
+    kmg_mpeml: float | None = None
 
 
 class KMGCreate(KMGBase):
@@ -19,13 +19,13 @@ class KMGCreate(KMGBase):
 
 
 class KMGUpdate(BaseModel):
-    kmg_bez: str | None
-    kmg_a: float | None
-    kmg_k: float | None
-    kmg_lt: float | None
-    kmg_uc: float | None
-    kmg_alpham: float | None
-    kmg_mpeml: float | None
+    kmg_bez: str | None = None
+    kmg_a: float | None = None
+    kmg_k: float | None = None
+    kmg_lt: float | None = None
+    kmg_uc: float | None = None
+    kmg_alpham: float | None = None
+    kmg_mpeml: float | None = None
 
 
 class KMGResponse(KMGBase):

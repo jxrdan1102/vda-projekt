@@ -9,7 +9,7 @@ from app.schemas.kmg import KMGCreate, KMGResponse, KMGUpdate
 router = APIRouter(prefix="/kmgs", tags=["KMGs"])
 
 
-@router.get("/", response_model=list[KMGResponse])
+@router.get("", response_model=list[KMGResponse])
 async def get_all_kmgs(db: AsyncSession = Depends(get_db)):
     return await get_all_generic(KMG, db, KMGResponse)
 
@@ -19,9 +19,9 @@ async def get_kmg(kmg_id: int, db: AsyncSession = Depends(get_db)):
     return await get_by_id(KMG, kmg_id, db, KMGResponse)
 
 
-@router.post("/", response_model=KMGResponse)
+@router.post("", response_model=KMGResponse)
 async def create_kmg(kmg: KMGCreate, db: AsyncSession = Depends(get_db)):
-    new_kmg = KMG(**kmg.dict())
+    new_kmg = KMG(**kmg.model_dump())
     db.add(new_kmg)
     await db.commit()
     await db.refresh(new_kmg)
