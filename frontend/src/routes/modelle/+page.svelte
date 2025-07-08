@@ -7,6 +7,7 @@
     export let data;
 
     $: modellDialogOpen = !!$page.state?.newModell;
+    let aufgabe_modell = '';
 
     async function onNewModellClick(e: MouseEvent & { currentTarget: HTMLAnchorElement }) {
         if (e.metaKey || e.ctrlKey) return;
@@ -80,6 +81,8 @@
         if (prozess === 3) goto(`http://localhost:5173/modelle/3D-${id}`)
         else goto(`http://localhost:5173/modelle/${id}`)
     }
+
+    let showForm = false;
 </script>
 
 
@@ -115,14 +118,63 @@
         <div class="w-1/2">Modell</div>
         <div class="w-1/2 flex justify-between items-center">
             <span>Beschreibung</span>
-            <a href="/modelle/add" on:click={onNewModellClick} title="Neues Modell hinzufügen">
+            <button on:click={() => (showForm = !showForm)} title="Neues Modell hinzufügen" class="focus:outline-none" aria-label="Neues Modell hinzufügen">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-green-600 hover:scale-110 transition-transform">
                     <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 9a.75.75 0 0 0-1.5 0v2.25H9a.75.75 0 0 0 0 1.5h2.25V15a.75.75 0 0 0 1.5 0v-2.25H15a.75.75 0 0 0 0-1.5h-2.25V9Z" clip-rule="evenodd" />
                 </svg>
-            </a>
+            </button>
         </div>
     </div>
+    {#if showForm}
+        <!-- Eingabeformular -->
+        <form method="POST" class="bg-gray-100 border border-t-0 border-gray-300 px-4 py-3 flex flex-wrap items-center gap-4">
+            <select
+                    id="aufgabe_modell"
+                    name="aufgabe_modell"
+                    bind:value={aufgabe_modell}
+                    required
+                    class="border border-gray-300 rounded px-2 py-1 w-36 text-sm"
+            >
+                <option value="" disabled selected>Bitte wählen</option>
+                <option value="1">Prüfprozess</option>
+                <option value="2">Kalibrierprozess</option>
+                <option value="3">3D-Prüfprozess</option>
+            </select>
 
+            <input
+                    id="name"
+                    name="name"
+                    required
+                    placeholder="Name"
+                    class="border border-gray-300 rounded px-2 py-1 w-48 text-sm"
+            />
+
+            {#if aufgabe_modell === '3'}
+                <select
+                        id="aufgabe"
+                        name="aufgabe"
+                        required
+                        class="border border-gray-300 rounded px-2 py-1 w-40 text-sm"
+                >
+                    <option value="" disabled selected>Bitte wählen</option>
+                    <option value="1">Durchmesser</option>
+                    <option value="2">Abstand</option>
+                    <option value="3">Richtung</option>
+                    <option value="4">Koaxialität</option>
+                    <option value="5">Form</option>
+                    <option value="6">Winkel</option>
+                    <option value="7">Position</option>
+                </select>
+            {/if}
+
+            <button
+                    type="submit"
+                    class="bg-green-100 text-green-800 hover:bg-green-200 border border-green-300 rounded px-3 py-1 text-sm font-medium transition-colors"
+            >
+                Erstellen
+            </button>
+        </form>
+    {/if}
     <!-- Table Body -->
     <div class="border border-t-0 border-gray-300 divide-y divide-gray-200">
         {#each data.modelle as modell}

@@ -81,6 +81,20 @@
         if (prozess === 3) goto(`http://localhost:5173/analyseprojekt/3D-${id}`)
         else goto(`http://localhost:5173/analyseprojekt/${id}`)
     }
+
+
+    let showForm = false;
+    let models: any;
+
+    async function loadModels() {
+        const res = await fetch('/api/modelle');
+        if (res.ok) {
+            models = await res.json();
+        } else {
+            models = [];
+        }
+    }
+
 </script>
 
 <div class="max-w-7xl mx-auto px-4 py-6">
@@ -109,13 +123,33 @@
         <div class="w-1/2">Identnummer</div>
         <div class="w-1/2 flex justify-between items-center">
             <span>Datum</span>
-            <a href="/analyseprojekt/add" on:click={onNewModellClick} title="Neues Modell hinzufügen">
+            <button on:click={() => {loadModels(); showForm = !showForm;}} title="Neues Modell hinzufügen" class="focus:outline-none" aria-label="Neues Modell hinzufügen">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-green-600 hover:scale-110 transition-transform">
                     <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 9a.75.75 0 0 0-1.5 0v2.25H9a.75.75 0 0 0 0 1.5h2.25V15a.75.75 0 0 0 1.5 0v-2.25H15a.75.75 0 0 0 0-1.5h-2.25V9Z" clip-rule="evenodd" />
                 </svg>
-            </a>
+            </button>
         </div>
     </div>
+
+    {#if showForm}
+        <!-- Eingabeformular -->
+        <form method="POST" class="bg-gray-100 border border-t-0 border-gray-300 px-4 py-3 flex flex-wrap items-center gap-4">
+            <input id="name" name="name" required placeholder="Name" class="border border-gray-300 rounded px-2 py-1 w-48 text-sm"/>
+
+            <input id="aenderungszustand" name="aenderungszustand" placeholder="Änderungsstand" class="border border-gray-300 rounded px-2 py-1 w-48 text-sm" />
+
+            <select id="modell" name="modell" required class="border border-gray-300 rounded px-2 py-1 w-48 text-sm">
+                <option value="" disabled selected>Modell wählen</option>
+                {#each models as modell}
+                    <option value={modell.id}>{modell.name} (ID: {modell.id})</option>
+                {/each}
+            </select>
+
+            <button type="submit" class="bg-green-100 text-green-800 hover:bg-green-200 border border-green-300 rounded px-3 py-1 text-sm font-medium transition-colors">
+                Erstellen
+            </button>
+        </form>
+    {/if}
 
     <!-- Table Body -->
     <div class="border border-t-0 border-gray-300 divide-y divide-gray-200">

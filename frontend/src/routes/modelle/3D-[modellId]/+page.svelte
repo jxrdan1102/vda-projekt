@@ -520,7 +520,7 @@
         <table class="w-full text-sm border-t">
             <thead class="bg-gray-200 text-gray-700">
             <tr>
-                <th class="px-2 py-1 text-left">#</th>
+                <th class="px-2 py-1 text-left w-1"></th>
                 <th class="px-2 py-1 text-left">Komponente</th>
                 <th class="px-2 py-1 text-left">ID</th>
                 <th class="px-2 py-1 text-left">Beschreibung</th>
@@ -536,9 +536,9 @@
                 <tr class="{selectedRow === i ? 'bg-green-300' : 'hover:bg-green-200'} cursor-pointer"
                     on:click={() => selectedRow = i}
                     on:dblclick={(e) => onOpenComponent(e, comp.id)}>
-                    <td class="px-2 py-1">{i + 1}</td>
+                    <td class="px-2 py-1 text-left w-0.5">{i + 1}</td>
                     <td class="px-2 py-1">{COMPONENTS[comp.kompid]}</td>
-                    <td class="px-2 py-1">{comp.id}</td>
+                    <td class="px-2 py-1">{comp.kompid}</td>
                     <td class="px-2 py-1">{ModelTextLabels[comp.modltxtid] ?? ''}</td>
                     <td class="float-right px-1">
                         <button type="button" on:click={() => deleteComponent(comp.id)}>

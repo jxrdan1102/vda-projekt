@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type {ActionData, PageData} from '$lib/types/analyseprojekt-types'; // oder passe es an
+    import type {ActionData, PageData} from '$lib/types/modelle-types'; // oder passe es an
 
     export let data: PageData;
     export let form: ActionData | null = null;

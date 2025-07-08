@@ -1,0 +1,149 @@
+AddToList(TC_Schrittweite_Geradheitskalibrierung_EN, 'mm'); // 2043
+AddToList(TC_Positionsgenauigkeit_Kalibrierung_MO, 'mm');   // 2044
+AddToList(TC_Betrag_max_Abweichung_Bezugsgerade, 'µm');     // 2045
+AddToList(TC_Laenge_stehender_Schenkel_EN, 'mm');           // 2046
+AddToList(TC_Abstand_Stuetzpunkte_EN, 'mm');                // 2047
+AddToList(TC_Geradheit_Messplatte_EN, 'µm');                // 2048
+AddToList(TC_Positionsabweichung_Stuetzpunkte_EN, 'mm');    // 2049
+AddToList(TC_Kalibrierung_Geradheit_EN, 'µm');              // 2050
+AddToList(TC_Laenge_stehender_Schenkel_MO, 'mm');           // 2051
+AddToList(TC_Stuetzpunktabstand_MO, 'mm');                  // 2052
+AddToList(TC_Geradheit_Messplatte_MO, 'µm');                // 2053
+AddToList(TC_Positionsabweichung_Stuetzpunkte_MO, 'mm');    // 2054
+AddToList(TC_Kalibrierung_Geradheit_MO, 'µm');              // 2055
+AddToList(TC_Kalibrierung_Ebenheit_Messplatte, 'µm');       // 2056
+AddToList(TC_Positionsgenauigkeit_Stuetzpunkte, 'mm');      // 2058
+AddToList(TC_Schrittweite_Geradheitskalibrierung_MO, 'mm'); // 2059
+AddToList(TC_Hoehendifferenz_Stuetzpunkte, 'mm');           // 2060
+AddToList(TC_Laenge_Messobjekt, 'mm');                      // 2061
+AddToList(TC_Anzahl_Verschiebungen_MO, '');                 // 2065
+AddToList(TC_Messbereichsendwert_Messeinrichtung, 'mm');    // 2066
+AddToList(TC_Hoehe_zu_Rechtwinkligkeit,'mm');               // 2067
+AddToList(TC_Rh_Anzahl_Messwerte_pro_Teilmessstrecke,'');   // 2068
+AddToList(TC_Rh_Anzahl_Teilmessstrecken,'');                // 2069
+AddToList(TC_Rh_Ortabhaengige_Unsicherheit_in_y,'mm');      // 2070
+AddToList(TC_Rh_Gradient_in_Rillenrichtung, 'µm/mm');       // 2071
+AddToList(TC_Rh_Messpunktabstand,'µm');                     // 2072
+AddToList(TC_Rh_Tiefpasswellenlaengen,'µm');                // 2073
+AddToList(TC_Rh_Kennwertaenderungsfaktor,'');               // 2074
+AddToList(TC_Rh_Gemessene_Kenngroesse,'µm');                // 2075
+AddToList(TC_Rh_Anzahl_Wiederholungsmessungen_geaenderter_Antastort,'');   // 2076
+AddToList(TC_Rh_Anzahl_Wiederholmessungen_selber_Antastort,'');            // 2077
+AddToList(TC_Fm_Anzahl_Wiederholmessungen_StreuungAnzeige,''); //2078
+AddToList(TC_Fm_Abstand_zwischen_zwei_benachbarten_Profilpunkten,'µm'); // 2079
+AddToList(TC_Fm_Grenzwellenlaenge,'µm'); // 2080
+AddToList(TC_Fm_Messwert_MO,'µm');                         // 2081
+AddToList(TC_Fm_Richtiger_Wert_Rundheit_Kugelnormal,'µm'); // 2082
+AddToList(TC_Fm_Messunsicherheit_der_Kalibrierung_Kugelnormal,'µm');  // 2083
+AddToList(TC_Fm_Gemessenden_Exzentrizitaet,'mm');          // 2084
+AddToList(TC_Fm_Aussendurchmesser_MO,'mm');                // 2085
+AddToList(TC_Fm_Tastkugeldurchmesser,'mm');                // 2086
+AddToList(TC_Fm_Innendurchmesser_MO,'mm');                 // 2087
+AddToList(TC_Fm_Kippung_MO_XAchse,'µm/10mm');              // 2088
+AddToList(TC_Fm_Kippung_MO_YAchse,'µm/10mm');              // 2089
+AddToList(TC_Fm_Radius_MO,'mm');                           // 2090
+AddToList(TC_Fm_Neigung_Zylinderachse_MO_zu_Flaeche_XOY,'Grad');  // 2091
+AddToList(TC_Fm_Formabweichung_Normal,'µm');               // 2092
+AddToList(TC_Fm_Kalibrierung_Normal,'µm');                 // 2093
+AddToList(TC_Fm_Standardabweichung_Wiederholmessungen_Normal,'µm');       // 2094
+AddToList(TC_Fm_AnzahlMessungen_Fuehrungsabweichung ,'');  // 2095
+AddToList(TC_Fm_Gemessene_Rundheit_EN ,'µm');              // 2096
+AddToList(TC_Gewinde_Steigung,'mm');                       // 2097
+AddToList(TC_KTMG_Gemessener_Abstand,'mm');        // 2101
+AddToList(TC_KTMG_Konstanter_Anteil_EMPE,'µm');    // 2102
+AddToList(TC_KTMG_Anzahl_Messpunkte,'');         // 2103
+AddToList(TC_KTMG_Gemessener_Winkel,'Grad');         // 2104
+AddToList(TC_KTMG_Laenge_kleinster_Schenkel,'mm'); // 2105
+AddToList(TC_KTMG_Gemessene_Geradheit,'µm');       // 2106
+AddToList(TC_KTMG_Sektor_Kreis,'Grad');              // 2107
+// 3d Technische Daten des KMG
+AddToList(TC_3d_KMG_A, '');                                // 2301
+AddToList(TC_3d_KMG_K, '');                                // 2302
+AddToList(TC_3d_KMG_LT,'mm');                              // 2340
+AddToList(TC_3d_KMG_Uc, 'µm');                             // 2303
+AddToList(TC_3d_KMG_alphaM, '10-6/K');                     // 2304
+AddToList(TC_3d_KMG_MPEML, 'µm');                          // 2357
+// 3d Technische Daten des KMG "Messbedingungen"
+AddToList(TC_3d_KMG_Tm, '°C');                             // 2305
+AddToList(TC_3d_KMG_deltaTm, 'K');                         // 2306
+AddToList(TC_3d_KMG_alphaW, '10-6/K');                     // 2307
+AddToList(TC_3d_KMG_Tw, '°C');                             // 2308
+AddToList(TC_3d_KMG_deltaTw, 'K');                         // 2309
+// 3d Konstanten Aufgabe Durchmesser
+AddToList(TC_3d_DUME_D, 'mm');                             // 2310
+AddToList(TC_3d_DUME_alpha, '°');                          // 2311
+AddToList(TC_3d_DUME_l, 'mm');                             // 2312
+AddToList(TC_3d_DUME_LM, 'mm');                            // 2341
+// 3d Konstanten Aufgabe Form
+AddToList(TC_3d_FORM_L, 'mm');                            // 2313
+AddToList(TC_3d_FORM_DL,'mm');                            // 2314
+AddToList(TC_3d_FORM_F, 'µm');                            // 2315
+AddToList(TC_3d_FORM_FN,  'µm');                         // 2359
+AddToList(TC_3d_FORM_FKMG,'µm');                         // 2360
+// 3d Konstanten Aufgabe Abstand
+AddToList(TC_3d_ABST_L,'mm');                             // 2316
+AddToList(TC_3d_ABST_LM1,'mm');                           // 2317
+AddToList(TC_3d_ABST_LE1,'mm');                           // 2318
+AddToList(TC_3d_ABST_LM2,'mm');                           // 2319
+AddToList(TC_3d_ABST_LE2,'mm');                           // 2320
+AddToList(TC_3D_ABST_LTE,'mm');                           // 2343
+AddToList(TC_3D_ABST_LTB,'mm');                           // 2344
+// 3d Konstanten Aufgabe Richtunng
+AddToList(TC_3d_Ri_LA,'mm');                               // 2321
+AddToList(TC_3d_Ri_Alpha,'°');                            // 2322
+AddToList(TC_3d_Ri_LME,'mm');                             // 2323
+AddToList(TC_3d_Ri_LE,'mm');                              // 2324
+AddToList(TC_3d_Ri_LMB,'mm');                             // 2325
+AddToList(TC_3d_Ri_LTE1,'mm');                            // 2345
+AddToList(TC_3d_Ri_LTE2,'mm');                            // 2346
+// 3D Konstanten Symmetrie
+AddToList(TC_3d_Sym_DE,'mm');          // 2326
+AddToList(TC_3d_Sym_LE,'mm');          // 2327
+AddToList(TC_3d_Sym_LME,'mm');         // 2349
+AddToList(TC_3d_Sym_DB,'mm');          // 2328
+AddToList(TC_3d_Sym_LB,'mm');          // 2350
+AddToList(TC_3d_Sym_LMB,'mm');         // 2329
+AddToList(TC_3d_Sym_LTE,'mm');          // 2351
+AddToList(TC_3d_Sym_LTB,'mm');         // 2352
+// 3D Konstanten Koaxialitδt
+AddToList(TC_3d_Koax_DE,'mm');         // 2330
+AddToList(TC_3d_Koax_LE,'mm');         // 2331
+AddToList(TC_3d_Koax_LA,'mm');         // 2332
+AddToList(TC_3d_Koax_DB,'mm');         // 2333
+AddToList(TC_3d_Koax_LB,'mm');         // 2334
+AddToList(TC_3d_Koax_LMB,'mm');        // 2335
+AddToList(TC_3d_Koax_LME,'mm');        // 2353
+//    AddToList(TC_3d_Koax_LT,'mm');         // 2354
+AddToList(TC_3d_Koax_LTB,'mm');        // 2355
+AddToList(TC_3d_Koax_LTE,'mm');        // 2356
+// 3D Konstanten Koaxialitδt zur gemeinsamen Achse
+AddToList(TC_3d_KoaxGA_DE,'mm');       // 2336
+AddToList(TC_3d_KoaxGA_LME,'mm');      // 2337
+AddToList(TC_3d_KoaxGA_LE,'mm');       // 2338
+AddToList(TC_3d_KoaxGA_LB,'mm');       // 2339
+AddToList(TC_3d_KoaxGA_LA,'mm');       // 2332 !!! siehe oben  TC_3d_Koax_LA
+AddToList(TC_3d_KoaxGA_LTB,'mm');      // 2355 !!!=  TC_3d_Koax_LTB
+AddToList(TC_3d_KoaxGA_LTE,'mm');      // 2356 !!!= TC_3d_Koax_LTE
+AddToList( TC_3D_NennLaenge_LD,'mm');  // 2358; // Komps 1323, 1324
+// 3D Konstanten: Winkel
+AddToList( TC_3d_KMG_AUFLOES,'°');      // 2361
+// 3D Konstanten Punkt-Punkt
+AddToList(TC_3d_PktPkt_dist,'mm');   // 2362  Abstand zw. toleriertes und Bezugselement
+AddToList(TC_3d_PktPkt_Wechsel,'ja/nein');   // 2363  Tasterwechsel
+AddToList(TC_3d_PktPkt_nTastBe,'');   // 2364  Anzahl Antastungen Bezugselement
+AddToList(TC_3d_PktPkt_nTastTe,'');   // 2365  Anzahl Antastungen toleriertes Element
+AddToList(TC_3d_PktPkt_SigBe,'mm');   // 2366  Standardabweichung bei Antastung des BE
+AddToList(TC_3d_PktPkt_SigTe,'mm');   // 2367  Standardabweichung bei Antastung des TE
+AddToList(TC_3d_PktPkt_ScanKgl,'Grad');   // 2368  Bereich zum Scannen von Kugeln
+AddToList(TC_3d_PktPkt_MBe,'W/L');   // 2369  Maximale Harmonik des Profils des BE . Apriori
+AddToList(TC_3d_PktPkt_Mte,'W/L');   // 2370  Maximale Harmonik des Profils des BE . Apriori
+AddToList(TC_3d_PktPkt_Temp,'°C');   // 2371  Raumtemperatur
+AddToList(TC_3d_PktPkt_Gamma0,'mm'); // 2372  Koeff fόr ZufAbw aufgrund Winkel de Sektor
+AddToList(TC_3d_PktPkt_Gamma1,'Grad');  // 2373  Koeff fόr ZufAbw aufgrund Winkel de Sektor
+AddToList(TC_3d_PktPkt_WinkelSeg_BE,'Grad'); //2374    Winkel Antastbereich (Segment) BE
+AddToList(TC_3d_PktPkt_WinkelSeg_TE,'Grad'); //2375    Winkel Antastbereich (Segment) tolerirtes Element
+AddToList(TC_3d_PktPkt_AnzSims,''); //2376    Anzahl Simulationen pro Messpunkt
+AddToList(TC_3d_PktPkt_Dia_BE, 'mm'); // 2377 Durchmesser Kreis 1 BE
+AddToList(TC_3d_PktPkt_Dia_TE, 'mm'); // 2378 Durchmesser Kreis 2 BE
+AddToList(TC_3d_KMG_AmpX, 'mm');  //  2379 Amplidude Streuung X
+AddToList(TC_3d_KMG_AmpY, 'mm');  //  2380 Amplidude Streuung Y
