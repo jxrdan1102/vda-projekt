@@ -13,7 +13,7 @@
     let compInputEl: any;
     async function saveBerechnen(id: number, newValue: boolean) {
         try {
-            const response = await fetch(`http://localhost:9999/anamu/anakomp/${id}/r`, {
+            const response = await fetch(`/api/anakomponent/${id}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -37,14 +37,49 @@
         await tick();
         editInput?.focus();
     }
+    function isEditable(konst: any) {
+        // Beispiel: Konstanten mit isKMG true sind nicht editierbar
+        return !isKMG(konst.constnum);
+    }
 
+    async function handleKeyDownConst(event: KeyboardEvent, konst: any, index: number) {
+        if (event.key === 'Tab') {
+            event.preventDefault();
 
+            // Speichern
+            await saveConstVal(event, konst.id);
+            await tick();
 
+            // Nächste editierbare Konstante finden
+            let nextIndex = index;
+            const length = analyseprojekt.anakonst.length;
+            do {
+                nextIndex = event.shiftKey ? nextIndex - 1 : nextIndex + 1;
 
+                if (nextIndex >= length) nextIndex = 0;
+                if (nextIndex < 0) nextIndex = length - 1;
+
+                // Falls wir wieder beim Start sind und nichts editierbar, abbrechen (Safety)
+                if (nextIndex === index) {
+                    // Keine andere editierbare Konstante gefunden
+                    return;
+                }
+
+            } while (!isEditable(analyseprojekt.anakonst[nextIndex]));
+
+            // Edit-Modus auf nächste editierbare Konstante setzen
+            startEditConst(analyseprojekt.anakonst[nextIndex]);
+
+            await tick();
+            editInput?.focus();
+        }
+        else if (event.key === 'Escape') {
+            cancelEdit();
+        }
+    }
     function cancelEditCompField() {
         editingCompField = null;
     }
-
 
     let editingConstId: number | null = null;
     let constvalEdit = 0;
@@ -72,11 +107,10 @@
             payload[editingCompField.field] = compFieldValue;
         }
 
-        const response = await fetch(`http://localhost:9999/anamu/anakomp/${id}/r`, {
-            method: "POST",
+        const response = await fetch(`/api/anakomponent/${id}`, {
+            method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
-            credentials: 'include',
         });
 
         if (response.ok) {
@@ -90,23 +124,63 @@
         }
     }
 
+    const editableFields = ['terml0', 'wertart', 'messpunkt_anzahl', 'anzahl_messungen'];
+    async function handleKeyDown(e: KeyboardEvent, comp: any, fieldName: string) {
+        if (e.key === 'Tab') {
+            e.preventDefault();
+
+            // Erst aktuelle Eingabe speichern
+            await tick(); // bind:value wartet auf Update
+            await saveCompField(e, comp.id);
+
+            // Index des aktuellen Feldes
+            let currentIndex = editableFields.indexOf(fieldName);
+
+            // Nächstes Feld bestimmen
+            let nextIndex = e.shiftKey ? currentIndex - 1 : currentIndex + 1;
+
+            // Wrap around
+            if (nextIndex >= editableFields.length) nextIndex = 0;
+            if (nextIndex < 0) nextIndex = editableFields.length - 1;
+
+            let nextField = editableFields[nextIndex];
+
+            // anzahl_messungen nur aktiv, wenn wertart === 4
+            if (nextField === 'anzahl_messungen' && comp.wertart !== 4) {
+                nextIndex = e.shiftKey ? nextIndex - 1 : nextIndex + 1;
+                if (nextIndex >= editableFields.length) nextIndex = 0;
+                if (nextIndex < 0) nextIndex = editableFields.length - 1;
+                nextField = editableFields[nextIndex];
+            }
+
+            // Nächstes Feld aktivieren
+            startEditCompField(comp, nextField);
+
+        } else if (e.key === 'Escape') {
+            cancelEditCompField();
+        }
+    }
+
+
 
     async function saveConstVal(event: any, id: number) {
         event.preventDefault();
+        const payload: Record<string, any> = {};
 
-        const response = await fetch(`/analyseprojekt/3D-${analyseprojektId}/constant-${id}`, {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: new URLSearchParams({ constval: constvalEdit.toString() }),
+        if (editingConstId) {
+            payload['constval'] = constvalEdit;
+        }
+
+        const response = await fetch(`/api/anakonstant/${id}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
         });
 
         if (response.ok) {
-            // Update lokale Daten im analyseprojekt.anakonst-Array
             const index = analyseprojekt.anakonst.findIndex((k: any) => k.id === id);
             if (index !== -1) {
                 analyseprojekt.anakonst[index].constval = constvalEdit;
-                // Optional: falls du möchtest, kannst du hier auch
-                // andere Rückgabewerte aus response auswerten und updaten
             }
             editingConstId = null;
         } else {
@@ -263,8 +337,6 @@
                 <th class="px-2 py-1 text-left">Methode</th>
                 <th class="px-2 py-1 text-left">Anzahl Messpunkte</th>
                 <th class="px-2 py-1 text-left">Anzahl Messungen</th>
-                <th class="px-2 py-1 text-left">A/3</th>
-
             </tr>
             </thead>
             <tbody>
@@ -281,8 +353,9 @@
                             {#if editingCompField?.id === comp.id && editingCompField?.field === 'terml0' && !comp.berechnen}
                                 <form on:submit|preventDefault={(e) => saveCompField(e, comp.id)} class="flex items-center gap-1">
                                     <div class="flex justify-end gap-2 mt-1">
-                                        <input type="hidden" name="compId" value={comp.id} />
-                                        <input id="terml0"
+                                        <div class="flex items-center gap-2">
+                                            {#if comp.wertart == 5} <input id="berechnen"  name="berechnen" bind:checked={comp.berechnen} on:change={() => saveBerechnen(comp.id, comp.berechnen)} type="checkbox">{/if}
+                                            <input id="terml0"
                                                name="terml0"
                                                 type="number"
                                                 step="any"
@@ -291,6 +364,7 @@
                                                 class="w-full text-sm py-[2px] leading-5 bg-transparent border-0 border-b border-gray-400 focus:outline-none focus:border-black focus:ring-0"
                                                 autofocus
                                                 on:click|stopPropagation
+                                                   on:keydown={(e) => handleKeyDown(e, comp, 'terml0')}
                                         />
                                         <button type="submit" class="text-sm text-green-700">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
@@ -302,13 +376,21 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                                             </svg>
                                         </button>
+                                        </div>
                                     </div>
                                 </form>
                             {:else}
                                 {#if !comp.berechnen}
+                                    <div class="flex items-center gap-2">
+                                    {#if comp.wertart == 5} <input id="berechnen"  name="berechnen" bind:checked={comp.berechnen} on:change={() => saveBerechnen(comp.id, comp.berechnen)} type="checkbox">{/if}
+
                                     <span class="inline-block w-full min-h-[1.2rem]">{comp.terml0 ?? '\u00A0'}</span>
-                                {:else}
-                                    <span class="inline-block w-full min-h-[1.2rem]">{'\u00A0'}</span>
+                                    </div>{:else}
+                                    <div class="flex items-center gap-2">
+                                    {#if comp.wertart == 5} <input id="berechnen"  name="berechnen" bind:checked={comp.berechnen} on:change={() => saveBerechnen(comp.id, comp.berechnen)} type="checkbox">{/if}
+
+                                    <span class="inline-block w-full min-h-[1.2rem]">A/3</span>
+                                    </div>
                                 {/if}
                             {/if}
                         </td>
@@ -327,6 +409,7 @@
                                             class="w-full text-sm py-[2px] leading-5 bg-transparent border-0 border-b border-gray-400 focus:outline-none focus:border-black focus:ring-0"
                                             autofocus
                                             on:click|stopPropagation
+                                            on:keydown={(e) => handleKeyDown(e, comp, 'wertart')}
                                     >
                                     <option value="" disabled>Bitte wählen</option>
                                     <option value={4}>A</option>
@@ -366,6 +449,7 @@
                                             class="w-full text-sm py-[2px] leading-5 bg-transparent border-0 border-b border-gray-400 focus:outline-none focus:border-black focus:ring-0"
                                             autofocus
                                             on:click|stopPropagation
+                                           on:keydown={(e) => handleKeyDown(e, comp, 'messpunkt_anzahl')}
                                     />
                                     <button type="submit" class="text-sm text-green-700">
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
@@ -400,6 +484,7 @@
                                             class="w-full text-sm py-[2px] leading-5 bg-transparent border-0 border-b border-gray-400 focus:outline-none focus:border-black focus:ring-0"
                                             autofocus
                                             on:click|stopPropagation
+                                           on:keydown={(e) => handleKeyDown(e, comp, 'anzahl_messungen')}
                                     />
                                     <button name="komponente" type="submit" class="text-sm text-green-700">
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
@@ -417,9 +502,7 @@
                             <span class="inline-block w-full min-h-[1.2rem]">{comp.wertart == 4 ? comp.anzahl_messungen ?? '\u00A0' : '\u00A0'}</span>
                         {/if}
                     </td>
-                    <td class="px-2 py-1">
-                        {#if comp.wertart == 5} <input id="berechnen"  name="berechnen" bind:checked={comp.berechnen} on:change={() => saveBerechnen(comp.id, comp.berechnen)} type="checkbox">{/if}</td>
-                </tr>
+                    </tr>
             {/each}
             </tbody>
         </table>
@@ -428,7 +511,7 @@
     {#if analyseprojekt.anakonst?.length > 0}
         <h2 class="text-base font-semibold">Konstanten</h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 lg:grid-cols-4 lg:grid-cols-5 gap-3">
-            {#each analyseprojekt.anakonst as konst}
+            {#each analyseprojekt.anakonst as konst, index}
                 <div class="bg-white border border-gray-300 rounded px-3 py-1 hover:shadow
       {isKMG(konst.constnum) ? 'opacity-70 cursor-not-allowed' : 'cursor-text'}"
                         on:dblclick={() => !isKMG(konst.constnum) && startEditConst(konst)}
@@ -448,6 +531,7 @@
                                         bind:value={constvalEdit}
                                         class="w-full text-sm py-[2px] leading-5 bg-transparent border-0 border-b border-gray-400 focus:outline-none focus:border-black focus:ring-0"
                                         autofocus
+                                        on:keydown={(e) => handleKeyDownConst(e, konst, index)}
                                 />
 
                                 <button type="submit" class="text-sm text-green-700">
