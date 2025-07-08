@@ -248,13 +248,13 @@ class TMU_ConstList(BaseModel):
 
 
 
-    async def load_kmg_constants(self, anamu_id: int, db: AsyncSession):
-        stmt = select(KMG).where(KMG.fk_anamu == anamu_id)
+    async def load_kmg_constants(self, fk_kmgs: int, db: AsyncSession):
+        stmt = select(KMG).where(KMG.id == fk_kmgs)
         result = await db.execute(stmt)
         kmg = result.scalar_one_or_none()
 
         if not kmg:
-            print("Kein KMG gefunden für ANAMU", anamu_id)
+            print("Kein KMG gefunden für ANAMU", fk_kmgs)
             return
 
         for enum_key, attr_name in KMG_ENUM_MAPPING.items():

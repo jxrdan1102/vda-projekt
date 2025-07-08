@@ -200,8 +200,8 @@ class TMU_Modell(list[TMU_Komponente]):
     async def setConstValue(self,anamu_id, db: AsyncSession):
         await self.const_list.load_constants(anamu_id,db)
 
-    async def setKMGConstValue(self, anamu_id, db: AsyncSession):
-        await self.const_list.load_constants(anamu_id, db)
+    async def setKMGConstValue(self, fk_kmgs, db: AsyncSession):
+        await self.const_list.load_kmg_constants(fk_kmgs, db)
 
     def addComponent(self, component_id: int,lfdnr):
         self.append(ComponentFactory.get_component(self, component_id,lfdnr))
@@ -315,7 +315,7 @@ class TMU_Modell(list[TMU_Komponente]):
         valid = False
         for c in self:
             print("Ausgabe3: ", c.messpunkt_anzahl)
-        if self.AufgabeModell == "a3D_Pruefprozess":
+        if self.AufgabeModell.value == "a3D_Pruefprozess":
             SummeEFG = 0
             U = self.StandardUnsicherheit_Uy()
             for item in self:
@@ -357,7 +357,7 @@ class TMU_Modell(list[TMU_Komponente]):
     def Erweiterungsfaktor_k(self):
         veff = self.V_eff()
         if not math.isnan(veff):
-            if self.AufgabeModell == "a3D_Pruefprozess":
+            if self.AufgabeModell.value == "a3D_Pruefprozess":
                 result = 2.0
             else:
                 if veff >= 500:

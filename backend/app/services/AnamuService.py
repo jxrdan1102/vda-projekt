@@ -37,8 +37,8 @@ CONSTNUM_KMG_MAPPING = {
     102: "kmg_a",
     103: "kmg_k",
     104: "kmg_uc",
-    105: "kmg_lt",
-    141: "kmg_alpham",
+    141: "kmg_lt",
+    105: "kmg_alpham",
     161: "kmg_mpeml",
 }
 def patch_konstanten_values(anamu: ANAMU) -> ANAMU:
@@ -199,7 +199,7 @@ async def calc_uncertainty(db: AsyncSession, id: int, user_id: int):
     await tmodell.setConstValue(anamu.id, db)
     if modell.aufgabe_modell == 3:
         print("KMG Konstanten")
-        await tmodell.setKMGConstValue(anamu.id, db)
+        await tmodell.setKMGConstValue(anamu.fk_kmg, db)
 
     print ("hier",tmodell.const_list)
     return tmodell.MUPruefverfahren_U()

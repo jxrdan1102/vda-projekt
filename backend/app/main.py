@@ -1,7 +1,4 @@
-import csv
-
 from fastapi import FastAPI
-from pypxlib import Table
 from starlette.middleware.cors import CORSMiddleware
 
 from app.database.database import create_tables, ping_connection
@@ -14,9 +11,9 @@ app.include_router(modells.router)
 app.include_router(ana_mu.router)
 app.include_router(auth.router)
 app.include_router(KMG.router)
-
+"""
 table = Table(
-    "C:\\Program Files (x86)\\Kistner Messtechnik\\QUEEN VDA5 GUM\\MUDB\\MODELL.DB"
+    "C:\\Program Files (x86)\\Kistner Messtechnik\\QUEEN VDA5 GUM\\MUDB\\ANAMU.DB"
 )
 
 fieldnames = list(table.fields.keys())
@@ -32,7 +29,7 @@ with open(csv_file, mode="w+", newline="", encoding="utf-8") as f:
             [getattr(row, field) for field in fieldnames]
         )  # Werte als Liste speichern
 
-
+"""
 origins = [
     "http://localhost:5173",  # Hier den richtigen Frontend-Link angeben
 ]
@@ -51,7 +48,7 @@ async def startup():
     await create_tables()
     await ping_connection()
     value = 257
-
+    """
     # 4 Bytes extrahieren
     byte1 = (value >> 24) & 0xFF
     byte2 = (value >> 16) & 0xFF
@@ -67,12 +64,11 @@ async def startup():
     print(b2_str)
     print(b3_str)
     print(b4_str)
-
-
+"""
 @app.get("/")
 def index():
     return {"message": "hello world"}
-
+"""
 from fastapi import Response
 import matplotlib.pyplot as plt
 import io
@@ -98,3 +94,4 @@ def plot_unsicherheiten(namen: str, werte: str):
     plt.close(fig)
 
     return Response(content=buf.read(), media_type="image/png")
+"""
