@@ -176,13 +176,11 @@ class TMU_Komponente(TMU_Atom):
                 return MU_NAN
 
             if self.data.Flags < 0:
-                # Optional: logge hier einen Fehler oder Hinweis
                 return MU_NAN
 
             return math.sqrt(self.data.Flags) * (abs(su0) + abs(su1))
 
         except Exception as e:
-            # Optional: logge den Fehler
             return MU_NAN
 
     def varianz(self) -> float:
