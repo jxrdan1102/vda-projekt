@@ -5,12 +5,12 @@
     import NewModelPage from "./component-[anakompId]/+page.svelte";
     import NewConstPage from "./constant-[anakonstId]/+page.svelte";
     import KmgInfoPage from "./kmg/+page.svelte";
-    import {COMPONENTS, tcMapping} from "$lib/Mapping";
+    import {COMPONENTS} from "$lib/Mapping";
+    import {tcMapping} from "C:\\Users\\Jason\\vda-projekt\\backend\\tcParameterMapping";
     import {tick} from 'svelte';
 
     let editingCompField: { id: number; field: string } | null = null;
     let compFieldValue: any = "";
-    let compInputEl: any;
     async function saveBerechnen(id: number, newValue: boolean) {
         try {
             const response = await fetch(`/api/anakomponent/${id}`, {
@@ -521,7 +521,7 @@
                                 on:submit|preventDefault={(e) => saveConstVal(e, konst.id)}
                                 class="space-y-1"
                         >
-                            <div class="text-sm font-semibold">{tcMapping[konst.constnum]}</div>
+                            <div class="text-sm font-semibold">{tcMapping[konst.constnum].übersetzung || tcMapping[konst.constnum].key}</div>
                             <div class="flex justify-end gap-2 mt-1">
 
                                 <input
@@ -533,6 +533,7 @@
                                         autofocus
                                         on:keydown={(e) => handleKeyDownConst(e, konst, index)}
                                 />
+                                {tcMapping[konst.constnum].einheit}
 
                                 <button type="submit" class="text-sm text-green-700">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
@@ -547,15 +548,16 @@
                             </div>
                         </form>
                     {:else}
-                        <div class="text-sm font-semibold">{tcMapping[konst.constnum]}</div>
+                        <div class="text-sm font-semibold">{tcMapping[konst.constnum].übersetzung || tcMapping[konst.constnum].key}</div>
+                        <div class="flex">
                         <input
                                 type="text"
                                 readonly
-                                value={konst.constval}
-                                class="w-full text-sm py-[2px] leading-5 bg-transparent border-0 border-b border-transparent text-gray-700 focus:outline-none focus:ring-0"
+                                value={`${konst.constval} ${tcMapping[konst.constnum].einheit}`}
+                                class="w-min text-sm py-[2px] leading-5 bg-transparent border-0 border-b border-transparent text-gray-700 focus:outline-none focus:ring-0"
                                 style="caret-color: transparent; /* verhindert blinkenden Cursor */"
                                 tabindex="-1"
-                        />
+                        /></div>
                     {/if}
                 </div>
             {/each}

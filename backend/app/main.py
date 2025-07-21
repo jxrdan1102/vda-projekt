@@ -3,6 +3,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 from app.database.database import create_tables, ping_connection
 from app.routers import KMG, ana_mu, auth, components, items, modells
+from app.services.component_service.EverythinForComponents.TMU_ConstList import export_ts_mapping, parameter_mapping
 
 app = FastAPI()
 app.include_router(items.router)
@@ -48,6 +49,43 @@ async def startup():
     await create_tables()
     await ping_connection()
     value = 257
+    export_ts_mapping(parameter_mapping)
+    """
+    def csv_to_python_dict(input_file: str, output_file: str):
+        with open(input_file, mode="r", encoding="utf-8-sig") as f:
+            reader = csv.DictReader(f, delimiter=";")
+            reader.fieldnames = [name.strip() for name in reader.fieldnames]
+
+            result = {}
+
+            for row in reader:
+                row = {k.strip(): v for k, v in row.items()}
+
+                code = row.get("Name im Code", "").strip()
+                if not code:
+                    continue
+
+                einheit = row.get("Einheit", "").strip()
+                übersetzung = row.get("Übersetzung/Beschreibung", "").strip()
+                kategorie = row.get("Kategorie", "").strip()
+
+                result[code] = {
+                    "einheit": einheit,
+                    "übersetzung": übersetzung,
+                    "kategorie": kategorie
+                }
+
+        with open(output_file, "w", encoding="utf-8") as f:
+            f.write("parameter_mapping = {\n")
+            for code, data in result.items():
+                f.write(f'    "{code}": {data},\n')
+            f.write("}\n")
+
+        print(f"✅ Mapping gespeichert in {output_file}")
+
+    # Hier den Aufruf einfügen, sonst wird die Funktion nie ausgeführt
+    csv_to_python_dict("C:\\Users\\Jason\\Desktop\\Parameter.csv", "parameter_mapping.py")
+"""
     """
     # 4 Bytes extrahieren
     byte1 = (value >> 24) & 0xFF
@@ -65,6 +103,8 @@ async def startup():
     print(b3_str)
     print(b4_str)
 """
+
+
 @app.get("/")
 def index():
     return {"message": "hello world"}

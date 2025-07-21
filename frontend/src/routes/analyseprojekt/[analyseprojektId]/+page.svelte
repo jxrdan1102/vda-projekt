@@ -2,10 +2,194 @@
     import {goto, preloadData, pushState} from "$app/navigation";
     import {page} from "$app/stores";
     import Modal from "$lib/components/Modal.svelte";
-    import NewModelPage from "./component-[anakompId]/+page.svelte";
-    import NewConstPage from "./constant-[anakonstId]/+page.svelte";
     import KmgInfoPage from "./kmg/+page.svelte";
-    import {COMPONENTS, tcMapping} from "$lib/Mapping";
+    import {COMPONENTS} from "$lib/Mapping";
+    import {tcMapping} from "C:\\Users\\Jason\\vda-projekt\\backend\\tcParameterMapping";
+    import {tick} from 'svelte';
+
+    let editingCompField: { id: number; field: string } | null = null;
+    let compFieldValue: any = "";
+    async function saveBerechnen(id: number, newValue: boolean) {
+        try {
+            const response = await fetch(`/api/anakomponent/${id}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify({ berechnen: newValue })
+            });
+
+            if (!response.ok) {
+                alert('Fehler beim Speichern der Änderung');
+            }
+        } catch (error) {
+            console.error('Speicherfehler:', error);
+            alert('Fehler beim Speichern der Änderung');
+        }
+    }
+
+    async function startEditCompField(comp: any, field: string) {
+        editingCompField = { id: comp.id, field };
+        compFieldValue = comp[field]; // Nur einen Wert verwenden!
+        await tick();
+        editInput?.focus();
+    }
+    const kmgConstnums = new Set([102, 103, 104, 105, 141, 161]);
+
+    function isKMG(konst: number) {
+        return kmgConstnums.has(konst);
+    }
+    function isEditable(konst: any) {
+        // Beispiel: Konstanten mit isKMG true sind nicht editierbar
+        return !isKMG(konst.constnum);
+    }
+
+    async function handleKeyDownConst(event: KeyboardEvent, konst: any, index: number) {
+        if (event.key === 'Tab') {
+            event.preventDefault();
+
+            // Speichern
+            await saveConstVal(event, konst.id);
+            await tick();
+
+            // Nächste editierbare Konstante finden
+            let nextIndex = index;
+            const length = analyseprojekt.anakonst.length;
+            do {
+                nextIndex = event.shiftKey ? nextIndex - 1 : nextIndex + 1;
+
+                if (nextIndex >= length) nextIndex = 0;
+                if (nextIndex < 0) nextIndex = length - 1;
+
+                // Falls wir wieder beim Start sind und nichts editierbar, abbrechen (Safety)
+                if (nextIndex === index) {
+                    // Keine andere editierbare Konstante gefunden
+                    return;
+                }
+
+            } while (!isEditable(analyseprojekt.anakonst[nextIndex]));
+
+            // Edit-Modus auf nächste editierbare Konstante setzen
+            startEditConst(analyseprojekt.anakonst[nextIndex]);
+
+            await tick();
+            editInput?.focus();
+        }
+        else if (event.key === 'Escape') {
+            cancelEdit();
+        }
+    }
+    function cancelEditCompField() {
+        editingCompField = null;
+    }
+
+    let editingConstId: number | null = null;
+    let constvalEdit = 0;
+
+    let editInput: any;
+
+    async function startEditConst(konst: any) {
+        if (isKMG(konst.constnum)) return; // kein Edit bei KMG
+        editingConstId = konst.id;
+        constvalEdit = konst.constval ?? 0;
+
+        await tick(); // sicherstellen, dass das Input gerendert wurde
+        editInput?.focus();
+    }
+
+
+    function cancelEdit() {
+        editingConstId = null;
+    }
+    async function saveCompField(event: any, id: number) {
+        event.preventDefault();
+        const payload: Record<string, any> = {};
+
+        if (editingCompField?.field) {
+            payload[editingCompField.field] = compFieldValue;
+        }
+
+        const response = await fetch(`/api/anakomponent/${id}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+
+        if (response.ok) {
+            const index = analyseprojekt.anakomp.findIndex((k: any) => k.id === id);
+            if (index !== -1 && editingCompField?.field) {
+                analyseprojekt.anakomp[index][editingCompField.field] = compFieldValue;
+            }
+            editingCompField = null;
+        } else {
+            alert("Fehler beim Speichern der Komponente");
+        }
+    }
+
+    const editableFields = ['terml0', 'terml1', 'verteilung', 'wertart', 'freigrad'];
+    async function handleKeyDown(e: KeyboardEvent, comp: any, fieldName: string) {
+        if (e.key === 'Tab') {
+            e.preventDefault();
+
+            // Erst aktuelle Eingabe speichern
+            await tick(); // bind:value wartet auf Update
+            await saveCompField(e, comp.id);
+
+            // Index des aktuellen Feldes
+            let currentIndex = editableFields.indexOf(fieldName);
+
+            // Nächstes Feld bestimmen
+            let nextIndex = e.shiftKey ? currentIndex - 1 : currentIndex + 1;
+
+            // Wrap around
+            if (nextIndex >= editableFields.length) nextIndex = 0;
+            if (nextIndex < 0) nextIndex = editableFields.length - 1;
+
+            let nextField = editableFields[nextIndex];
+
+            // anzahl_messungen nur aktiv, wenn wertart === 4
+            if (nextField === 'anzahl_messungen' && comp.wertart !== 4) {
+                nextIndex = e.shiftKey ? nextIndex - 1 : nextIndex + 1;
+                if (nextIndex >= editableFields.length) nextIndex = 0;
+                if (nextIndex < 0) nextIndex = editableFields.length - 1;
+                nextField = editableFields[nextIndex];
+            }
+
+            // Nächstes Feld aktivieren
+            startEditCompField(comp, nextField);
+
+        } else if (e.key === 'Escape') {
+            cancelEditCompField();
+        }
+    }
+
+
+
+    async function saveConstVal(event: any, id: number) {
+        event.preventDefault();
+        const payload: Record<string, any> = {};
+
+        if (editingConstId) {
+            payload['constval'] = constvalEdit;
+        }
+
+        const response = await fetch(`/api/anakonstant/${id}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+
+        if (response.ok) {
+            const index = analyseprojekt.anakonst.findIndex((k: any) => k.id === id);
+            if (index !== -1) {
+                analyseprojekt.anakonst[index].constval = constvalEdit;
+            }
+            editingConstId = null;
+        } else {
+            alert("Fehler beim Speichern der Konstante");
+        }
+    }
 
 
     export let data;
@@ -17,20 +201,8 @@
     let identnr = analyseprojekt.identnr ?? null;
     let remark = analyseprojekt.remark ?? "";
 
-    $: showConstModal = !!$page.state?.selectedConstant;
-    $: modellDialogOpen = !!$page.state?.updateComp;
     $: showKmg = !!$page.state?.kmgInfo;
 
-
-    async function onUpdateCompClick(compId: number) {
-        const href = `/analyseprojekt/${analyseprojektId}/component-${compId}`;
-        const result = await preloadData(href);
-        if (result.type === 'loaded' && result.status === 200) {
-            pushState(href, { updateComp: result.data });
-        } else {
-            goto(href);
-        }
-    }
 
     async function openKmg() {
         const href = `/analyseprojekt/${analyseprojektId}/kmg`;
@@ -215,45 +387,258 @@
             <tbody>
             {#each analyseprojekt.anakomp as comp, i}
                 <tr class="{selectedRow === i ? 'bg-green-200' : 'hover:bg-gray-100'} cursor-pointer"
-                    on:click={() => selectedRow = i}
-                    on:dblclick={() => onUpdateCompClick(comp.id)}>
+                    on:click={() => selectedRow = i}>
                     <td class="px-2">{i + 1}</td>
                     <td class="px-2 py-1">{COMPONENTS[comp.komponente.kompid]}</td>
-                    <td class="px-2 py-1">{comp.terml0}</td>
-                    <td class="px-2 py-1">{comp.terml1}</td>
-                    <td class="px-2 py-1">{getVerteilungText(comp.verteilung)}</td>
-                    <td class="px-2 py-1">{getWertartText(comp.wertart)}</td>
-                    <td class="px-2 py-1">{getFreigradText(comp.freigrad)}</td>
+                    <td
+                            class="px-2 py-1 clickable-cell"
+                            on:dblclick={() => startEditCompField(comp, 'terml0')}
+                    >
+                        {#if editingCompField?.id === comp.id && editingCompField?.field === 'terml0'}
+                            <form on:submit|preventDefault={(e) => saveCompField(e, comp.id)} class="flex items-center gap-1">
+                                <div class="flex justify-end gap-2 mt-1">
+                                    <input type="hidden" name="compId" value={comp.id} />
+
+                                    <input id="terml0"
+                                           name="terml0"
+                                           type="number"
+                                           step="any"
+                                           bind:this={editInput}
+                                           bind:value={compFieldValue}
+                                           class="w-full text-sm py-[2px] leading-5 bg-transparent border-0 border-b border-gray-400 focus:outline-none focus:border-black focus:ring-0"
+                                           autofocus
+                                           on:click|stopPropagation
+                                           on:keydown={(e) => handleKeyDown(e, comp, 'terml0')}
+                                    />
+                                    <button type="submit" class="text-sm text-green-700">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                        </svg>
+                                    </button>
+                                    <button type="button" on:click={cancelEditCompField} class="text-sm text-red-600">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </form>
+                        {:else}
+                            <span class="inline-block w-full min-h-[1.2rem]">{comp.terml0 ?? '\u00A0'}</span>
+                        {/if}
+                    </td>
+                    <td
+                            class="px-2 py-1 clickable-cell"
+                            on:dblclick={() => startEditCompField(comp, 'terml1')}
+                    >
+                        {#if editingCompField?.id === comp.id && editingCompField?.field === 'terml1'}
+                            <form on:submit|preventDefault={(e) => saveCompField(e, comp.id)} class="flex items-center gap-1">
+                                <div class="flex justify-end gap-2 mt-1">
+                                    <input type="hidden" name="compId" value={comp.id} />
+
+                                    <input id="terml1"
+                                           name="terml1"
+                                           type="number"
+                                           step="any"
+                                           bind:this={editInput}
+                                           bind:value={compFieldValue}
+                                           class="w-full text-sm py-[2px] leading-5 bg-transparent border-0 border-b border-gray-400 focus:outline-none focus:border-black focus:ring-0"
+                                           autofocus
+                                           on:click|stopPropagation
+                                           on:keydown={(e) => handleKeyDown(e, comp, 'terml1')}
+                                    />
+                                    <button type="submit" class="text-sm text-green-700">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                        </svg>
+                                    </button>
+                                    <button type="button" on:click={cancelEditCompField} class="text-sm text-red-600">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </form>
+                        {:else}
+                            <span class="inline-block w-full min-h-[1.2rem]">{comp.terml1 ?? '\u00A0'}</span>
+                        {/if}
+                    </td>
+                    <td
+                            class="px-2 py-1 clickable-cell"
+                            on:dblclick={() => startEditCompField(comp, 'verteilung')}
+                    >
+                        {#if editingCompField?.id === comp.id && editingCompField?.field === 'verteilung'}
+                            <form on:submit|preventDefault={(e) => saveCompField(e, comp.id)} class="flex items-center gap-1">
+                                <div class="flex justify-end gap-2 mt-1">
+                                    <input type="hidden" name="compId" value={comp.id} />
+                                    <select id="verteilung"
+                                            name="verteilung"
+                                            bind:this={editInput}
+                                            bind:value={compFieldValue}
+                                            class="w-full text-sm py-[2px] leading-5 bg-transparent border-0 border-b border-gray-400 focus:outline-none focus:border-black focus:ring-0"
+                                            autofocus
+                                            on:click|stopPropagation
+                                            on:keydown={(e) => handleKeyDown(e, comp, 'verteilung')}
+                                    >
+                                        <option value="" disabled>Bitte wählen</option>
+                                        <option value={1}>Rechteckverteilung</option>
+                                        <option value={2}>Normalverteilung</option>
+                                        <option value={3}>Dreieckverteilung</option>
+                                    </select>
+                                    <button type="submit" class="text-sm text-green-700">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                        </svg>
+                                    </button>
+                                    <button type="button" on:click={cancelEditCompField} class="text-sm text-red-600">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </form>
+                        {:else}
+                            <span class="inline-block w-full min-h-[1.2rem]">{getVerteilungText(comp.verteilung) || '\u00A0'}</span>
+                        {/if}
+                    </td>
+
+                    <td
+                            class="px-2 py-1 clickable-cell"
+                            on:dblclick={() => startEditCompField(comp, 'wertart')}
+                    >
+                        {#if editingCompField?.id === comp.id && editingCompField?.field === 'wertart'}
+                            <form on:submit|preventDefault={(e) => saveCompField(e, comp.id)} class="flex items-center gap-1">
+                                <div class="flex justify-end gap-2 mt-1">
+                                    <input type="hidden" name="compId" value={comp.id} />
+                                    <select id="wertart"
+                                            name="wertart"
+                                            bind:this={editInput}
+                                            bind:value={compFieldValue}
+                                            class="w-full text-sm py-[2px] leading-5 bg-transparent border-0 border-b border-gray-400 focus:outline-none focus:border-black focus:ring-0"
+                                            autofocus
+                                            on:click|stopPropagation
+                                            on:keydown={(e) => handleKeyDown(e, comp, 'wertart')}
+                                    >
+                                        <option value="" disabled>Bitte wählen</option>
+                                        <option value={1}>Halbweite</option>
+                                        <option value={2}>Spannweite</option>
+                                        <option value={3}>Standardabweichung</option>
+                                    </select>
+                                    <button type="submit" class="text-sm text-green-700">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                        </svg>
+                                    </button>
+                                    <button type="button" on:click={cancelEditCompField} class="text-sm text-red-600">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </form>
+                        {:else}
+                            <span class="inline-block w-full min-h-[1.2rem]">{getWertartText(comp.wertart) || '\u00A0'}</span>
+                        {/if}
+                    </td>
+                    <td
+                            class="px-2 py-1 clickable-cell"
+                            on:dblclick={() => startEditCompField(comp, 'freigrad')}
+                    >
+                        {#if editingCompField?.id === comp.id && editingCompField?.field === 'freigrad'}
+                            <form on:submit|preventDefault={(e) => saveCompField(e, comp.id)} class="flex items-center gap-1">
+                                <div class="flex justify-end gap-2 mt-1">
+                                    <input type="hidden" name="compId" value={comp.id} />
+
+                                    <input id="freigrad"
+                                           name="freigrad"
+                                           type="number"
+                                           step="any"
+                                           bind:this={editInput}
+                                           bind:value={compFieldValue}
+                                           class="w-full text-sm py-[2px] leading-5 bg-transparent border-0 border-b border-gray-400 focus:outline-none focus:border-black focus:ring-0"
+                                           autofocus
+                                           on:click|stopPropagation
+                                           on:keydown={(e) => handleKeyDown(e, comp, 'freigrad')}
+                                    />
+                                    <button type="submit" class="text-sm text-green-700">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                        </svg>
+                                    </button>
+                                    <button type="button" on:click={cancelEditCompField} class="text-sm text-red-600">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </form>
+                        {:else}
+                            <span class="inline-block w-full min-h-[1.2rem]">{comp.freigrad ?? '\u00A0'}</span>
+                        {/if}
+                    </td>
                 </tr>
             {/each}
             </tbody>
         </table>
     </div>
-
     {#if analyseprojekt.anakonst?.length > 0}
         <h2 class="text-base font-semibold">Konstanten</h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 lg:grid-cols-4 lg:grid-cols-5 gap-3">
-            {#each analyseprojekt.anakonst as konst}
-                <div
-                        class="bg-white border border-gray-300 rounded px-3 py-1 cursor-pointer hover:shadow"
-                        on:dblclick={() => onConstClick(konst.id)}>
-                    <p><strong>{tcMapping[konst.constnum]}</strong></p>
-                    <p>Wert: {konst.constval}</p>
+            {#each analyseprojekt.anakonst as konst, index}
+                <div class="bg-white border border-gray-300 rounded px-3 py-1 hover:shadow
+      {isKMG(konst.constnum) ? 'opacity-70 cursor-not-allowed' : 'cursor-text'}"
+                     on:dblclick={() => !isKMG(konst.constnum) && startEditConst(konst)}
+                >
+                    {#if editingConstId === konst.id}
+                        <form
+                                on:submit|preventDefault={(e) => saveConstVal(e, konst.id)}
+                                class="space-y-1"
+                        >
+                            <div class="text-sm font-bold">{tcMapping[konst.constnum].übersetzung || tcMapping[konst.constnum].key}</div>
+                            <div class="flex justify-end gap-2 mt-1">
+
+                                <input
+                                        type="number"
+                                        step="any"
+                                        bind:this={editInput}
+                                        bind:value={constvalEdit}
+                                        class="w-full text-sm py-[2px] leading-5 bg-transparent border-0 border-b border-gray-400 focus:outline-none focus:border-black focus:ring-0"
+                                        autofocus
+                                        on:keydown={(e) => handleKeyDownConst(e, konst, index)}
+                                />
+                                {tcMapping[konst.constnum].einheit}
+
+                                <button type="submit" class="text-sm text-green-700">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                    </svg>
+                                </button>
+                                <button type="button" on:click={cancelEdit} class="text-sm text-red-600">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </form>
+                    {:else}
+                        <div class="text-sm font-bold">{tcMapping[konst.constnum].übersetzung || tcMapping[konst.constnum].key}</div>
+                        <div class="flex">
+                            <input
+                                    type="text"
+                                    readonly
+                                    value={`${konst.constval} ${tcMapping[konst.constnum].einheit}`}
+                                    class="w-min text-sm py-[2px] leading-5 bg-transparent border-0 border-b border-transparent text-gray-700 focus:outline-none focus:ring-0"
+                                    style="caret-color: transparent; /* verhindert blinkenden Cursor */"
+                                    tabindex="-1"
+                            /></div>
+                    {/if}
                 </div>
             {/each}
+
         </div>
     {/if}
 
-
 </section>
 
-<Modal open={modellDialogOpen} on:close={closeModal}>
-    <NewModelPage data={$page.state.updateComp} />
-</Modal>
-
-<Modal open={showConstModal} on:close={closeModal}>
-    <NewConstPage data={$page.state.selectedConstant} />
-</Modal>
 
 <Modal open={showKmg} on:close={closeModal}>
     <KmgInfoPage data={$page.state.kmgInfo} />
