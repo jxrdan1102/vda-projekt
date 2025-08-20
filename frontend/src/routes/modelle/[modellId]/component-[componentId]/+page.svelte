@@ -30,18 +30,18 @@
         </label>
 
         <label class="flex flex-col">
-            <span class="text-gray-600">Wertart</span>
+            <span class="text-gray-600">Verteilung</span>
             <select
-                    id="wertart"
-                    name="wertart"
-                    bind:value={wertart}
+                    id="verteilung"
+                    name="verteilung"
+                    bind:value={verteilung}
                     required
                     class="border px-2 py-1 text-sm"
             >
                 <option value="" disabled selected>Bitte wählen</option>
-                <option value="1">Halbweite</option>
-                <option value="2">Spannweite</option>
-                <option value="3">Standardabweichung</option>
+                <option value="1">Rechteckverteilung</option>
+                <option value="2">Normalverteilung</option>
+                <option value="3">Dreieckverteilung</option>
             </select>
         </label>
 
@@ -66,19 +66,20 @@
                    class="border px-2 py-1 text-sm" />
         </label>
 
+
         <label class="flex flex-col">
-            <span class="text-gray-600">Verteilung</span>
+            <span class="text-gray-600">Wertart</span>
             <select
-                    id="verteilung"
-                    name="verteilung"
-                    bind:value={verteilung}
+                    id="wertart"
+                    name="wertart"
+                    bind:value={wertart}
                     required
                     class="border px-2 py-1 text-sm"
             >
                 <option value="" disabled selected>Bitte wählen</option>
-                <option value="1">Rechteckverteilung</option>
-                <option value="2">Normalverteilung</option>
-                <option value="3">Dreieckverteilung</option>
+                <option value="1">Halbweite</option>
+                <option value="2">Spannweite</option>
+                <option value="3">Standardabweichung</option>
             </select>
         </label>
         <label class="flex flex-col">

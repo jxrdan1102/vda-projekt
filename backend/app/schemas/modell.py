@@ -43,6 +43,7 @@ class ModellCreateR(BaseModel):
         from_attributes = True
 
 class ModellForAnamuR(BaseModel):
+    id: int
     name: str
     aufgabe: int | None = None
     methode: int | None = None

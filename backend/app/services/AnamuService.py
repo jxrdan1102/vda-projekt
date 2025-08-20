@@ -1,5 +1,5 @@
 from fastapi import HTTPException
-from sqlalchemy import select, delete
+from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -94,8 +94,20 @@ async def add_anakomps(db: AsyncSession, fk_anamu: int, fk_modell: int , user_id
     await db.commit()
     return anakomps
 
+from sqlalchemy import select
+
+
 async def update_anamu(db: AsyncSession, id: int, data: dict, user_id: int):
+    if data.get('tolfaktor') == 1:
+        for constnum in [2, 3, 4]:
+            stmt = select(ANAKONST).where(ANAKONST.fk_anamu == id,ANAKONST.constnum == constnum)
+            result = await db.execute(stmt)
+            existing = result.scalar_one_or_none()
+            if existing is None:
+                db.add(ANAKONST(fk_anamu = id,constnum = constnum,constval = None,remark= '',fk_user_id = user_id))
+        await db.commit()
     return await AnamuCRUD.update(db, id, data, user_id)
+
 
 async def get_anakomp(db: AsyncSession, id: int, user_id: int):
     stmt = (
@@ -126,7 +138,7 @@ async def add_anakonsts(db: AsyncSession, fk_anamu: int, fk_modell: int, user_id
     if not components:
         return []
 
-    schema = TMU_ModellSchema(id=modell.id, aufgabe=modell.aufgabe, AufgabeModell=modell.aufgabe_modell, Element1=modell.Element1, Element2=modell.Element2 )
+    schema = TMU_ModellSchema(id=modell.id, aufgabe=modell.aufgabe, AufgabeModell=modell.aufgabe_modell, Element1=modell.Element1, Element2=modell.Element2, i_geometrie_me=modell.geo_me, i_geometrie_mo= modell.geo_mo, i_geometrie_en= modell.geo_bn)
     tmodell = TMU_Modell(schema)
 
     for komp in components:
@@ -200,6 +212,8 @@ async def calc_uncertainty(db: AsyncSession, id: int, user_id: int):
     if modell.aufgabe_modell == 3:
         print("KMG Konstanten")
         await tmodell.setKMGConstValue(anamu.fk_kmg, db)
+    if anamu.tolfaktor == 1:
+        tmodell.mit_berechnung_toleranzfaktor = True
 
     print ("hier",tmodell.const_list)
     return tmodell.MUPruefverfahren_U()

@@ -30,6 +30,7 @@ class AnamuBase(BaseModel):
 
 class AnamuGetR(AnamuBase):
     modell: ModellForAnamuR
+
     pass
 
 
@@ -46,7 +47,7 @@ class AnamuGetIdR(BaseModel):
     anakomp: list[AnakompForAnamuR] | None = None
     anakonst: list[AnakonstForAnamuR] | None = None
     fk_kmg: int | None = None
-
+    tolfaktor: int | None = None
     class Config:
         from_attributes = True
 
@@ -56,6 +57,7 @@ class AnamuIdGet(BaseModel):
     identnr: int
     modell: ModellIDResponse
     fk_kmg: int | None = None
+    tolfaktor:int | None = None
     class Config:
         from_attributes = True
 
@@ -65,7 +67,8 @@ class AnamuUpdate(BaseModel):
     identnr: int | None = None
     remark: str | None = None
     fk_kmg: int | None = None
-
+    tolfaktor: int | None = None
+    fk_modell: int 
     class Config:
         from_attributes = True
 
@@ -78,6 +81,7 @@ class AnamuOut(BaseModel):
     fk_modell: int
     aenderungszustand: str
     identnr: Optional[int] = None
+    tolfaktor: int | None = None
     remark: Optional[str] = None
     creation: Optional[datetime] = None
     modell: ModellForAnamuR

@@ -69,7 +69,7 @@ class TMU_ModellSchema(BaseModel):
     AufgabeModell: TMU_AufgabeModell | None = None  # Kannst du nach Bedarf definieren
     i_aufgabe: int = 0
     i_geometrie_me: int = 0
-    iGeometrie_EN: int | None = None
+    i_geometrie_en: int | None = None
     i_geometrie_mo: int = 0
     read_only: bool = False
     modell_desc: str = ""
@@ -108,11 +108,15 @@ class TMU_ModellSchema(BaseModel):
     @classmethod
     def assign_geo_bn_to_igeometrie_en(cls, data):
         if hasattr(data, "geo_bn"):
-            data.iGeometrie_EN = data.geo_bn
+            data.i_geometrie_en = data.geo_bn
         if hasattr(data, "tsk_ausenmessung"):
             data.winkelE1 = data.tsk_ausenmessung
         if hasattr(data, "aufgabe_modell"):
             data.AufgabeModell = data.aufgabe_modell
+        if hasattr(data, "geo_me"):
+            data.i_geometrie_me = data.geo_me
+        if hasattr(data, "geo_mo"):
+            data.i_geometrie_mo = data.geo_mo
         return data
 
     @field_validator("AufgabeModell", mode="before")
@@ -129,7 +133,7 @@ class TMU_ModellSchema(BaseModel):
             try:
                 return mapping[value]
             except KeyError:
-                raise ValueError(f"Invalid integer value for iGeometrie_EN: {value}")
+                raise ValueError(f"Invalid integer value for i_geometrie_en: {value}")
         elif isinstance(value, str):
             return TMU_3DElement(value)
         return value
@@ -143,7 +147,7 @@ class TMU_ModellSchema(BaseModel):
 class TMU_Modell(list[TMU_Komponente]):
     def __init__(self, schema: TMU_ModellSchema):
         super().__init__()
-        self.iGeometrie_EN = schema.iGeometrie_EN
+        self.i_geometrie_en = schema.i_geometrie_en
         self.Winkel = TMU_Winkel(Winkel_Bezug1=1,Winkel_Bezug2=1,Winkel_Element1=1,Winkel_Element2=1)
         self.Winkel.Winkel_Element1 = schema.winkelE1
         self.mit_berechnung_toleranzfaktor = schema.mit_berechnung_toleranzfaktor
@@ -213,7 +217,7 @@ class TMU_Modell(list[TMU_Komponente]):
         self.Constlist.clear()
         self.iGeometrie_ME = 0  # Corresponds to ord(Flaeche)
         self.iGeometrie_MO = 0
-        self.iGeometrie_EN = 0  # Corresponds to ord(Geometrie_undefiniert)
+        self.i_geometrie_en = 0  # Corresponds to ord(Geometrie_undefiniert)
         self.Winkel["l"] = 0
         self.iBezug1 = 0
         self.iBezug2 = 0
@@ -419,12 +423,14 @@ class TMU_Modell(list[TMU_Komponente]):
         return result
 
     def MUPruefverfahren_U(self):
-        for c in self:
-            print("Ausgabe1: ", c.id, " ",c.messpunkt_anzahl)
         k = self.Erweiterungsfaktor_k()
+        ubs:list = []
+        for c in self:
+            comps = c.unsicherheitsbeitrag
+            ubs.append([c.__class__.__name__,comps])
         uy = self.StandardUnsicherheit_Uy()
         if k != MU_NAN and uy != MU_NAN:
-            return k * uy
+            return {"Unsicherheit" :k * uy, "Erweiterungsfaktor": k, "Komponenten": ubs}
         return MU_NAN
 
     def BerechnungToleranzfaktor(self):

@@ -7,6 +7,7 @@
     import {tcMapping} from "C:\\Users\\Jason\\vda-projekt\\backend\\tcParameterMapping";
     import {tick} from 'svelte';
 
+
     let editingCompField: { id: number; field: string } | null = null;
     let compFieldValue: any = "";
     async function saveBerechnen(id: number, newValue: boolean) {
@@ -200,6 +201,7 @@
     let aenderungszustand = analyseprojekt.aenderungszustand ?? "";
     let identnr = analyseprojekt.identnr ?? null;
     let remark = analyseprojekt.remark ?? "";
+    let tolfaktor = analyseprojekt.tolfaktor === 1 || analyseprojekt.tolfaktor === true;
 
     $: showKmg = !!$page.state?.kmgInfo;
 
@@ -309,6 +311,8 @@
         }
         return "Unbekannt";
     }
+
+    let fk_modell = 0;
 </script>
 
 <section class="space-y-4 text-sm font-sans text-gray-800 m-auto pt-5">
@@ -348,9 +352,10 @@
                 <input type="text" name="remark" bind:value={remark} class="w-full h-6 border border-gray-400 px-2 text-sm py-2 bg-white" />
             </div>
             <div class="flex ml-6 items-center space-x-2 mb-1">
-                <label for="eignungswert" class="text-gray-700 text-xs object-bottom">Eignungskennwert</label>
-                <input type="checkbox" name="eignungswert" id="eignungswert" class="h-4 w-4 text-gray-600 border-gray-400 rounded" />
+                <label for="tolfaktor" class="text-gray-700 text-xs object-bottom">Eignungskennwert</label>
+                <input type="checkbox" name="tolfaktor" id="tolfaktor" bind:checked={tolfaktor} class="h-4 w-4 text-gray-600 border-gray-400 rounded" />
             </div>
+            <input hidden type="number" name="fk_modell" id="fk_modell" bind:value={data.analyseprojekt.modell.id} class="h-4 w-4 text-gray-600 border-gray-400 rounded" />
 
 
         </div>
@@ -548,17 +553,19 @@
                                 <div class="flex justify-end gap-2 mt-1">
                                     <input type="hidden" name="compId" value={comp.id} />
 
-                                    <input id="freigrad"
+                                    <select id="freigrad"
                                            name="freigrad"
-                                           type="number"
-                                           step="any"
                                            bind:this={editInput}
                                            bind:value={compFieldValue}
                                            class="w-full text-sm py-[2px] leading-5 bg-transparent border-0 border-b border-gray-400 focus:outline-none focus:border-black focus:ring-0"
                                            autofocus
                                            on:click|stopPropagation
-                                           on:keydown={(e) => handleKeyDown(e, comp, 'freigrad')}
-                                    />
+                                           on:keydown={(e) => handleKeyDown(e, comp, 'freigrad')}>
+                                        <option value="" disabled>Bitte wählen</option>
+                                        <option value={1}>Unbegrenzt</option>
+                                        <option value={2}>N-1</option>
+                                    </select>
+
                                     <button type="submit" class="text-sm text-green-700">
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
@@ -572,7 +579,7 @@
                                 </div>
                             </form>
                         {:else}
-                            <span class="inline-block w-full min-h-[1.2rem]">{comp.freigrad ?? '\u00A0'}</span>
+                            <span class="inline-block w-full min-h-[1.2rem]">{getFreigradText(comp.freigrad) || '\u00A0'}</span>
                         {/if}
                     </td>
                 </tr>
@@ -584,6 +591,7 @@
         <h2 class="text-base font-semibold">Konstanten</h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 lg:grid-cols-4 lg:grid-cols-5 gap-3">
             {#each analyseprojekt.anakonst as konst, index}
+                {#if (konst.constnum != 2 && konst.constnum != 3 && konst.constnum != 4) || tolfaktor == true }
                 <div class="bg-white border border-gray-300 rounded px-3 py-1 hover:shadow
       {isKMG(konst.constnum) ? 'opacity-70 cursor-not-allowed' : 'cursor-text'}"
                      on:dblclick={() => !isKMG(konst.constnum) && startEditConst(konst)}
@@ -632,6 +640,7 @@
                             /></div>
                     {/if}
                 </div>
+                {/if }
             {/each}
 
         </div>

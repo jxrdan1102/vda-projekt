@@ -1,4 +1,7 @@
+import csv
+
 from fastapi import FastAPI
+from pypxlib import Table
 from starlette.middleware.cors import CORSMiddleware
 
 from app.database.database import create_tables, ping_connection
@@ -12,7 +15,7 @@ app.include_router(modells.router)
 app.include_router(ana_mu.router)
 app.include_router(auth.router)
 app.include_router(KMG.router)
-"""
+
 table = Table(
     "C:\\Program Files (x86)\\Kistner Messtechnik\\QUEEN VDA5 GUM\\MUDB\\ANAMU.DB"
 )
@@ -29,7 +32,7 @@ with open(csv_file, mode="w+", newline="", encoding="utf-8") as f:
         writer.writerow(
             [getattr(row, field) for field in fieldnames]
         )  # Werte als Liste speichern
-
+"""
 """
 origins = [
     "http://localhost:5173",  # Hier den richtigen Frontend-Link angeben

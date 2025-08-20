@@ -1,20 +1,5 @@
-import type {Actions, PageServerLoad} from './$types';
+import type {Actions} from './$types';
 import {fail} from "@sveltejs/kit";
-
-export const load: PageServerLoad = async ({ params, fetch }) => {
-    const { analyseprojektId } = params;
-
-    const response = await fetch(`http://localhost:9999/anamu/${analyseprojektId}/r`, {
-        method: 'GET',
-        credentials: 'include'  // ← WICHTIG
-    });
-    const responseBody = await response.json();
-    console.log(responseBody);
-    return {
-        title: 'Analyseprojekt:',
-        analyseprojekt: responseBody
-    }
-}
 
 
 export const actions: Actions = {
@@ -49,6 +34,16 @@ export const actions: Actions = {
 
         const remark = parseOptionalString('remark');
         if (remark !== undefined) payload.remark = remark;
+
+        function parseCheckbox(formData: FormData, field: string): number {
+            const val = formData.get(field);
+            return val ? 1 : 0;
+        }
+        const tolfaktor = parseCheckbox(formData, 'tolfaktor');
+        if (tolfaktor !== undefined) payload.tolfaktor = tolfaktor;
+
+        payload.fk_modell = parseOptionalInt('fk_modell');
+
         console.log(payload);
         // Update an Backend senden
         const res = await fetch(`http://localhost:9999/anamu/${analyseprojektId}/r`, {

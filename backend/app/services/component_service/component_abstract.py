@@ -88,8 +88,8 @@ class TMU_Komponente(TMU_Atom):
         if not is_valid_number(l):
             return MU_NAN
 
-        verteilung = getattr(self.data.Verteilung, "name", "")
-        kennwert = getattr(self.data.KennwertArt, "name", "")
+        verteilung = self.data.Verteilung.name
+        kennwert = self.data.KennwertArt.name
 
         try:
             if verteilung == "V_Rechteck":
@@ -161,7 +161,7 @@ class TMU_Komponente(TMU_Atom):
     def unsicherheitsbeitrag_l1(self) -> float:
         su = self.std_unsicherheit(self.b_val())
         c2 = self.sensititivty_c2()
-        l = 25 * 1000  # mm → µm
+        l = self.modell.const_list.const_map[TKompConstants.TC_Messwert] * 1000  # mm → µm
         if is_valid_number(su) and is_valid_number(c2) and is_valid_number(l):
             return su * c2 * l
         return MU_NAN

@@ -13,6 +13,7 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
     }
 
     const responseBody = await response.json();
+    console.log(responseBody);
     return {
         title: 'Messunsicherheit:',
         messunsicherheit: responseBody
