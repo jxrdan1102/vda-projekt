@@ -77,7 +77,7 @@ class TK_StreuungMesskraft(TMU_Komponente):
         except Exception as e:
             print(f"[Fehler in KomponenteA.clear] {e}")
 
-    def sensitivity_c1(self):
+    def sensititivty_c1(self):
         try:
             dk = self.modell.const_list.const_map[TKompConstants.TC_DurchmesserMesseinsatzME] / 1000
             En = self.modell.const_list.const_map[TKompConstants.TC_Elast_Modul_Normal]
@@ -98,7 +98,7 @@ class TK_StreuungMesskraft(TMU_Komponente):
                     * math.pow(F, -1 / 3)
             )
         except Exception as e:
-            print(f"[Fehler in KomponenteA.sensitivity_c1] {e}")
+            print(f"[Fehler in KomponenteA.sensititivty_c1] {e}")
             return MU_NAN
 
     def unsicherheitsbeitrag_l0(self):
@@ -106,7 +106,7 @@ class TK_StreuungMesskraft(TMU_Komponente):
             if self.archiv:
                 return self.arch_data.UNSBL0
             su = self.std_unsicherheit(self.a_val())
-            c1 = self.sensitivity_c1()
+            c1 = self.sensititivty_c1()
             r = self.modell.const_list.const_map[TKompConstants.TC_Korrelationskoeffizient]
             if all(x != MU_NAN for x in [su, c1, r]) and r <= 1:
                 return 2 * su * c1 * math.sqrt(1 - r)
@@ -353,7 +353,7 @@ class TK_AbweichungPoissonKoeffizientMO_EN(TMU_Komponente):
     def b_val(self):
         return 0
 
-    def sensitivity_c1(self):
+    def sensititivty_c1(self):
         try:
             dk = self.modell.const_list.const_map[TKompConstants.TC_DurchmesserMesseinsatzME] / 1000  # Eingabe in mm, Berechnung in m
             En = self.modell.const_list.const_map[TKompConstants.TC_Elast_Modul_Normal]
@@ -378,13 +378,13 @@ class TK_AbweichungPoissonKoeffizientMO_EN(TMU_Komponente):
                     * math.pow(1 - math.pow(v, 2), -1 / 3)
                 )
         except Exception as e:
-            print(f"[Fehler in TK_AbweichungPoissonKoeffizientMO_EN.sensitivity_c1] {e}")
+            print(f"[Fehler in TK_AbweichungPoissonKoeffizientMO_EN.sensititivty_c1] {e}")
             return MU_NAN
 
     def unsicherheitsbeitrag_l0(self):
         try:
             su = self.StdUnsicherheit(self.a_Val())
-            c1 = self.sensitivity_c1()
+            c1 = self.sensititivty_c1()
             if su != MU_NAN and c1 != MU_NAN:
                 return 2 * su * c1
             else:
@@ -1090,7 +1090,7 @@ class TK_VerformungMO(TMU_Komponente):
         except Exception as e:
             print(f"[Fehler in TK_VerformungMO.clear] {e}")
 
-    def sensitivity_c1(self):
+    def sensititivty_c1(self):
         try:
             if self.archiv:
                 return self.arch_data.SensC1
@@ -1106,7 +1106,7 @@ class TK_VerformungMO(TMU_Komponente):
             else:
                 return MU_NAN
         except Exception as e:
-            print(f"[Fehler in TK_VerformungMO.sensitivity_c1] {e}")
+            print(f"[Fehler in TK_VerformungMO.sensititivty_c1] {e}")
             return MU_NAN
 
     def b_val(self):
@@ -1394,7 +1394,7 @@ class TK_Verformung_MOsph_MEplan(TMU_Komponente):
         except Exception as e:
             print(f"[Fehler in TK_Verformung_MOsph_MEplan.clear] {e}")
 
-    def sensitivity_c1(self):
+    def sensititivty_c1(self):
         try:
             if self.archiv:
                 return self.arch_data.SensC1
@@ -1404,7 +1404,7 @@ class TK_Verformung_MOsph_MEplan(TMU_Komponente):
                 return MU_NAN
             return 0.543 * math.pow(lx * F, -1 / 3)
         except Exception as e:
-            print(f"[Fehler in TK_Verformung_MOsph_MEplan.sensitivity_c1] {e}")
+            print(f"[Fehler in TK_Verformung_MOsph_MEplan.sensititivty_c1] {e}")
             return MU_NAN
 
     def a_val(self):
@@ -1457,7 +1457,7 @@ class TK_Verformung_MOsph_MEsph(TMU_Komponente):
         except Exception as e:
             print(f"[Fehler in TK_Verformung_MOsph_MEsph.clear] {e}")
 
-    def sensitivity_c1(self):
+    def sensititivty_c1(self):
         try:
             if self.archiv:
                 return self.arch_data.SensC1
@@ -1468,7 +1468,7 @@ class TK_Verformung_MOsph_MEsph(TMU_Komponente):
                 return MU_NAN
             return 0.277 * math.pow(F, 1 / 3) * math.pow((1 / lx) + (1 / d), 1 / 3)
         except Exception as e:
-            print(f"[Fehler in TK_Verformung_MOsph_MEsph.sensitivity_c1] {e}")
+            print(f"[Fehler in TK_Verformung_MOsph_MEsph.sensititivty_c1] {e}")
             return MU_NAN
 
     def a_val(self):
@@ -1520,7 +1520,7 @@ class TK_Verformung_MOzyl_MEsph(TMU_Komponente):
         except Exception as e:
             print(f"[Fehler in TK_Verformung_MOzyl_MEsph.clear] {e}")
 
-    def sensitivity_c1(self):
+    def sensititivty_c1(self):
         try:
             if self.archiv:
                 return self.arch_data.SensC1
@@ -1538,7 +1538,7 @@ class TK_Verformung_MOzyl_MEsph(TMU_Komponente):
 
             return 0.32 * (divident / divisor)
         except Exception as e:
-            print(f"[Fehler in TK_Verformung_MOzyl_MEsph.sensitivity_c1] {e}")
+            print(f"[Fehler in TK_Verformung_MOzyl_MEsph.sensititivty_c1] {e}")
             return MU_NAN
 
     def a_val(self):
@@ -1641,7 +1641,7 @@ class TK_Korr_TempDifferenz_EN_ME(TMU_Komponente):
                 return MU_NAN
             return (alphaEN + alphaN) / 2
         except Exception as e:
-            print(f"[Fehler in KorrTempDifferenzENME.sensitivity_c2] {e}")
+            print(f"[Fehler in KorrTempDifferenzENME.sensititivty_c2] {e}")
             return MU_NAN
 
     def b_val(self):
@@ -1724,7 +1724,7 @@ class TK_Korr_TempDifferenz_EN_ME_20(TMU_Komponente):
                 return MU_NAN
             return abs(alpha_en - alpha_n) / (2 * math.sqrt(3))
         except Exception as e:
-            print(f"[Fehler in KorrTempDifferenzENME20.sensitivity_c2] {e}")
+            print(f"[Fehler in KorrTempDifferenzENME20.sensititivty_c2] {e}")
             return MU_NAN
 
 
@@ -1909,7 +1909,7 @@ class TK_Korr_Abplattung_Messkraft_ME_MO(TK_Korr_Abplattung_Messkraft):
 
             return c1
         except Exception as e:
-            print(f"[Fehler in TK_Korr_Abplattung_Messkraft_ME_MO.sensitivity_c1] {e}")
+            print(f"[Fehler in TK_Korr_Abplattung_Messkraft_ME_MO.sensititivty_c1] {e}")
             return MU_NAN
 
 
@@ -2041,7 +2041,7 @@ class TK_Korr_Abplattung_Messkraft_ME_GN(TK_Korr_Abplattung_Messkraft):
 
             return c1
         except Exception as e:
-            print(f"[Fehler in TK_Korr_Abplattung_Messkraft_ME_GN.sensitivity_c1] {e}")
+            print(f"[Fehler in TK_Korr_Abplattung_Messkraft_ME_GN.sensititivty_c1] {e}")
             return MU_NAN
 
 class TK_Kalibrierung_Faktor_Kennlinie_ME(TMU_Komponente):
@@ -2051,6 +2051,7 @@ class TK_Kalibrierung_Faktor_Kennlinie_ME(TMU_Komponente):
             self.const_list = const_list
             self.archiv = False
             self.lfdnr = lfdnr
+            self.c1_val = 0
             self.data = TMuKompRec(
                 TermL0=0,
                 TermL1=0,
@@ -2077,7 +2078,7 @@ class TK_Kalibrierung_Faktor_Kennlinie_ME(TMU_Komponente):
         except Exception as e:
             print(f"[Fehler in TK_Kalibrierung_Faktor_Kennlinie_ME.clear] {e}")
 
-    def sensitivity_c2(self):
+    def sensititivty_c2(self):
         try:
             if self.archiv:
                 return self.arch_data.SensC2
@@ -2087,7 +2088,7 @@ class TK_Kalibrierung_Faktor_Kennlinie_ME(TMU_Komponente):
             else:
                 return MU_NAN
         except Exception as e:
-            print(f"[Fehler in TK_Kalibrierung_Faktor_Kennlinie_ME.sensitivity_c2] {e}")
+            print(f"[Fehler in TK_Kalibrierung_Faktor_Kennlinie_ME.sensititivty_c2] {e}")
             return MU_NAN
 
 class TK_Kalibrierung_Parm_Kennlinie_ME(TMU_Komponente):
@@ -2130,7 +2131,7 @@ class TK_Kalibrierung_Parm_Kennlinie_ME(TMU_Komponente):
         except Exception as e:
             print(f"[Fehler in TK_Kalibrierung_Parm_Kennlinie_ME.clear] {e}")
 
-    def sensitivity_c1(self):
+    def sensititivty_c1(self):
         try:
             if self.archiv:
                 return self.arch_data.SensC1
@@ -2140,7 +2141,7 @@ class TK_Kalibrierung_Parm_Kennlinie_ME(TMU_Komponente):
             else:
                 return MU_NAN
         except Exception as e:
-            print(f"[Fehler in TK_Kalibrierung_Parm_Kennlinie_ME.sensitivity_c1] {e}")
+            print(f"[Fehler in TK_Kalibrierung_Parm_Kennlinie_ME.sensititivty_c1] {e}")
             return MU_NAN
 
     def b_val(self):
@@ -2180,7 +2181,7 @@ class TK_Nichtlinearitaet_Kennlinie_ME(TMU_Komponente):
         except Exception as e:
             print(f"[Fehler in TK_Nichtlinearitaet_Kennlinie_ME.clear] {e}")
 
-    def sensitivity_c1(self):
+    def sensititivty_c1(self):
         try:
             if self.archiv:
                 return self.arch_data.SensC1
@@ -2190,7 +2191,7 @@ class TK_Nichtlinearitaet_Kennlinie_ME(TMU_Komponente):
             else:
                 return MU_NAN
         except Exception as e:
-            print(f"[Fehler in TK_Nichtlinearitaet_Kennlinie_ME.sensitivity_c1] {e}")
+            print(f"[Fehler in TK_Nichtlinearitaet_Kennlinie_ME.sensititivty_c1] {e}")
             return MU_NAN
 
     def b_val(self):
@@ -2234,7 +2235,7 @@ class TK_Zeitdrift_ME(TMU_Komponente):
         except Exception as e:
             print(f"[Fehler in TK_Zeitdrift_ME.clear] {e}")
 
-    def sensitivity_c1(self):
+    def sensititivty_c1(self):
         try:
             if self.archiv:
                 return self.arch_data.SensC1
@@ -2244,7 +2245,7 @@ class TK_Zeitdrift_ME(TMU_Komponente):
             else:
                 return MU_NAN
         except Exception as e:
-            print(f"[Fehler in TK_Zeitdrift_ME.sensitivity_c1] {e}")
+            print(f"[Fehler in TK_Zeitdrift_ME.sensititivty_c1] {e}")
             return MU_NAN
 
     def a_val(self):
@@ -2275,13 +2276,25 @@ class TMU_Geometrie(Enum):
     Zylinder = auto()
     HohlZylinder = auto()
 
-class TK_Verformung_Differenz_MO_GN:
-    def __init__(self, modell, const_list):
-        self.MyModell = modell
+class TK_Verformung_Differenz_MO_GN(TMU_Komponente):
+    def __init__(self, modell, const_list, lfdnr):
+        super().__init__(modell, 1037, const_list, "")
+        self.modell = modell
+        self.c1_val = 1
+        self.c2_val = 0
+        self.lfdnr = lfdnr
+        self.data = TMuKompRec(
+            TermL0=0,
+            TermL1=0,
+            Verteilung="V_Normal",
+            KennwertArt="K_HalbWeite",
+            Freiheitsgrad="FG_unbegrenzt",
+            FreiN_minus_1=0,
+            Flags=1,
+        )
         self.ConstList = const_list
         self.archiv = False
         self.ArchData = type('ArchDataType', (object,), {"Aval": 0.0})()
-        self.data = type('DataType', (object,), {})()
         self.clear()
 
     def clear(self):
@@ -2293,87 +2306,123 @@ class TK_Verformung_Differenz_MO_GN:
         try:
             delta = 0.0
             geo_map = {
-                TMU_Objekt.MessObjekt: self.MyModell.Geometrie_MO,
-                TMU_Objekt.Gebrauchsnormal: self.MyModell.Geometrie_EN,
-                TMU_Objekt.Bezugsnormal: self.MyModell.Geometrie_EN
+                TMU_Objekt.MessObjekt: self.modell.i_geometrie_mo,
+                TMU_Objekt.Gebrauchsnormal: self.modell.i_geometrie_me,
+                TMU_Objekt.Bezugsnormal: self.modell.i_geometrie_en
             }
-            geo = geo_map.get(objekt, self.MyModell.Geometrie_MO)
+            geo = geo_map.get(objekt, self.modell.i_geometrie_mo)
+            if objekt == TMU_Objekt.MessObjekt:
+                geo = self.modell.i_geometrie_mo
+            if objekt == TMU_Objekt.Gebrauchsnormal:
+                geo = self.modell.i_geometrie_en
+            if objekt == TMU_Objekt.Bezugsnormal:
+                geo = self.modell.i_geometrie_bn
+            if objekt not in [TMU_Objekt.MessObjekt,TMU_Objekt.Gebrauchsnormal,TMU_Objekt.Bezugsnormal]:
+                geo = self.modell.i_geometrie_mo
 
-            geo_ME = self.MyModell.Geometrie_ME
+            geo_ME = self.modell.i_geometrie_me
 
             # --- FLÄCHE als ME ---
-            if geo_ME in [TMU_Geometrie.Geometrie_undefiniert, TMU_Geometrie.Flaeche]:
-                if geo == TMU_Geometrie.Flaeche:
+            if geo_ME in [0, 1]:
+                if geo == 1:
                     delta = 0
-                elif geo == TMU_Geometrie.Kugel:
-                    F = self.ConstList.get("TC_MesskraftME")
-                    lx = self.ConstList.get("TC_Messwert")
+                elif geo == 2:
+                    F = self.modell.const_list.const_map[TKompConstants.TC_MesskraftME]
+                    lx = self.modell.const_list.const_map[TKompConstants.TC_Messwert]
                     delta = 0.415 * F**(2/3) * lx**(-1/3)
-                elif geo == TMU_Geometrie.Zylinder:
-                    F = self.ConstList.get("TC_MesskraftME")
-                    lx = self.ConstList.get("TC_Messwert")
-                    D = self.ConstList.get("TC_DurchmesserMessflaeche")
-                    lm = self.ConstList.get({
-                        TMU_Objekt.MessObjekt: "TC_MantellinieMO",
-                        TMU_Objekt.Gebrauchsnormal: "TC_MantellinieEN",
-                        TMU_Objekt.Bezugsnormal: "TC_MantellinieEN"
-                    }.get(objekt, "TC_MantellinieMO"))
+                elif geo == 3:
+                    lm = MU_NAN
+                    F = self.modell.const_list.const_map[TKompConstants.TC_MesskraftME]
+                    lx = self.modell.const_list.const_map[TKompConstants.TC_Messwert]
+                    D = self.modell.const_list.const_map[TKompConstants.TC_DurchmesserMessflaeche]
+                    if objekt == TMU_Objekt.MessObjekt:
+                        lm = self.modell.const_list.const_map[TKompConstants.TC_MantellinieMO]
+                    if objekt == TMU_Objekt.Gebrauchsnormal:
+                        lm = self.modell.const_list.const_map[TKompConstants.TC_MantellinieEN]
+                    if objekt == TMU_Objekt.Bezugsnormal:
+                        lm = self.modell.const_list.const_map[TKompConstants.TC_MantellinieEN]
+                    if objekt not in [TMU_Objekt.MessObjekt,TMU_Objekt.Gebrauchsnormal,TMU_Objekt.Bezugsnormal]:
+                        lm = self.modell.const_list.const_map[TKompConstants.TC_MantellinieMO]
+
+
+
                     lb = min(D, lm)
                     delta = 4.69e-2 * lx**(-1/3) * lb**(-1) * F
-                elif geo == TMU_Geometrie.HohlZylinder:
+                elif geo == 4:
                     delta = 0
 
             # --- KUGEL als ME ---
-            elif geo_ME == TMU_Geometrie.Kugel:
-                F = self.ConstList.get("TC_MesskraftME")
-                dd = self.ConstList.get("TC_DurchmesserMesseinsatzME")
-                if geo in [TMU_Geometrie.Flaeche, TMU_Geometrie.Geometrie_undefiniert]:
+            elif geo_ME == 2:
+                F = self.modell.const_list.const_map[TKompConstants.TC_MesskraftME]
+                dd = self.modell.const_list.const_map[TKompConstants.TC_DurchmesserMesseinsatzME]
+                if geo in [1, 0]:
                     delta = 0.415 * F**(2/3) * dd**(-1/3)
-                elif geo == TMU_Geometrie.Kugel:
-                    lx = self.ConstList.get({
-                        TMU_Objekt.MessObjekt: "TC_Messwert",
-                        TMU_Objekt.Gebrauchsnormal: "TC_NennmassEN",
-                        TMU_Objekt.Bezugsnormal: "TC_NennmassEN"
-                    }.get(objekt, "TC_Messwert"))
+                elif geo == 2:
+                    lx = MU_NAN
+                    if objekt == TMU_Objekt.MessObjekt:
+                        lx = self.modell.const_list.const_map[TKompConstants.TC_Messwert]
+                    if objekt == TMU_Objekt.Gebrauchsnormal:
+                        lx = self.modell.const_list.const_map[TKompConstants.TC_NennmassEN]
+                    if objekt == TMU_Objekt.Bezugsnormal:
+                        lx = self.modell.const_list.const_map[TKompConstants.TC_NennmassEN]
+                    if objekt not in [TMU_Objekt.MessObjekt,TMU_Objekt.Gebrauchsnormal,TMU_Objekt.Bezugsnormal]:
+                        lx = self.modell.const_list.const_map[TKompConstants.TC_Messwert]
+
                     delta = 0.415 * F**(2/3) * ((1/lx)+(1/dd))**(1/3)
-                elif geo in [TMU_Geometrie.Zylinder, TMU_Geometrie.HohlZylinder]:
-                    lx = self.ConstList.get({
-                        TMU_Objekt.MessObjekt: "TC_Messwert",
-                        TMU_Objekt.Gebrauchsnormal: "TC_NennmassEN",
-                        TMU_Objekt.Bezugsnormal: "TC_NennmassEN"
-                    }.get(objekt, "TC_Messwert"))
-                    if geo == TMU_Geometrie.Zylinder:
+                elif geo in [3, 4]:
+                    lx = MU_NAN
+                    if objekt == TMU_Objekt.MessObjekt:
+                        lx = self.modell.const_list.const_map[TKompConstants.TC_Messwert]
+                    if objekt == TMU_Objekt.Gebrauchsnormal:
+                        lx = self.modell.const_list.const_map[TKompConstants.TC_NennmassEN]
+                    if objekt == TMU_Objekt.Bezugsnormal:
+                        lx = self.modell.const_list.const_map[TKompConstants.TC_NennmassEN]
+                    if objekt not in [TMU_Objekt.MessObjekt, TMU_Objekt.Gebrauchsnormal, TMU_Objekt.Bezugsnormal]:
+                        lx = self.modell.const_list.const_map[TKompConstants.TC_Messwert]
+                    if geo == 3:
                         delta = 0.480 * F**(2/3) * ((1/dd)+(1/lx))**(1/4) * ((2/dd)+(1/lx))**(-1/6)
                     else:
                         delta = 0.480 * F**(2/3) * ((1/dd)-(1/lx))**(1/4) * ((2/dd)-(1/lx))**(-1/6)
 
             # --- ZYLINDER als ME ---
-            elif geo_ME == TMU_Geometrie.Zylinder:
-                F = self.ConstList.get("TC_MesskraftME")
-                dd = self.ConstList.get("TC_DurchmesserMesseinsatzME")
-                if geo in [TMU_Geometrie.Flaeche, TMU_Geometrie.Geometrie_undefiniert]:
-                    lm = self.ConstList.get("TC_MantellinieME")
-                    D = self.ConstList.get({
-                        TMU_Objekt.MessObjekt: "TC_BreiteMessflaecheMO",
-                        TMU_Objekt.Gebrauchsnormal: "TC_BreiteMessflaecheEN",
-                        TMU_Objekt.Bezugsnormal: "TC_BreiteMessflaecheEN"
-                    }.get(objekt, "TC_BreiteMessflaecheMO"))
+            elif geo_ME == 3:
+                F = self.modell.const_list.const_map[TKompConstants.TC_MesskraftME]
+                dd = self.modell.const_list.const_map[TKompConstants.TC_DurchmesserMesseinsatzME]
+                if geo in [1, 0]:
+                    lm = self.modell.const_list.const_map[TKompConstants.TC_MantellinieME]
+                    D = MU_NAN
+                    if objekt == TMU_Objekt.MessObjekt:
+                        D = self.modell.const_list.const_map[TKompConstants.TC_BreiteMessflaecheMO]
+                    if objekt == TMU_Objekt.Gebrauchsnormal:
+                        D = self.modell.const_list.const_map[TKompConstants.TC_BreiteMessflaecheEN]
+                    if objekt == TMU_Objekt.Bezugsnormal:
+                        D = self.modell.const_list.const_map[TKompConstants.TC_BreiteMessflaecheEN]
+                    if objekt not in [TMU_Objekt.MessObjekt, TMU_Objekt.Gebrauchsnormal, TMU_Objekt.Bezugsnormal]:
+                        D = self.modell.const_list.const_map[TKompConstants.TC_BreiteMessflaecheMO]
                     lb = min(D, lm)
                     delta = 4.69e-2 * F * dd**(-1/3) * lb**(-1)
-                elif geo == TMU_Geometrie.Kugel:
-                    lx = self.ConstList.get({
-                        TMU_Objekt.MessObjekt: "TC_Messwert",
-                        TMU_Objekt.Gebrauchsnormal: "TC_NennmassEN",
-                        TMU_Objekt.Bezugsnormal: "TC_NennmassEN"
-                    }.get(objekt, "TC_Messwert"))
+                elif geo == 2:
+                    lx = MU_NAN
+                    if objekt == TMU_Objekt.MessObjekt:
+                        lx = self.modell.const_list.const_map[TKompConstants.TC_Messwert]
+                    if objekt == TMU_Objekt.Gebrauchsnormal:
+                        lx = self.modell.const_list.const_map[TKompConstants.TC_NennmassEN]
+                    if objekt == TMU_Objekt.Bezugsnormal:
+                        lx = self.modell.const_list.const_map[TKompConstants.TC_NennmassEN]
+                    if objekt not in [TMU_Objekt.MessObjekt, TMU_Objekt.Gebrauchsnormal, TMU_Objekt.Bezugsnormal]:
+                        lx = self.modell.const_list.const_map[TKompConstants.TC_Messwert]
                     delta = 0.480 * F**(2/3) * ((1/lx)+(1/dd))**(1/4) * ((2/lx)+(1/dd))**(-1/6)
-                elif geo in [TMU_Geometrie.Zylinder, TMU_Geometrie.HohlZylinder]:
-                    lx = self.ConstList.get({
-                        TMU_Objekt.MessObjekt: "TC_Messwert",
-                        TMU_Objekt.Gebrauchsnormal: "TC_NennmassEN",
-                        TMU_Objekt.Bezugsnormal: "TC_NennmassEN"
-                    }.get(objekt, "TC_Messwert"))
-                    if geo == TMU_Geometrie.Zylinder:
+                elif geo in [3, 4]:
+                    lx = MU_NAN
+                    if objekt == TMU_Objekt.MessObjekt:
+                        lx = self.modell.const_list.const_map[TKompConstants.TC_Messwert]
+                    if objekt == TMU_Objekt.Gebrauchsnormal:
+                        lx = self.modell.const_list.const_map[TKompConstants.TC_NennmassEN]
+                    if objekt == TMU_Objekt.Bezugsnormal:
+                        lx = self.modell.const_list.const_map[TKompConstants.TC_NennmassEN]
+                    if objekt not in [TMU_Objekt.MessObjekt, TMU_Objekt.Gebrauchsnormal, TMU_Objekt.Bezugsnormal]:
+                        lx = self.modell.const_list.const_map[TKompConstants.TC_Messwert]
+                    if geo == 3:
                         delta = 0.480 * F**(2/3) * ((1/dd)+(1/lx))**(1/4) * ((2/dd)+(1/lx))**(-1/6)
                     else:
                         delta = 0.480 * F**(2/3) * ((1/dd)-(1/lx))**(1/4) * ((2/dd)-(1/lx))**(-1/6)
@@ -2382,7 +2431,7 @@ class TK_Verformung_Differenz_MO_GN:
         except Exception:
             return MU_NAN
 
-    def a_Val(self) -> float:
+    def a_val(self) -> float:
         if self.archiv:
             return self.ArchData.Aval
         else:
@@ -2533,7 +2582,7 @@ class TK_Messkraft_3Draht_Methode(TMU_Komponente):
             else:
                 return MU_NAN
         except Exception as e:
-            print(f"[Fehler in Messkraft3DrahtMethodeComponent.sensitivity_c1] {e}")
+            print(f"[Fehler in Messkraft3DrahtMethodeComponent.sensititivty_c1] {e}")
             return MU_NAN
 
 class TK_KalibrierungMessdraehte(TMU_Komponente):
@@ -2682,7 +2731,7 @@ class TK_GewindeProfilwinkel(TMU_Komponente):
             else:
                 return MU_NAN
         except Exception as e:
-            print(f"[Fehler in GewindeProfilwinkelComponent.sensitivity_c1] {e}")
+            print(f"[Fehler in GewindeProfilwinkelComponent.sensititivty_c1] {e}")
             return MU_NAN
 
     def a_val(self):
@@ -2748,7 +2797,7 @@ class TK_Messkraft_2Kugel_Methode(TMU_Komponente):
             else:
                 return MU_NAN
         except Exception as e:
-            print(f"[Fehler in KomponenteMesskraft2KugelMethode.sensitivity_c1] {e}")
+            print(f"[Fehler in KomponenteMesskraft2KugelMethode.sensititivty_c1] {e}")
             return MU_NAN
 
     def b_val(self):
@@ -2890,7 +2939,7 @@ class TK_Geradheit_stehender_Schenkel_EN(TMU_Komponente):
                 return dz / deltaz
             return MU_NAN
         except Exception as e:
-            print(f"[Fehler in sensitivity_c1 KomponenteGeradheitStehenderSchenkelEN] {e}")
+            print(f"[Fehler in sensititivty_c1 KomponenteGeradheitStehenderSchenkelEN] {e}")
             return MU_NAN
 
 
@@ -2950,7 +2999,7 @@ class TK_Geradheit_stehender_Schenkel_MO(TMU_Komponente):
                 return dz / deltaz
             return MU_NAN
         except Exception as e:
-            print(f"[Fehler in sensitivity_c1 TK_Geradheit_stehender_Schenkel_MO] {e}")
+            print(f"[Fehler in sensititivty_c1 TK_Geradheit_stehender_Schenkel_MO] {e}")
             return MU_NAN
 
 class TK_Geradheit_liegender_Schenkel_EN(TMU_Komponente):
@@ -3305,7 +3354,7 @@ class TK_Kalibrierung_Geradheit_stehender_Schenkel_EN(TMU_Komponente):
             else:
                 return MU_NAN
         except Exception as e:
-            print(f"[Fehler in sensitivity_c1 TK_Kalibrierung_Geradheit_stehender_Schenkel_EN] {e}")
+            print(f"[Fehler in sensititivty_c1 TK_Kalibrierung_Geradheit_stehender_Schenkel_EN] {e}")
             return MU_NAN
 
 class TK_Kalibrierung_Geradheit_stehender_Schenkel_MO(TMU_Komponente):
@@ -3366,7 +3415,7 @@ class TK_Kalibrierung_Geradheit_stehender_Schenkel_MO(TMU_Komponente):
             else:
                 return MU_NAN
         except Exception as e:
-            print(f"[Fehler in sensitivity_c1 TK_Kalibrierung_Geradheit_stehender_Schenkel_MO] {e}")
+            print(f"[Fehler in sensititivty_c1 TK_Kalibrierung_Geradheit_stehender_Schenkel_MO] {e}")
             return MU_NAN
 
 class TK_Kalibrierung_Geradheit_Hoehenmessgeraets(TMU_Komponente):
