@@ -19,6 +19,7 @@ class TMU_3DKomponente(TMU_Komponente):
             self.copy_source = None
             self.messpunkt_anzahl = None
             self.anzahl_messungen: int | None = None
+            self.id: int
         except Exception as e:
             print(f"[Fehler in TMU_3DKomponente.__init__] {e}")
 
@@ -69,12 +70,12 @@ class TMU_3DKomponente(TMU_Komponente):
     def g_val(self) -> float:
         return 1.0
 
-    def copy_methode(self, komp):
+    def copy_methode(self, komp: str):
         try:
-            self.copy_source = self.mymodell.find_komp(self.ckomponenten[komp])
+            self.copy_source = self.modell.find_komponente_by_classname(self.id)
             if self.copy_source and self.sensititivty_c1() != MU_NAN:
-                self.data.KennwertArt = self.copy_source.data.kennwert_art
-                self.data.TermL1 = self.copy_source.data.term_l1
+                self.data.KennwertArt = self.copy_source.data.KennwertArt
+                self.data.TermL1 = self.copy_source.data.TermL1
         except Exception as e:
             print(f"[Fehler in TMU_3DKomponente.copy_methode] {e}")
 

@@ -294,12 +294,18 @@ class TMU_Modell(list[TMU_Komponente]):
         return self.Winkel.Winkel_Bezug2 + 1
 
     def Merkmal_3d(self):
-        return self.iGeometrie_ME
+        return self.merkmal
 
     def find_komponente_by_id(self, id_list: list[int]):
         for c in self:
             if c.id in id_list:
                 return c
+    def find_komponente_by_classname(self, name: str):
+        for c in self:
+            if c.__class__.__name__ == name:
+                return c
+            else: return None
+
     def SummeDerVarianzen(self):
         v = 0
         valid = False
