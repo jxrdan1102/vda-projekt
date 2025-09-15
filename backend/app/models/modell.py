@@ -42,6 +42,7 @@ class Modell(Base):
     punktmusterB1 = Column(Integer)
     tasterschaft1 = Column(Integer, default=1)
     tasterschaft2 = Column(Integer, default=1)
+    artdesmasses = Column(Integer)
     punktmusterR1 = Column(Integer)
     punktmusterR2 = Column(Integer)
     taster1 = Column(Integer)

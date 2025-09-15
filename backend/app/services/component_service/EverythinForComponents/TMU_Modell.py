@@ -1,4 +1,5 @@
 import math
+from cmath import isnan
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
@@ -68,9 +69,9 @@ class TMU_ModellSchema(BaseModel):
     modell_name: str = ""
     AufgabeModell: TMU_AufgabeModell | None = None  # Kannst du nach Bedarf definieren
     i_aufgabe: int = 0
-    i_geometrie_me: int = 0
+    i_geometrie_me: int | None = None
     i_geometrie_en: int | None = None
-    i_geometrie_mo: int = 0
+    i_geometrie_mo: int | None = None
     read_only: bool = False
     modell_desc: str = ""
     methode: int = 0
@@ -298,7 +299,7 @@ class TMU_Modell(list[TMU_Komponente]):
 
     def find_komponente_by_id(self, id_list: list[int]):
         for c in self:
-            if c.id in id_list:
+            if c.komp_id in id_list:
                 return c
     def find_komponente_by_classname(self, name: str):
         for c in self:
@@ -310,8 +311,7 @@ class TMU_Modell(list[TMU_Komponente]):
         v = 0
         valid = False
         for item in self:
-            if isinstance(item, TMU_Komponente) and item.varianz() != MU_NAN:
-
+            if isinstance(item, TMU_Komponente) and not isnan(item.varianz()):
                 v += item.varianz()
                 valid = True
         return v if valid else MU_NAN
@@ -323,8 +323,6 @@ class TMU_Modell(list[TMU_Komponente]):
     def V_eff(self):
         result = MU_NAN
         valid = False
-        for c in self:
-            print("Ausgabe3: ", c.messpunkt_anzahl)
         if self.AufgabeModell.value == "a3D_Pruefprozess":
             SummeEFG = 0
             U = self.StandardUnsicherheit_Uy()
@@ -432,10 +430,12 @@ class TMU_Modell(list[TMU_Komponente]):
         k = self.Erweiterungsfaktor_k()
         ubs:list = []
         for c in self:
-            comps = c.unsicherheitsbeitrag
+            if not isnan(c.unsicherheitsbeitrag):
+                comps = c.unsicherheitsbeitrag
+            else: comps = None
             ubs.append([c.__class__.__name__,comps])
         uy = self.StandardUnsicherheit_Uy()
-        if k != MU_NAN and uy != MU_NAN:
+        if not isnan(k) and not isnan(uy):
             return {"Unsicherheit" :k * uy, "Erweiterungsfaktor": k, "Komponenten": ubs}
         return MU_NAN
 

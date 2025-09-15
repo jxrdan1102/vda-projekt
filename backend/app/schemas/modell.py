@@ -83,6 +83,7 @@ class ModellUpdateR(BaseModel):
     punktmusterB1: int | None = None
     tasterschaft1: int | None = None
     tasterschaft2: int | None = None
+    artdesmasses: int | None = None
     punktmusterR1: int | None = None
     punktmusterR2: int | None = None
     taster1: int | None = None
@@ -208,6 +209,7 @@ class ModellGetIdR(BaseModel):
     punktmusterB1: int | None = None
     tasterschaft1: int | None = None
     tasterschaft2: int | None = None
+    artdesmasses: int | None = None
     punktmusterR1: int | None = None
     punktmusterR2: int | None = None
     taster1: int | None = None

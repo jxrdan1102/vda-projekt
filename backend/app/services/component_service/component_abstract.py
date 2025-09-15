@@ -27,6 +27,7 @@ class TMU_Komponente(TMU_Atom):
             FreiN_minus_1=0,
             Flags=1,
         )
+        self.komp_id = AnID
         self.modell: "TMU_Modell" = AModell
         self.const_list: object = AConstList
         self.formel: str = AFormel

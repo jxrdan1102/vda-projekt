@@ -35,7 +35,7 @@ export const actions: Actions = {
         }
 
         const payload: Record<string, any> = {};
-        payload.kmg_ident = parseOptionalInt('kmg_ident');
+        payload.kmg_ident = parseOptionalString('kmg_ident');
         payload.kmg_bez = parseOptionalString('kmg_bez');
         payload.kmg_a = parseOptionalFloat('kmg_a');
         payload.kmg_k = parseOptionalFloat('kmg_k');
@@ -43,7 +43,11 @@ export const actions: Actions = {
         payload.kmg_lt = parseOptionalFloat('kmg_lt');
         payload.kmg_alpham = parseOptionalFloat('kmg_alpham');
         payload.kmg_mpeml = parseOptionalFloat('kmg_mpeml');
-        console.log("Senden",payload);
+
+        console.log("Formular-Daten", payload);  // Überprüfe die extrahierten Daten
+
+// Rest des Codes bleibt gleich...
+
         const res = await fetch(`http://localhost:9999/kmgs`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

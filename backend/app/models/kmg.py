@@ -8,7 +8,7 @@ class KMG(Base):
     __tablename__ = "kmgs"
 
     id = Column(Integer, primary_key=True, index=True)
-    kmg_ident = Column(Integer, index=True)
+    kmg_ident = Column(String(255), index=True)
     kmg_bez = Column(String(255))
     kmg_a = Column(Float)
     kmg_k = Column(Float)

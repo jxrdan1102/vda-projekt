@@ -135,6 +135,7 @@ class ComponentFactory:
         1301: d.TK_3d_Dw,
         1303: d.TK_3d_DeltaDC,
         1304: d.TK_3d_DeltaLkmg,
+        1310: d.TK_3d_DeltaFT,
         1311: d.TK_3d_DeltaFkmg,
         1312: d.TK_3dA_X1,
         1313: d.TK_3dA_W1,

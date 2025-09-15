@@ -55,7 +55,7 @@ class ANAKOMP(Base):
     freigrad = Column(Integer)
     frei_n_1 = Column(Integer)
     verteilung = Column(Integer)
-    messpunkt_anzahl = Column(Integer)
+    messpunkt_anzahl = Column(Integer, default = 0)
     anzahl_messungen = Column(Integer)
     berechnen = Column(Integer)
     fk_user_id = Column(Integer, ForeignKey("users.id"))

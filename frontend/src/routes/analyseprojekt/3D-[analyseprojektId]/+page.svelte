@@ -196,6 +196,7 @@
     let aenderungszustand = analyseprojekt.aenderungszustand ?? "";
     let identnr = analyseprojekt.identnr ?? null;
     let remark = analyseprojekt.remark ?? "";
+    let tolfaktor = analyseprojekt.tolfaktor === 1 || analyseprojekt.tolfaktor === true;
 
     $: showConstModal = !!$page.state?.selectedConstant;
     $: modellDialogOpen = !!$page.state?.updateComp;
@@ -304,8 +305,8 @@
                     <input type="text" name="remark" bind:value={remark} class="w-full h-6 border border-gray-400 px-2 text-sm py-2 bg-white" />
                 </div>
                 <div class="flex ml-6 items-center space-x-2 mb-1">
-                    <label for="eignungswert" class="text-gray-700 text-xs object-bottom">Eignungskennwert</label>
-                    <input type="checkbox" name="eignungswert" id="eignungswert" class="h-4 w-4 text-gray-600 border-gray-400 rounded" />
+                    <label for="tolfaktor" class="text-gray-700 text-xs object-bottom">Eignungskennwert</label>
+                    <input type="checkbox" name="tolfaktor" id="tolfaktor" bind:checked={tolfaktor} class="h-4 w-4 text-gray-600 border-gray-400 rounded" />
                 </div>
 
 

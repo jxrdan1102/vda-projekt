@@ -34,7 +34,7 @@ class TMU_3DKomponente(TMU_Komponente):
             elif self.data.TermL0 != 0:
                 return self.data.TermL0
             else:
-                a = 1  # Platzhalter für 'Konstanter Teil A'
+                a = self.modell.const_list.const_map[TKompConstants.TC_3d_KMG_A]  # Platzhalter für 'Konstanter Teil A'
                 return a / 3 if a != MU_NAN else MU_NAN
         except Exception as e:
             print(f"[Fehler in TMU_3DKomponente.standard_unsicherheit_su] {e}")

@@ -49,6 +49,14 @@ export const actions: Actions = {
 
         const remark = parseOptionalString('remark');
         if (remark !== undefined) payload.remark = remark;
+
+        function parseCheckbox(formData: FormData, field: string): number {
+            const val = formData.get(field);
+            return val ? 1 : 0;
+        }
+        const tolfaktor = parseCheckbox(formData, 'tolfaktor');
+        if (tolfaktor !== undefined) payload.tolfaktor = tolfaktor;
+
         console.log(payload);
         // Update an Backend senden
         const res = await fetch(`http://localhost:9999/anamu/${analyseprojektId}/r`, {

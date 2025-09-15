@@ -68,7 +68,7 @@ class AnamuUpdate(BaseModel):
     remark: str | None = None
     fk_kmg: int | None = None
     tolfaktor: int | None = None
-    fk_modell: int 
+    fk_modell: int | None = None
     class Config:
         from_attributes = True
 

@@ -2,7 +2,7 @@
     import {goto, preloadData, pushState} from "$app/navigation";
     import {page} from "$app/stores";
     import Modal from "$lib/components/Modal.svelte";
-    import KmgInfoPage from "./kmg/+page.svelte";
+    import KmgInfoPage from "./kmgkmg/+page.svelte";
     import {COMPONENTS} from "$lib/Mapping";
     import {tcMapping} from "C:\\Users\\Jason\\vda-projekt\\backend\\tcParameterMapping";
     import {tick} from 'svelte';

@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 
 class KMGBase(BaseModel):
-    kmg_ident: int | None = None
+    kmg_ident: str | None = None
     kmg_bez: str | None = None
     kmg_a: float | None = None
     kmg_k: float | None = None

@@ -1,6 +1,7 @@
-from app.database.database import Base
 from sqlalchemy import Column, Float, ForeignKey, Integer
 from sqlalchemy.orm import relationship
+
+from app.database.database import Base
 
 
 class Component(Base):
@@ -18,7 +19,7 @@ class Component(Base):
     frei_n_1 = Column(Integer)
     verteilung = Column(Integer)
     kflags = Column(Integer)
-    messpunkt_anzahl = Column(Integer)
+    messpunkt_anzahl = Column(Integer, default = 0)
     anzahl_messungen = Column(Integer)
     fk_user_id = Column(Integer, ForeignKey("users.id"))
 

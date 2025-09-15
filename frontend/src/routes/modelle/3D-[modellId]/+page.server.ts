@@ -89,7 +89,7 @@ export const actions: Actions = {
         console.log("Taster 1: ",parseOptionalInt("taster"));
         const optionalIntFields = [
             'taster', 'merkmal', 'element',
-            'punktmusterB1', 'tasterschaft1', 'tasterschaft2',
+            'punktmusterB1', 'tasterschaft1', 'tasterschaft2', 'artdesmasses',
             'punktmusterR1', 'punktmusterR2', 'taster1', 'taster2',
             'abstand', 'winkelE1', 'winkelE2'
         ];

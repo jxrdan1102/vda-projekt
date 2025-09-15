@@ -26,6 +26,7 @@
     let punktmusterB1: number = data.modell?.punktmusterB1 ?? null;
     let tasterschaft1: number = data.modell?.tasterschaft1 ?? null;
     let tasterschaft2: number = data.modell?.tasterschaft2 ?? null;
+    let artdesmasses: number = data.modell?.artdesmasses ?? null;
     let punktmusterR1: number = data.modell?.punktmusterR1 ?? null;
     let punktmusterR2: number = data.modell?.punktmusterR2 ?? null;
     let taster1: number = data.modell?.taster1 ?? null;
@@ -204,23 +205,23 @@
                         <label class="block text-gray-700 text-xs mb-1">Element</label>
                         <select id="element" name="element" bind:value={element}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
                             <option value="" disabled>Bitte wählen</option>
-                            <option value=1>Gerade</option>
-                            <option value=2>Ebene</option>
-                            <option value=3>Kreis</option>
-                            <option value=4>Halbkugel</option>
-                            <option value=5>Zylinder</option>
-                            <option value=6>Kegel</option>
+                            <option value={2}>Gerade</option>
+                            <option value={3}>Ebene</option>
+                            <option value={4}>Kreis</option>
+                            <option value={5}>Halbkugel</option>
+                            <option value={6}>Zylinder</option>
+                            <option value={7}>Kegel</option>
                         </select>
                     </div>
                     <div>
                         <label class="block text-gray-700 text-xs mb-1">Merkmal</label>
                         <select id="merkmal" name="merkmal" bind:value={merkmal}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
                             <option value="" disabled>Bitte wählen</option>
-                            <option value=1>Geradheit</option>
-                            <option value=2>Ebenheit</option>
-                            <option value=3>Rundheit</option>
-                            <option value=4>Flächenform</option>
-                            <option value=5>Zylinderform</option>
+                            <option value={1}>Geradheit</option>
+                            <option value={2}>Ebenheit</option>
+                            <option value={3}>Rundheit</option>
+                            <option value={4}>Zylinderform</option>
+                            <option value={5}>Flächenform</option>
                         </select>
                     </div>
                 </div>
@@ -243,12 +244,12 @@
                         <label class="block text-gray-700 text-xs mb-1">Element</label>
                         <select id="element" name="element" bind:value={element}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
                             <option value="" disabled>Bitte wählen</option>
-                            <option value=1>Gerade</option>
-                            <option value=2>Ebene</option>
-                            <option value=3>Kreis</option>
-                            <option value=4>Halbkugel</option>
-                            <option value=5>Zylinder</option>
-                            <option value=6>Kegel</option>
+                            <option value={1}>Gerade</option>
+                            <option value={2}>Ebene</option>
+                            <option value={3}>Kreis</option>
+                            <option value={4}>Halbkugel</option>
+                            <option value={5}>Zylinder</option>
+                            <option value={6}>Kegel</option>
                         </select>
                     </div>
                     <div>
@@ -404,20 +405,27 @@
                         <label class="block text-gray-700 text-xs mb-1">Element 1</label>
                         <select id="Element1" name="Element1" bind:value={Element1}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
                             <option value="" disabled>Bitte wählen</option>
+                            <option value="Punkt">Punkt</option>
+                            <option value="Kreis">Kreis</option>
                             <option value="Gerade">Gerade</option>
                             <option value="Ebene">Ebene</option>
                             <option value="Zylinder">Zylinder</option>
                             <option value="Kegel">Kegel</option>
+                            <option value="Halbkugel">Halbkugel</option>
                         </select>
                     </div>
                     <div>
                         <label class="block text-gray-700 text-xs mb-1">Element 2</label>
                         <select id="Element2" name="Element2" bind:value={Element2}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
                             <option value="" disabled>Bitte wählen</option>
+                            <option value="Punkt">Punkt</option>
+                            <option value="Kreis">Kreis</option>
                             <option value="Gerade">Gerade</option>
                             <option value="Ebene">Ebene</option>
                             <option value="Zylinder">Zylinder</option>
                             <option value="Kegel">Kegel</option>
+                            <option value="Halbkugel">Halbkugel</option>
+
                         </select>
                     </div>
                     <div>
@@ -473,6 +481,14 @@
                             <option value="" disabled>Bitte wählen</option>
                             <option value={1}>senkrecht</option>
                             <option value={2}>parallel zu Auswerterichtung</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 text-xs mb-1">Art des Maßes</label>
+                        <select id="artdesmasses" name="artdesmasses" bind:value={artdesmasses}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                            <option value="" disabled>Bitte wählen</option>
+                            <option value={1}>Stufenmaß</option>
+                            <option value={2}>Innen- ode Außenmaß</option>
                         </select>
                     </div>
                 </div>

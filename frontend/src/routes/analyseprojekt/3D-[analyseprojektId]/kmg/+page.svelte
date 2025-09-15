@@ -2,6 +2,7 @@
     import {fail} from "@sveltejs/kit";
     import {page} from "$app/stores";
     import {get} from "svelte/store";
+    import {goto} from "$app/navigation";
 
     export let fk_kmg;
     export let data: { kmg: any[] };
@@ -20,8 +21,8 @@
     let kmg_mpeml = 0;
 
     async function handleAuswaehlen(id: number) {
-        const payload: Record<string, any> = {};
-        payload.fk_kmg = id;
+        const payload: Record<string, any> = { fk_kmg: id };
+
         const res = await fetch(`http://localhost:9999/anamu/${analyseprojektId}/r`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -33,6 +34,11 @@
             const err = await res.json();
             return fail(res.status, { error: err.detail || 'Fehler beim Erstellen des KMGs.' });
         }
+
+        // Frontend-State direkt aktualisieren
+        fk_kmg = id;
+        selectedKMG = kmg.find(k => k.id === id) ?? null;
+        await goto(`/analyseprojekt/3D-${analyseprojektId}`);
     }
 
     function selectKMG(item: any) {
@@ -82,9 +88,9 @@
                 </svg>
 
                 <div class="mt-2 flex justify-end gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" on:click|stopPropagation={() => handleAuswaehlen(item.id)} stroke-width="1.5" stroke="currentColor" class="absolute bottom-2 right-2 size-4 hover:text-green-500">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                        </svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" on:click={() => handleAuswaehlen(item.id)} stroke-width="1.5" stroke="currentColor" class="absolute bottom-2 right-2 size-4 hover:text-green-500">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                    </svg>
                 </div>
 
             </div>

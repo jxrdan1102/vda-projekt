@@ -46,7 +46,16 @@
             alert('Löschen fehlgeschlagen');
         }
     }
+    let selectedModelId: number | null = null;
+    let aufgabe_modell_value: string = "";
 
+    function handleSelectChange(e: Event) {
+        const id = Number((e.target as HTMLSelectElement).value);
+        selectedModelId = id;
+
+        const model = models.find(m => m.id === id);
+        aufgabe_modell_value = model ? model.aufgabe_modell : "";
+    }
     let showDuplicateModal = false;
     let duplicateProjektId: number | null = null;
     let duplicateName = "";
@@ -138,13 +147,20 @@
 
             <input id="aenderungszustand" name="aenderungszustand" placeholder="Änderungsstand" class="border border-gray-300 rounded px-2 py-1 w-48 text-sm" />
 
-            <select id="modell" name="modell" required class="border border-gray-300 rounded px-2 py-1 w-48 text-sm">
+            <select id="modell" name="modell" required
+                    class="border border-gray-300 rounded px-2 py-1 w-48 text-sm"
+                    on:change={handleSelectChange}>
                 <option value="" disabled selected>Modell wählen</option>
                 {#each models as modell}
                     <option value={modell.id}>{modell.name} (ID: {modell.id})</option>
                 {/each}
             </select>
 
+            <input id="aufgabe_modell"
+                   hidden
+                   name="aufgabe_modell"
+                   bind:value={aufgabe_modell_value}
+            />
             <button type="submit" class="bg-green-100 text-green-800 hover:bg-green-200 border border-green-300 rounded px-3 py-1 text-sm font-medium transition-colors">
                 Erstellen
             </button>
