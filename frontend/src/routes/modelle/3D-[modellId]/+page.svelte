@@ -134,14 +134,15 @@
                         <label class="block text-gray-700 text-xs mb-1">Taster</label>
                         <select id="taster" name="taster" bind:value={taster}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
                             <option value="" disabled>Bitte wählen</option>
-                            <option value="1">derselbe Taster</option>
-                            <option value="2">verschiedene Taster</option>
+                            <option value={1}>derselbe Taster</option>
+                            <option value={2}>verschiedene Taster</option>
                         </select>
                     </div>
                     <div>
                         <label class="block text-gray-700 text-xs mb-1">Element 1</label>
                         <select id="Element1" name="Element1" bind:value={Element1}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
                             <option value="" disabled>Bitte wählen</option>
+                            <option value="Punkt">Punkt</option>
                             <option value="Gerade">Gerade</option>
                             <option value="Ebene">Ebene</option>
                             <option value="Zylinder">Zylinder</option>
@@ -152,6 +153,7 @@
                         <label class="block text-gray-700 text-xs mb-1">Element 2</label>
                         <select id="Element2" name="Element2" bind:value={Element2}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
                             <option value="" disabled>Bitte wählen</option>
+                            <option value="Punkt">Punkt</option>
                             <option value="Gerade">Gerade</option>
                             <option value="Ebene">Ebene</option>
                             <option value="Zylinder">Zylinder</option>
@@ -236,20 +238,20 @@
                         <label class="block text-gray-700 text-xs mb-1">Taster</label>
                         <select id="taster" name="taster" bind:value={taster}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
                             <option value="" disabled>Bitte wählen</option>
-                            <option value=1>derselbe Taster</option>
-                            <option value=2>verschiedene Taster</option>
+                            <option value={1}>derselbe Taster</option>
+                            <option value={2}>verschiedene Taster</option>
                         </select>
                     </div>
                     <div>
                         <label class="block text-gray-700 text-xs mb-1">Element</label>
-                        <select id="element" name="element" bind:value={element}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                        <select id="Element1" name="Element1" bind:value={Element1}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
                             <option value="" disabled>Bitte wählen</option>
-                            <option value={1}>Gerade</option>
-                            <option value={2}>Ebene</option>
-                            <option value={3}>Kreis</option>
-                            <option value={4}>Halbkugel</option>
-                            <option value={5}>Zylinder</option>
-                            <option value={6}>Kegel</option>
+                            <option value="Gerade">Gerade</option>
+                            <option value="Ebene">Ebene</option>
+                            <option value="Kreis">Kreis</option>
+                            <option value="Halbkugel">Halbkugel</option>
+                            <option value="Zylinder">Zylinder</option>
+                            <option value="Kegel">Kegel</option>
                         </select>
                     </div>
                     <div>
@@ -264,9 +266,9 @@
                         <label class="block text-gray-700 text-xs mb-1">Bezug1</label>
                         <select id="Bezug1" name="Bezug1" bind:value={Bezug1}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
                             <option value="" disabled>Bitte wählen</option>
-                            <option value=1>Kreis</option>
-                            <option value=2>Zylinder</option>
-                            <option value=3>Kegel</option>
+                            <option value="Kreis">Kreis</option>
+                            <option value="Zylinder">Zylinder</option>
+                            <option value="Kegel">Kegel</option>
                         </select>
                     </div>
                     <div>
@@ -282,25 +284,25 @@
                         <select id="Bezug2" name="Bezug2" bind:value={Bezug2}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
                             <option value="" disabled>Bitte wählen</option>
                             <option value=0>-</option>
-                            <option value=1>Kreis</option>
-                            <option value=2>Zylinder</option>
-                            <option value=3>Kegel</option>
+                            <option value="Kreis">Kreis</option>
+                            <option value="Zylinder">Zylinder</option>
+                            <option value="Kegel">Kegel</option>
                         </select>
                     </div>
                     <div>
                         <label class="block text-gray-700 text-xs mb-1">Tasterschaft 1</label>
                         <select id="tasterschaft1" name="tasterschaft1" bind:value={tasterschaft1}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
                             <option value="" disabled>Bitte wählen</option>
-                            <option value=1>senkrecht</option>
-                            <option value=2>parallel zu Auswerterichtung</option>
+                            <option value={1}>senkrecht</option>
+                            <option value={2}>parallel zu Auswerterichtung</option>
                         </select>
                     </div>
                     <div>
                         <label class="block text-gray-700 text-xs mb-1">Tasterschaft 2</label>
                         <select id="tasterschaft2" name="tasterschaft2" bind:value={tasterschaft2}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
                             <option value="" disabled>Bitte wählen</option>
-                            <option value=1>senkrecht</option>
-                            <option value=2>parallel zu Auswerterichtung</option>
+                            <option value={1}>senkrecht</option>
+                            <option value={2}>parallel zu Auswerterichtung</option>
                         </select>
                     </div>
                 </div>

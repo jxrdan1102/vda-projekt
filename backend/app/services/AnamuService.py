@@ -138,7 +138,7 @@ async def add_anakonsts(db: AsyncSession, fk_anamu: int, fk_modell: int, user_id
     if not components:
         return []
 
-    schema = TMU_ModellSchema(id=modell.id, aufgabe=modell.aufgabe, AufgabeModell=modell.aufgabe_modell, Element1=modell.Element1, Element2=modell.Element2, i_geometrie_me=modell.geo_me, i_geometrie_mo= modell.geo_mo, i_geometrie_en= modell.geo_bn, merkmal=modell.merkmal, element=modell.element, )
+    schema = TMU_ModellSchema(id=modell.id, aufgabe=modell.aufgabe, AufgabeModell=modell.aufgabe_modell, Element1=modell.Element1, Element2=modell.Element2, i_geometrie_me=modell.geo_me, i_geometrie_mo= modell.geo_mo, i_geometrie_en= modell.geo_bn, merkmal=modell.merkmal, element=modell.element, Bezug1=modell.Bezug1, Bezug2=modell.Bezug2 )
     tmodell = TMU_Modell(schema)
 
     for komp in components:

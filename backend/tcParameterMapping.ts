@@ -162,7 +162,7 @@ export const tcMapping: Record<number, {
   160: { key: "TC_3d_KoaxGA_LTE", einheit: "mm", übersetzung: "!!!= TC_3d_Koax_LTE		Tasterlänge E- L(TE)", kategorie: 3 },
   163: { key: "TC_3D_NennLaenge_LD", einheit: "mm", übersetzung: "	Nennmaß der Länge bzw. Durchmessers L(D)", kategorie: 1 },
   166: { key: "TC_3d_KMG_AUFLOES", einheit: "°", übersetzung: "", kategorie: 0 },
-  167: { key: "TC_3d_PktPkt_dist", einheit: "mm", übersetzung: "", kategorie: 0 },
+  167: { key: "TC_3d_PktPkt_dist", einheit: "mm", übersetzung: "Abstand toleriertem zu Bezugselement", kategorie: 0 },
   168: { key: "TC_3d_PktPkt_Wechsel", einheit: "ja/nein", übersetzung: "Tasterwechsel", kategorie: 3 },
   169: { key: "TC_3d_PktPkt_nTastBe", einheit: "", übersetzung: "Anzahl Antastungen Bezugselement", kategorie: 2 },
   170: { key: "TC_3d_PktPkt_nTastTe", einheit: "", übersetzung: "Anzahl Antastungen toleriertes Element", kategorie: 2 },

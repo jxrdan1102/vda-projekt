@@ -110,8 +110,6 @@ class TMU_ModellSchema(BaseModel):
     def assign_geo_bn_to_igeometrie_en(cls, data):
         if hasattr(data, "geo_bn"):
             data.i_geometrie_en = data.geo_bn
-        if hasattr(data, "tsk_ausenmessung"):
-            data.winkelE1 = data.tsk_ausenmessung
         if hasattr(data, "aufgabe_modell"):
             data.AufgabeModell = data.aufgabe_modell
         if hasattr(data, "geo_me"):

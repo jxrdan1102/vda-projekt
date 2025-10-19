@@ -2,11 +2,17 @@ from enum import Enum
 from functools import cached_property
 from math import pi, sqrt, isnan
 
+import numpy as np
+import numpy.linalg as la
+from numpy.random import default_rng
+
 from app.services.component_service.EverythinForComponents.TMU_ConstList import TKompConstants
 from app.services.component_service.EverythinForComponents.TMuKompRec import TMuKompRec
 from app.services.component_service.component_abstract import MU_NAN
 from app.services.component_service.componente3D import TMU_3DKomponente
+from app.services.component_service.montecarlo_code import mu_position
 
+rng = default_rng(42)
 
 class TMU_3DAufgabe(Enum):
     aDurchmesser = 1
@@ -1086,7 +1092,8 @@ class TK_3dA_W1(TMU_3DKomponente):
     def b_val(self) -> float:
         if self.archiv:
             return self.arch_data.bval
-
+        self.setMesspunktAnzahl()
+        self.setAnzahlMessungen()
         if math.isnan(self.sensititivty_c1()):
             return float("nan")
 
@@ -1110,9 +1117,9 @@ class TK_3dA_W1(TMU_3DKomponente):
                 result = math.sqrt(8 / n)
 
         if e == "Zylinder":
-            if winkel == 2:
+            if winkel == 5:
                 result = math.sqrt(8 / n)
-            elif winkel == 1:
+            elif winkel == 4:
                 result = math.sqrt((24 * (n - 1)) / (n * (n + 1)))
 
         return result
@@ -1132,6 +1139,8 @@ class TK_3dA_W1(TMU_3DKomponente):
     def effektiver_freiheitsgrad(self) -> float:
         if self.archiv:
             return abs(self.arch_data.frei_eff)
+        self.setMesspunktAnzahl()
+        self.setAnzahlMessungen()
         print(" Look hier",self.messpunkt_anzahl)
         if self.data.KennwertArt.name == "M3D_MethodeB":
             return abs(self.messpunkt_anzahl - 1)
@@ -1340,7 +1349,7 @@ class TK_3dA_X2(TMU_3DKomponente):
             if self.data.KennwertArt.name == "M3D_MethodeB":
                 val = self.messpunkt_anzahl - 1
             else:
-                val = self.anzahl_messungen * abs(self.messpunkt_anzahl - self.modell.mindestpunkt_anzahl(self.modell.Element1))
+                val = self.anzahl_messungen * abs(self.messpunkt_anzahl - self.mindestpunkt_anzahl(self.modell.Element1))
             return abs(val) if val != MU_NAN else MU_NAN
 
 
@@ -1379,7 +1388,8 @@ class TK_3dA_W2(TMU_3DKomponente):
     def b_val(self) -> float:
         if self.archiv:
             return self.arch_data.bval
-
+        self.setMesspunktAnzahl()
+        self.setAnzahlMessungen()
         c1 = self.sensititivty_c1()
         if c1 == MU_NAN:
             return MU_NAN
@@ -1423,7 +1433,8 @@ class TK_3dA_W2(TMU_3DKomponente):
     def effektiver_freiheitsgrad(self) -> float:
         if self.archiv:
             return self.arch_data.frei_eff
-
+        self.setMesspunktAnzahl()
+        self.setAnzahlMessungen()
         if self.data.KennwertArt.name == "M3D_MethodeB":
             return abs(self.messpunkt_anzahl - 1)
 
@@ -1487,9 +1498,9 @@ class TK_3dA_DeltaXT2(TMU_3DKomponente):
 
         n = self.messpunkt_anzahl
         m = self.anzahl_messungen
-        if self.data.KennwertArt == "M3D_MethodeB":
+        if self.data.KennwertArt.name == "M3D_MethodeB":
             result = n - 1
-        elif self.data.KennwertArt == "M3D_MethodeA" and n > 2:
+        elif self.data.KennwertArt.name == "M3D_MethodeA" and n > 2:
             result = m * (n - 4)
         else:
             result = float('nan')
@@ -3717,15 +3728,16 @@ class TK_3d_Koax_XE(TMU_3DKomponente):
                 if self.data.KennwertArt == "M3D_MethodeA":
                     if self.messpunkt_anzahl > 1:
                         return 1
-                elif self.messpunkt_anzahl > ord(self.modell.Element1) - 1:
+                elif self.messpunkt_anzahl > TMU_3DElement.get(self.modell.Element1) - 1:
                     return math.sqrt(2 / self.messpunkt_anzahl)
             return float("nan")
 
+    @property
     def effektiver_freiheitsgrad(self) -> float:
         if self.archiv:
             return self.arch_data.FreiEff
         else:
-            if self.data.KennwertArt == "M3D_MethodeB":
+            if self.data.KennwertArt.name == "M3D_MethodeB":
                 result = self.messpunkt_anzahl - 1
             else:
                 result = self.anzahl_messungen * (self.messpunkt_anzahl - self.mindestpunkt_anzahl(self.modell.Element1))
@@ -3736,10 +3748,12 @@ class TK_3d_Koax_XE(TMU_3DKomponente):
 class TK_3d_Koax_WE(TMU_3DKomponente):
     def __init__(self, modell, const_list, lfdnr):
         super().__init__(modell, 1351, const_list, "W<sub>E</sub>")
+        self.ConstNeeded += [TKompConstants["TC_3d_Koax_LME"], TKompConstants["TC_3d_Koax_LE"]]
         self.lfdnr = lfdnr
         self.fields_to_edit = ["EF_Term0", "EF_Kennwertart", "EF_MPAnzahl"]
+        self.addConstNeededToModell()
 
-    def sensititvity_c1(self) -> float:
+    def sensititivty_c1(self) -> float:
         if self.archiv:
             return self.arch_data.SensC1
         else:
@@ -3753,7 +3767,7 @@ class TK_3d_Koax_WE(TMU_3DKomponente):
         if self.archiv:
             return self.arch_data.BVAL
         else:
-            sensitivity_c1 = self.sensititvity_c1()
+            sensitivity_c1 = self.sensititivty_c1()
             if sensitivity_c1 != float("nan"):
                 if self.data.KennwertArt == "M3D_MethodeA":
                     return 1
@@ -3769,11 +3783,12 @@ class TK_3d_Koax_WE(TMU_3DKomponente):
                                 return math.sqrt(8 / self.messpunkt_anzahl)
         return float("nan")
 
+    @property
     def effektiver_freiheitsgrad(self) -> float:
         if self.archiv:
             return self.arch_data.FreiEff
         else:
-            if self.data.KennwertArt == "M3D_MethodeB":
+            if self.data.KennwertArt.name == "M3D_MethodeB":
                 return abs(self.messpunkt_anzahl - 1)
             else:
                 return abs(self.anzahl_messungen * (self.messpunkt_anzahl - self.mindestpunkt_anzahl(self.modell.Element1)))
@@ -3829,6 +3844,7 @@ class TK_3d_Koax_DeltaXTE(TMU_3DKomponente):
             print(f"Fehler in b_val: {e}")
             return MU_NAN
 
+    @property
     def effektiver_freiheitsgrad(self) -> float:
         try:
             if self.archiv:
@@ -3896,6 +3912,7 @@ class TK_3d_Koax_XB1(TMU_3DKomponente):
             print(f"Fehler in b_val: {e}")
             return MU_NAN
 
+    @property
     def effektiver_freiheitsgrad(self) -> float:
         try:
             if self.archiv:
@@ -3920,6 +3937,7 @@ class TK_3d_Koax_WB1(TMU_3DKomponente):
             self.ConstNeeded += [TKompConstants["TC_3d_Koax_LA"], TKompConstants["TC_3d_Koax_LMB"]]
         self.fields_to_edit = []
         self.copy_methode("TK_3d_Koax_XB1")
+        self.addConstNeededToModell()
 
     def messpunkt_anzahl(self) -> int:
         try:
@@ -3995,6 +4013,7 @@ class TK_3d_Koax_WB1(TMU_3DKomponente):
             print(f"Fehler in b_val: {e}")
             return MU_NAN
 
+    @property
     def effektiver_freiheitsgrad(self) -> float:
         try:
             if self.archiv:
@@ -4064,6 +4083,7 @@ class TK_3d_Koax_XB2(TMU_3DKomponente):
             print(f"Fehler in b_val: {e}")
             return MU_NAN
 
+    @property
     def effektiver_freiheitsgrad(self) -> float:
         try:
             if self.archiv:
@@ -4128,6 +4148,7 @@ class TK_3d_Koax_DeltaXTB(TMU_3DKomponente):
             print(f"Fehler in b_val: {e}")
             return MU_NAN
 
+    @property
     def effektiver_freiheitsgrad(self) -> float:
         try:
             if self.archiv:
@@ -5438,7 +5459,7 @@ class TK_3d_PktPkt_dPZuf(TMU_3DKomponente):
         except Exception as e:
             print(f"Fehler in standard_unsicherheit_su: {e}")
             return MU_NAN
-
+    @cached_property
     def unsicherheitsbeitrag(self) -> float:
         try:
             if self.archiv:
@@ -5446,7 +5467,7 @@ class TK_3d_PktPkt_dPZuf(TMU_3DKomponente):
             siai = self.standard_unsicherheit_su()
             b = self.b_val()
             g = self.g_val()
-            ci = self.sensititvity_c1()
+            ci = self.sensititivty_c1()
             if any(map(lambda x: x is None or math.isnan(x), [siai, b, g, ci])):
                 return MU_NAN
             return siai * b * g * ci
@@ -5463,18 +5484,127 @@ class TSimKreis:
         self.nPts = nPts
         self.Segment = Segment
 
+
+class Punkt:
+    coord_x = 0
+    coord_y = 0
+
+    def __init__(self, x=0.0, y=0.0):  # constructor
+        self.coord_x = x
+        self.coord_y = y
+        self.punkt_wolke = np.empty(shape=(num_sims, 2))
+
+    def wolke_erzeugen(self):
+        self.punkt_wolke = rng.standard_normal(size=(num_sims, 2))
+        for i in range(num_sims):
+            self.punkt_wolke[i, 0] = self.coord_x + kmg_ampx / 3. * self.punkt_wolke[i, 0]
+            self.punkt_wolke[i, 1] = self.coord_y + kmg_ampy / 3. * self.punkt_wolke[i, 1]
+
+
+class Kreis(Punkt):
+    """ Kreis Objekt """
+    # coord_x=0
+    # coord_y=0
+    dia = 0
+    anz_punkte = 0
+    k_segment = 360
+    Schrittwinkel = 0.0
+
+    def __init__(self, midx=0.0, midy=0.0, dia=0.0, numpoints=8, segment=360):  # constructor
+        super().__init__(midx, midy)  # initialisierung Punkt()
+        # self.coord_x = midx
+        # self.coord_y = midy
+        self.dia = dia
+        self.anz_punkte = numpoints
+        self.k_segment = segment
+        self.ideal = np.empty(shape=(self.anz_punkte, 2))  # np.empty([8,2], dtype = float )
+        self.calc()  # idealkreis mit diesen Parametern erzeugen
+        self.wolke_erzeugen()  # Montecarlo Simulation:  Kreismittelpunkte erzeugen
+
+    def calc(self):
+        """ Kreisberechnung Idealkreis """
+        self.schrittwinkel = (self.k_segment * np.pi / 180) / self.anz_punkte
+        for i in range(0, self.anz_punkte):
+            self.ideal[i, 0] = self.coord_x + self.dia / 2 * np.cos(i * self.schrittwinkel)
+            self.ideal[i, 1] = self.coord_y + self.dia / 2 * np.sin(i * self.schrittwinkel)
+
+    """ ------------------------------------------------------------------------
+      Kreisberechnung Ausgleichskreis mit scipy
+
+    def calc_ausgleichskreisA(self, points ):
+        x = points[:,0] # Split x and y coordinates
+        y = points[:,1]
+        x_m = np.mean(x)  # coordinates of the barycenter
+        y_m = np.mean(y)
+        def calc_R(xc, yc):
+            " "" calculate the distance of each 2D points from the center (xc, yc) "" "
+            return np.sqrt((x-xc)**2 + (y-yc)**2)
+        # @countcalls
+        def f_2(c):
+            " "" calculate the algebraic distance between the 2D points and the mean circle centered at c=(xc, yc) "" "
+            Ri = calc_R(*c)
+            return Ri - Ri.mean()
+        center_estimate = x_m, y_m
+        " "" kleinste Quadrate für Ausgleichskreis "" "
+        center_2, ier = optimize.leastsq(f_2, center_estimate)
+        xc_2, yc_2 = center_2
+        return xc_2, yc_2          # radius?
+   ------------------------------------------------------------------------------  """
+
+    def calc_ausgleichskreis(self, points):
+        xk = points[:, 0]  # x und y herauslösen
+        yk = points[:, 1]
+
+        # Finde Kreisgleichung
+        A = np.column_stack((2. * xk, 2 * yk, np.ones_like(xk)))
+        rhs = xk * xk + yk * yk
+        # Berechne Lösung des Ausgleichsproblem
+        a, b, c = la.lstsq(A, rhs, rcond=None)[0]
+        # r = np.sqrt(c+a**2+b**2) r=Radius: wird nicht benötigt
+        # xc_2, yc_2 = a, b
+        return a, b  # Mittelpunkt des Ausgleichskreises
+
+    def wolke_erzeugen(self, zufall=None):
+        """ Erzeugt zufällige Punktwolke; bei Bedarf mit übergebenem Zufallsfeld """
+        for s in range(num_sims):
+            # Wenn keine gemeinsame Zufallswolke übergeben wurde → eigene erzeugen
+            if zufall is None:
+                zufall_akt = rng.standard_normal(size=(self.anz_punkte, 2))
+            else:
+                zufall_akt = zufall[s]
+
+            punkte = np.empty_like(zufall_akt)
+            for i in range(self.anz_punkte):
+                punkte[i, 0] = self.ideal[i, 0] + kmg_ampx / 3.0 * zufall_akt[i, 0]
+                punkte[i, 1] = self.ideal[i, 1] + kmg_ampy / 3.0 * zufall_akt[i, 1]
+
+            self.punkt_wolke[s] = self.calc_ausgleichskreis(punkte)
+
+
 class FrmMCSimClass:
     @staticmethod
-    def doit(AnzSims, KMG_AmpX, KMG_AmpY, Element1, Element2):
-        # Hier muss die Monte-Carlo-Simulation implementiert werden
-        # Placeholder: Dummy-Rückgabewert, z.B. float
-        return 1.0  # Beispielwert
+    def doit(anz_sims, kmg_amp_x, kmg_amp_y, element1, element2):
+        # Übergabe an das globale Simulationsmodul
+        global num_sims, kmg_ampx, kmg_ampy
+
+        num_sims = anz_sims
+        kmg_ampx = kmg_amp_x
+        kmg_ampy = kmg_amp_y
+
+        # Konvertiere deine TSimKreis-Objekte in Kreis-Objekte für die Simulation
+        kreis1 = Kreis(midx=element1.x,midy=element1.y,dia=element1.dia,numpoints=element1.nPts,segment=element1.Segment)
+
+        kreis2 = Kreis(midx=element2.x,midy=element2.y,dia=element2.dia,numpoints=element2.nPts,segment=element2.Segment)
+
+        # Berechne Standardunsicherheit
+        _, _, su = mu_position(kreis1, kreis2)
+        return su
 
     @staticmethod
     def hide():
-        # Optional: UI-Elemente ausblenden etc.
         pass
 
+# Objekt wie gehabt
 FrmMCSim = FrmMCSimClass()
 
 
@@ -5521,7 +5651,7 @@ class TK_3d_PktPkt_dAbwTemp(TMU_3DKomponente):
 
         self.addConstNeededToModell()
 
-    def sensititvity_c1(self) -> float:
+    def sensititivty_c1(self) -> float:
         try:
             a = self.modell.const_list.const_map[TKompConstants.TC_3d_PktPkt_dist]  # in mm
             alpha = self.modell.const_list.const_map[TKompConstants.TC_AusdehnKoeffMO]  # Ausdehnungskoeff.
@@ -5564,7 +5694,7 @@ class TK_3d_PktPkt_AbwTempAusd(TMU_3DKomponente):
 
         self.addConstNeededToModell()
 
-    def sensititvity_c1(self) -> float:
+    def sensititivty_c1(self) -> float:
         try:
             return self.modell.const_list.const_map[TKompConstants.TC_3d_PktPkt_dist]
         except Exception as e:
@@ -5638,7 +5768,7 @@ class TK_3d_PktPkt_dFormAbwTE(TMU_3DKomponente):
             TKompConstants["TC_3d_PktPkt_SigTe"],
             TKompConstants["TC_3d_KMG_A"],
             TKompConstants["TC_3d_PktPkt_nTastTe"],
-            TKompConstants["TC_3d_PktPkt_MTe"]
+            TKompConstants["TC_3d_PktPkt_Mte"]
         ]
         self.fields_to_edit = ["EF_Verteilung", "EF_StreuungsParam"]
 
@@ -5649,7 +5779,7 @@ class TK_3d_PktPkt_dFormAbwTE(TMU_3DKomponente):
             sig_te = self.modell.const_list.const_map[TKompConstants.TC_3d_PktPkt_SigTe]
             a = self.modell.const_list.const_map[TKompConstants.TC_3d_KMG_A] / 1000.0  # mm → µm
             n_tast_te = self.modell.const_list.const_map[TKompConstants.TC_3d_PktPkt_nTastTe]
-            m_te = self.modell.const_list.const_map[TKompConstants.TC_3d_PktPkt_MTe]
+            m_te = self.modell.const_list.const_map[TKompConstants.TC_3d_PktPkt_Mte]
 
             if None not in (sig_te, a, n_tast_te, m_te):
                 basis = 3 * math.sqrt(16 * sig_te**2 - 3 * a**2)

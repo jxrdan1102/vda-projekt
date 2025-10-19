@@ -96,7 +96,7 @@ class TMU_3DKomponente(TMU_Komponente):
             verteilung = self.data.Verteilung.name
             art = self.data.KennwertArt.name
 
-            if verteilung == "V3D_Rechteck":
+            if verteilung == "V_Rechteck":
                 if art == "K_HalbWeite":
                     return l / math.sqrt(3)
                 if art == "K_Spannweite":
@@ -104,7 +104,7 @@ class TMU_3DKomponente(TMU_Komponente):
                 if art == "K_Standardabweichung":
                     return l
 
-            elif verteilung == "V3D_Normal":
+            elif verteilung == "V_Normal":
                 if art == "K_HalbWeite":
                     return l / 2
                 if art == "K_Spannweite":
@@ -112,7 +112,7 @@ class TMU_3DKomponente(TMU_Komponente):
                 if art == "K_Standardabweichung":
                     return l
 
-            elif verteilung == "V3d_Dreieck":
+            elif verteilung == "V_Dreieck":
                 if art == "K_HalbWeite":
                     return l / math.sqrt(6)
                 if art == "K_Spannweite":
