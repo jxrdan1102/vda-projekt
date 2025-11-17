@@ -5,7 +5,7 @@
     import NewModelPage from "./component-[anakompId]/+page.svelte";
     import NewConstPage from "./constant-[anakonstId]/+page.svelte";
     import KmgInfoPage from "./kmg/+page.svelte";
-    import {COMPONENTS} from "$lib/Mapping";
+    import {COMPONENTS, Components} from "$lib/Mapping";
     import {tcMapping} from "C:\\Users\\Jason\\vda-projekt\\backend\\tcParameterMapping";
     import {tick} from 'svelte';
 
@@ -332,8 +332,7 @@
         <table class="w-full text-sm border-t">
             <thead class="bg-gray-200 text-gray-700">
             <tr>
-                <th class="px-2 text-left"></th>
-                <th class="px-2 py-1 text-left">Komponente</th>
+                <th class="px-3 py-1 text-left">Komponente</th>
                 <th class="px-2 py-1 text-left">Standardabweichung</th>
                 <th class="px-2 py-1 text-left">Methode</th>
                 <th class="px-2 py-1 text-left">Anzahl Messpunkte</th>
@@ -344,8 +343,7 @@
             {#each analyseprojekt.anakomp as comp, i}
                 <tr class="{selectedRow === i ? 'bg-green-200' : 'hover:bg-gray-100'} cursor-pointer"
                 on:click={() => selectedRow = i}>
-                    <td class="px-2 py-1">{comp.id}</td>
-                    <td class="px-2 py-1">{COMPONENTS[comp.komponente.kompid]}</td>
+                    <td class="px-3 py-1">{Components[comp.komponente.kompid] ? Components[comp.komponente.kompid] : COMPONENTS[comp.komponente.kompid]}</td>
 
                         <td
                                 class="px-2 py-1 clickable-cell"

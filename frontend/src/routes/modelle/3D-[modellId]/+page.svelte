@@ -4,7 +4,7 @@
     import Modal from "$lib/components/Modal.svelte";
     import NewCompPage from "../3D-[modellId]/addComponent/+page.svelte";
     import CompInfoPage from '../3D-[modellId]/component-[componentId]/+page.svelte';
-    import {COMPONENTS} from "$lib/Mapping.js";
+    import {COMPONENTS, Components} from "$lib/Mapping.js";
 
     export let data;
     const ModelTextLabels: Record<number, string> = {
@@ -112,6 +112,121 @@
             alert('Löschen fehlgeschlagen');
         }
     }
+    // Reaktiv: Optionen hängen von Element1 ab
+    $: punktmusterOptionen = (() => {
+        switch (Element1) {
+            case "Gerade":
+                return [
+                    { value: 1, label: "in Reihe" },
+                    { value: 2, label: "an den Enden" }
+                ];
+            case "Ebene":
+                return [
+                    { value: 1, label: "in Reihe oder im Raster" },
+                    { value: 2, label: "an den Enden" },
+                    { value: 3, label: "kreisförmig" }
+
+                ];
+            case "Zylinder":
+            case "Kegel":
+                return [
+                    { value: 1, label: "gleichmäßig verteilt" },
+                    { value: 2, label: "zwei Radialschnitte" }
+                ];
+            default:
+                return [];
+        }
+    })();
+    // Reaktiv: Optionen hängen von Element1 ab
+    $: punktmuster2Optionen = (() => {
+        switch (Bezug1) {
+            case "Gerade":
+                return [
+                    { value: 1, label: "in Reihe" },
+                    { value: 2, label: "an den Enden" }
+                ];
+            case "Ebene":
+                return [
+                    { value: 1, label: "in Reihe oder im Raster" },
+                    { value: 2, label: "an den Enden" },
+                    { value: 3, label: "kreisförmig" }
+
+                ];
+            case "Zylinder":
+            case "Kegel":
+                return [
+                    { value: 1, label: "gleichmäßig verteilt" },
+                    { value: 2, label: "zwei Radialschnitte" }
+                ];
+            default:
+                return [];
+        }
+    })();
+    // Sichtbarkeitslogik reaktiv berechnen
+    $: showPunktmusterR1 = ["Gerade", "Ebene", "Zylinder", "Kegel"].includes(Element1);
+    $: showElement2Taster1 = ["Kreis", "Punkt"].includes(Element1);
+
+    $: showPunktmusterR2 = ["Gerade", "Ebene", "Zylinder", "Kegel"].includes(Bezug1);
+    $: showBezug2Taster2 = ["Kreis", "Punkt"].includes(Bezug1);
+    $: showTasterschaft1 = Element1 === "Halbkugel" || ((Element1 === "Punkt" || Element1 === "Gerade" || Element1 === "Ebene") && taster == 2);
+    $: showTasterschaft2 = Element2 === "Halbkugel" || ((Element2 === "Punkt" || Element2 === "Gerade" || Element2 === "Ebene") && taster == 2);
+
+    $: showArtDesMasses =
+        (Element1 === "Punkt" || Element1 === "Gerade" || Element1 === "Ebene") &&
+        (Element2 === "Punkt" || Element2 === "Gerade" || Element2 === "Ebene") && taster == 1;
+
+    $: showWinkelE1 =
+        (Element1 === "Gerade" || Element1 === "Ebene" || Element1 === "Zylinder" || Element1 === "Kegel") && abstand == 1;
+
+    $: showWinkelE2 =
+        (Element2 === "Gerade" || Element2 === "Ebene" || Element2 === "Zylinder" || Element2 === "Kegel") && abstand == 1;
+
+    // Optionen für Element 1 dynamisch
+    $: optionsWinkelE1 =
+        (Element1 === "Gerade")
+            ? [
+                { value: 1, label: "in Reihe" },
+                { value: 2, label: "an den Enden" },
+            ]
+            : (Element1 === "Zylinder" || Element1 === "Kegel")
+                ? [
+                    { value: 4, label: "gleichmäßig verteilt" },
+                    { value: 5, label: "zwei Radialschnitte" },
+                ]
+                : (Element1 === "Ebene")
+                    ? [
+                        { value: 1, label: "in Reihe oder im Raster" },
+                        { value: 2, label: "an den Enden" },
+                        { value: 3, label: "kreisförmig" },
+
+                    ]
+                    : [];
+
+    // Optionen für Element 2 dynamisch
+    $: optionsWinkelE2 =
+        (Element2 === "Gerade")
+            ? [
+                { value: 1, label: "in Reihe" },
+                { value: 2, label: "an den Enden" },
+            ]
+            : (Element2 === "Zylinder" || Element2 === "Kegel")
+                ? [
+                    { value: 4, label: "gleichmäßig verteilt" },
+                    { value: 5, label: "zwei Radialschnitte" },
+                ]
+                : (Element2 === "Ebene")
+                    ? [
+                            { value: 1, label: "in Reihe oder im Raster" },
+                            { value: 2, label: "an den Enden" },
+                            { value: 3, label: "kreisförmig" },
+
+                        ]
+                    : [];
+
+    $: showPunktmuster = Element1 == "Zylinder";
+    $: showPunktmuster1 = Bezug1 == "Zylinder";
+
+
 </script>
 <section class="w-8xl space-y-4 text-sm font-sans text-gray-800 m-auto pt-5">
     <form method="POST" class="max-w-8xl space-y-6">
@@ -254,14 +369,16 @@
                             <option value="Kegel">Kegel</option>
                         </select>
                     </div>
-                    <div>
-                        <label class="block text-gray-700 text-xs mb-1">Punktmuster</label>
-                        <select id="punktmuster" name="punktmuster" bind:value={punktmuster}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
-                            <option value="" disabled>Bitte wählen</option>
-                            <option value=1>gleichmäßig verteilt</option>
-                            <option value=2>zwei Radialschnitte</option>
-                        </select>
-                    </div>
+                    {#if showPunktmuster}
+                        <div>
+                            <label class="block text-gray-700 text-xs mb-1">Punktmuster</label>
+                            <select id="punktmuster" name="punktmuster" bind:value={punktmuster}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                                <option value="" disabled>Bitte wählen</option>
+                                <option value=1>gleichmäßig verteilt</option>
+                                <option value=2>zwei Radialschnitte</option>
+                            </select>
+                        </div>
+                    {/if}
                     <div>
                         <label class="block text-gray-700 text-xs mb-1">Bezug1</label>
                         <select id="Bezug1" name="Bezug1" bind:value={Bezug1}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
@@ -271,14 +388,16 @@
                             <option value="Kegel">Kegel</option>
                         </select>
                     </div>
-                    <div>
-                        <label class="block text-gray-700 text-xs mb-1">Punktmuster 1</label>
-                        <select id="punktmusterB2" name="punktmusterB1" bind:value={punktmusterB1}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
-                            <option value="" disabled>Bitte wählen</option>
-                            <option value=1>gleichmäßig verteilt</option>
-                            <option value=2>zwei Radialschnitte</option>
-                        </select>
-                    </div>
+                    {#if showPunktmuster1}
+                        <div>
+                            <label class="block text-gray-700 text-xs mb-1">Punktmuster 1</label>
+                            <select id="punktmusterB1" name="punktmusterB1" bind:value={punktmusterB1}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                                <option value="" disabled>Bitte wählen</option>
+                                <option value={1}>gleichmäßig verteilt</option>
+                                <option value={2}>zwei Radialschnitte</option>
+                            </select>
+                        </div>
+                    {/if}
                     <div>
                         <label class="block text-gray-700 text-xs mb-1">Bezug2</label>
                         <select id="Bezug2" name="Bezug2" bind:value={Bezug2}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
@@ -313,99 +432,140 @@
                         <label class="block text-gray-700 text-xs mb-1">Modell</label>
                         <input type="text" name="name" bind:value={name} class="w-full h-6 border border-gray-400 px-2 text-sm py-2 bg-white" />
                     </div>
+                    <!-- Merkmal (immer sichtbar) -->
                     <div>
                         <label class="block text-gray-700 text-xs mb-1">Merkmal</label>
-                        <select id="merkmal" name="merkmal" bind:value={merkmal}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                        <select id="merkmal" name="merkmal" bind:value={merkmal}
+                                class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
                             <option value="" disabled>Bitte wählen</option>
-                            <option value=1>Geradheit</option>
-                            <option value=2>Ebenheit</option>
-                            <option value=3>Rundheit</option>
-                            <option value=4>Flächenform</option>
-                            <option value=5>Zylinderform</option>
+                            <option value={1}>Parallelität</option>
+                            <option value={2}>Rechtwinkligkeit</option>
+                            <option value={3}>Neigung</option>
                         </select>
                     </div>
+
+                    <!-- Element 1 (immer sichtbar) -->
                     <div>
                         <label class="block text-gray-700 text-xs mb-1">Element 1</label>
-                        <select id="Element1" name="Element1" bind:value={Element1}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                        <select bind:value={Element1} class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
                             <option value="" disabled>Bitte wählen</option>
+                            <option value="Punkt">Punkt</option>
                             <option value="Gerade">Gerade</option>
                             <option value="Ebene">Ebene</option>
+                            <option value="Kreis">Kreis</option>
                             <option value="Zylinder">Zylinder</option>
                             <option value="Kegel">Kegel</option>
                         </select>
                     </div>
+
+                    <!-- Bezug 1 (immer sichtbar) -->
                     <div>
-                        <label class="block text-gray-700 text-xs mb-1">Element 2</label>
-                        <select id="Element2" name="Element2" bind:value={Element2}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                        <label class="block text-gray-700 text-xs mb-1">Bezug 1</label>
+                        <select bind:value={Bezug1} class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
                             <option value="" disabled>Bitte wählen</option>
+                            <option value="Punkt">Punkt</option>
                             <option value="Gerade">Gerade</option>
                             <option value="Ebene">Ebene</option>
+                            <option value="Kreis">Kreis</option>
                             <option value="Zylinder">Zylinder</option>
                             <option value="Kegel">Kegel</option>
                         </select>
                     </div>
-                    <div>
-                        <label class="block text-gray-700 text-xs mb-1">Punktmuster</label>
-                        <select id="punktmusterR2" name="punktmusterR2" bind:value={punktmusterR2}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
-                            <option value="" disabled>Bitte wählen</option>
-                            <option value=1>gleichmäßig verteilt</option>
-                            <option value=2>zwei Radialschnitte</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-gray-700 text-xs mb-1">Bezug1</label>
-                        <select id="Bezug1" name="Bezug1" bind:value={Bezug1}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
-                            <option value="" disabled>Bitte wählen</option>
-                            <option value=1>Kreis</option>
-                            <option value=2>Zylinder</option>
-                            <option value=3>Kegel</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-gray-700 text-xs mb-1">Punktmuster</label>
-                        <select id="punktmusterR2" name="punktmusterR1" bind:value={punktmusterR1}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
-                            <option value="" disabled>Bitte wählen</option>
-                            <option value=1>gleichmäßig verteilt</option>
-                            <option value=2>zwei Radialschnitte</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-gray-700 text-xs mb-1">Bezug2</label>
-                        <select id="Bezug2" name="Bezug2" bind:value={Bezug2}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
-                            <option value="" disabled>Bitte wählen</option>
-                            <option value=0>-</option>
-                            <option value=1>Kreis</option>
-                            <option value=2>Zylinder</option>
-                            <option value=3>Kegel</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-gray-700 text-xs mb-1">Taster 1</label>
-                        <select id="taster" name="taster1" bind:value={taster1}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
-                            <option value="" disabled>Bitte wählen</option>
-                            <option value=1>derselbe Taster</option>
-                            <option value=2>verschiedene Taster</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-gray-700 text-xs mb-1">Taster 2</label>
-                        <select id="taster2" name="taster2" bind:value={taster2}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
-                            <option value="" disabled>Bitte wählen</option>
-                            <option value=1>derselbe Taster</option>
-                            <option value=2>verschiedene Taster</option>
-                        </select>
-                    </div>
+
+                    <!-- Bedingte Blöcke für Element 1 -->
+                    {#if showPunktmusterR1}
+                        <div>
+                            <label class="block text-gray-700 text-xs mb-1">Punktmuster R1</label>
+                            <select bind:value={punktmusterR1}
+                                    class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                                <option value="" disabled>Bitte wählen</option>
+                                {#each punktmusterOptionen as opt}
+                                    <option value={opt.value}>{opt.label}</option>
+                                {/each}
+                            </select>
+                        </div>
+                    {/if}
+
+                    {#if showElement2Taster1}
+                        <div>
+                            <label class="block text-gray-700 text-xs mb-1">Element 2</label>
+                            <select bind:value={Element2}
+                                    class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                                <option value="" disabled>Bitte wählen</option>
+                                <option value="Punkt">Punkt</option>
+                                <option value="Gerade">Gerade</option>
+                                <option value="Ebene">Ebene</option>
+                                <option value="Kreis">Kreis</option>
+                                <option value="Zylinder">Zylinder</option>
+                                <option value="Kegel">Kegel</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-gray-700 text-xs mb-1">Taster 1</label>
+                            <select bind:value={taster1}
+                                    class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                                <option value="" disabled>Bitte wählen</option>
+                                <option value={1}>derselbe Taster</option>
+                                <option value={2}>verschiedene Taster</option>
+                            </select>
+                        </div>
+                    {/if}
+
+                    <!-- Bedingte Blöcke für Bezug 1 -->
+                    {#if showPunktmusterR2}
+                        <div>
+                            <label class="block text-gray-700 text-xs mb-1">Punktmuster R2</label>
+                            <select bind:value={punktmusterR2}
+                                    class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                                <option value="" disabled>Bitte wählen</option>
+                                {#each punktmuster2Optionen as opt}
+                                    <option value={opt.value}>{opt.label}</option>
+                                {/each}
+                            </select>
+                        </div>
+                    {/if}
+
+                    {#if showBezug2Taster2}
+                        <div>
+                            <label class="block text-gray-700 text-xs mb-1">Bezug 2</label>
+                            <select bind:value={Bezug2}
+                                    class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                                <option value="" disabled>Bitte wählen</option>
+                                <option value="Punkt">Punkt</option>
+                                <option value="Gerade">Gerade</option>
+                                <option value="Ebene">Ebene</option>
+                                <option value="Kreis">Kreis</option>
+                                <option value="Zylinder">Zylinder</option>
+                                <option value="Kegel">Kegel</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-gray-700 text-xs mb-1">Taster 2</label>
+                            <select bind:value={taster2}
+                                    class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                                <option value="" disabled>Bitte wählen</option>
+                                <option value={1}>derselbe Taster</option>
+                                <option value={2}>verschiedene Taster</option>
+                            </select>
+                        </div>
+                    {/if}
                 </div>
             {/if}
             {#if aufgabe === 2}
                 <div class="mb-3 w-lg pl-5 grid grid-cols-3 gap-2">
+
                     <div>
-                    <label class="block text-gray-700 text-xs mb-1">Modell</label>
-                    <input type="text" name="name" bind:value={name} class="w-full h-6 border border-gray-400 px-2 text-sm py-2 bg-white" />
+                        <label class="block text-gray-700 text-xs mb-1">Modell</label>
+                        <input type="text" bind:value={name}
+                               class="w-full h-6 border border-gray-400 px-2 text-sm py-2 bg-white" />
                     </div>
+
                     <div>
                         <label class="block text-gray-700 text-xs mb-1">Element 1</label>
-                        <select id="Element1" name="Element1" bind:value={Element1}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                        <select bind:value={Element1}
+                                class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
                             <option value="" disabled>Bitte wählen</option>
                             <option value="Punkt">Punkt</option>
                             <option value="Kreis">Kreis</option>
@@ -416,9 +576,11 @@
                             <option value="Halbkugel">Halbkugel</option>
                         </select>
                     </div>
+
                     <div>
                         <label class="block text-gray-700 text-xs mb-1">Element 2</label>
-                        <select id="Element2" name="Element2" bind:value={Element2}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                        <select bind:value={Element2}
+                                class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
                             <option value="" disabled>Bitte wählen</option>
                             <option value="Punkt">Punkt</option>
                             <option value="Kreis">Kreis</option>
@@ -427,72 +589,90 @@
                             <option value="Zylinder">Zylinder</option>
                             <option value="Kegel">Kegel</option>
                             <option value="Halbkugel">Halbkugel</option>
-
                         </select>
                     </div>
+
                     <div>
                         <label class="block text-gray-700 text-xs mb-1">Abstand</label>
-                        <select id="abstand" name="abstand" bind:value={abstand}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                        <select bind:value={abstand}
+                                class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
                             <option value="" disabled>Bitte wählen</option>
                             <option value={1}>in der Nullebene des Koordinatensystems</option>
                             <option value={2}>im Schwerpunkt</option>
                         </select>
                     </div>
+
                     <div>
                         <label class="block text-gray-700 text-xs mb-1">Taster</label>
-                        <select id="taster" name="taster" bind:value={taster}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                        <select bind:value={taster}
+                                class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
                             <option value="" disabled>Bitte wählen</option>
                             <option value={1}>derselbe Taster</option>
                             <option value={2}>verschiedene Taster</option>
                         </select>
                     </div>
-                    <div>
-                        <label class="block text-gray-700 text-xs mb-1">Winkel zu Element 1</label>
-                        <select id="winkelE1" name="winkelE1" bind:value={winkelE1}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
-                            <option value="" disabled>Bitte wählen</option>
-                            <option value={1}>in Reihe oder im Raster</option>
-                            <option value={2}>an den Enden Taster</option>
-                            <option value={3}>kreisförmig</option>
-                            <option value={4}>gleichmäßig verteilt</option>
-                            <option value={5}>zwei Radialschnitte</option>
 
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-gray-700 text-xs mb-1">Winkel zu Element 2</label>
-                        <select id="winkelE2" name="winkelE2" bind:value={winkelE2}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
-                            <option value="" disabled>Bitte wählen</option>
-                            <option value={1}>in Reihe oder im Raster</option>
-                            <option value={2}>an den Enden Taster</option>
-                            <option value={3}>kreisförmig</option>
-                            <option value={4}>gleichmäßig verteilt</option>
-                            <option value={5}>zwei Radialschnitte</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-gray-700 text-xs mb-1">Tasterschaft 1</label>
-                        <select id="tasterschaft1" name="tasterschaft1" bind:value={tasterschaft1}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
-                            <option value="" disabled>Bitte wählen</option>
-                            <option value={1}>senkrecht</option>
-                            <option value={2}>parallel zu Auswerterichtung</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-gray-700 text-xs mb-1">Tasterschaft 2</label>
-                        <select id="tasterschaft2" name="tasterschaft2" bind:value={tasterschaft2}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
-                            <option value="" disabled>Bitte wählen</option>
-                            <option value={1}>senkrecht</option>
-                            <option value={2}>parallel zu Auswerterichtung</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-gray-700 text-xs mb-1">Art des Maßes</label>
-                        <select id="artdesmasses" name="artdesmasses" bind:value={artdesmasses}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
-                            <option value="" disabled>Bitte wählen</option>
-                            <option value={1}>Stufenmaß</option>
-                            <option value={2}>Innen- ode Außenmaß</option>
-                        </select>
-                    </div>
+                    {#if showWinkelE1}
+                        <div>
+                            <label class="block text-gray-700 text-xs mb-1">Winkel zu Element 1</label>
+                            <select bind:value={winkelE1} class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                                <option value="" disabled>Bitte wählen</option>
+                                {#each optionsWinkelE1 as opt}
+                                    <option value={opt.value}>{opt.label}</option>
+                                {/each}
+                            </select>
+                        </div>
+                    {/if}
+
+
+                    {#if showWinkelE2}
+                        <div>
+                            <label class="block text-gray-700 text-xs mb-1">Winkel zu Element 2</label>
+                            <select bind:value={winkelE2} class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                                <option value="" disabled>Bitte wählen</option>
+                                {#each optionsWinkelE2 as opt}
+                                    <option value={opt.value}>{opt.label}</option>
+                                {/each}
+                            </select>
+                        </div>
+                    {/if}
+
+
+                    {#if showTasterschaft1}
+                        <div>
+                            <label class="block text-gray-700 text-xs mb-1">Tasterschaft 1</label>
+                            <select bind:value={tasterschaft1}
+                                    class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                                <option value="" disabled>Bitte wählen</option>
+                                <option value={1}>senkrecht</option>
+                                <option value={2}>parallel zu Auswerterichtung</option>
+                            </select>
+                        </div>
+                    {/if}
+
+                    {#if showTasterschaft2}
+                        <div>
+                            <label class="block text-gray-700 text-xs mb-1">Tasterschaft 2</label>
+                            <select bind:value={tasterschaft2}
+                                    class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                                <option value="" disabled>Bitte wählen</option>
+                                <option value={1}>senkrecht</option>
+                                <option value={2}>parallel zu Auswerterichtung</option>
+                            </select>
+                        </div>
+                    {/if}
+
+                    {#if showArtDesMasses}
+                        <div>
+                            <label class="block text-gray-700 text-xs mb-1">Art des Maßes</label>
+                            <select bind:value={artdesmasses}
+                                    class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                                <option value="" disabled>Bitte wählen</option>
+                                <option value={1}>Stufenmaß</option>
+                                <option value={2}>Innen- ode Außenmaß</option>
+                            </select>
+                        </div>
+                    {/if}
                 </div>
             {/if}
             {#if aufgabe === 1}
@@ -540,7 +720,6 @@
             <tr>
                 <th class="px-2 py-1 text-left w-1"></th>
                 <th class="px-2 py-1 text-left">Komponente</th>
-                <th class="px-2 py-1 text-left">ID</th>
                 <th class="px-2 py-1 text-left">Beschreibung</th>
                 <th class="float-right p-1">
                     <svg on:click={onNewComponentClick} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-5.5 hover:text-gray-800 cursor-pointer">
@@ -555,8 +734,7 @@
                     on:click={() => selectedRow = i}
                     on:dblclick={(e) => onOpenComponent(e, comp.id)}>
                     <td class="px-2 py-1 text-left w-0.5">{i + 1}</td>
-                    <td class="px-2 py-1">{COMPONENTS[comp.kompid]}</td>
-                    <td class="px-2 py-1">{comp.kompid}</td>
+                    <td class="px-2 py-1">{Components[comp.kompid] ? Components[comp.kompid] : COMPONENTS[comp.kompid]}</td>
                     <td class="px-2 py-1">{ModelTextLabels[comp.modltxtid] ?? ''}</td>
                     <td class="float-right px-1">
                         <button type="button" on:click={() => deleteComponent(comp.id)}>

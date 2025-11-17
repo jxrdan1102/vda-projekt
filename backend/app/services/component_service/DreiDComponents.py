@@ -38,7 +38,7 @@ class TMU_3dKomponente_Richtung(TMU_3DKomponente):
                 ux = MU_NAN
                 if self.c1_val != MU_NAN:
                     if self.data.KennwertArt.name == "M3D_MethodeA":
-                        ux = self.standard_unsicherheit
+                        ux = self.standard_unsicherheit_su()
                     else:
                         A = 1
                         si = self.standard_unsicherheit_su()
@@ -462,7 +462,7 @@ class TK_3d_Dw(TMU_3DKomponente):
         self.lfdnr = lfdnr
         self.data = TMuKompRec(TermL0=0.15,TermL1=0,Verteilung="V_Rechteck",KennwertArt="M3D_MethodeB",Freiheitsgrad="FG_unbegrenzt",FreiN_minus_1=0,Flags=1,)
 
-        if self.modell.Element1 != 4:  # Annahme: Vergleich als String oder Enum
+        if self.modell.Element1 != "Halbkugel":  # Annahme: Vergleich als String oder Enum
             self.ConstNeeded += [TKompConstants['TC_3d_KMG_A'],TKompConstants['TC_3d_DUME_alpha']]
         else:
             self.ConstNeeded += [TKompConstants['TC_3d_KMG_A']]
@@ -496,13 +496,17 @@ class TK_3d_Dw(TMU_3DKomponente):
             return MU_NAN
 
     def g_val(self) -> float:
-        Phi = self.modell.const_list.const_map[TKompConstants.TC_3d_DUME_alpha]
-        if Phi == 0 or math.isnan(Phi):
-            Phi = 360
-        print("Phi:",20631 * (Phi ** -1.6878))
-        return 20631 * (Phi ** -1.6878)
+        try:
+            phi = self.modell.const_list.const_map[TKompConstants.TC_3d_DUME_alpha]
+        except (KeyError, AttributeError):
+            phi = float("nan")
+        if math.isnan(phi) or phi == 0:
+            phi = 360
+            print("Phi:",20631 * (phi ** -1.6878))
+        return 20631 * (phi ** -1.6878)
 
-    def EffektiverFreiheitsgrad(self) -> float:
+    @property
+    def effektiver_freiheitsgrad(self) -> float:
         if self.archiv:
             return self.arch_data.FreiEff
 
@@ -559,9 +563,10 @@ class TK_3dA_DeltaDT(TMU_3DKomponente):
 
         if n is not None and n > 0 and not math.isnan(faktor):
             return faktor * math.sqrt(4 / n)
-        return MU_NAN
+        return 1
 
-    def EffektiverFreiheitsgrad(self) -> float:
+    @property
+    def effektiver_freiheitsgrad(self) -> float:
         if self.archiv:
             return self.arch_data.FreiEff
 
@@ -1802,9 +1807,8 @@ class TK_3d_Ri_WE(TMU_3dKomponente_Richtung):
             Flags=1,
         )
 
-        if self.modell.Element1 in ["Kreis", "Halbkugel", "Zylinder", "Kegel"]:
-            self.ConstNeeded += [TKompConstants["TC_3d_Ri_LME"], TKompConstants["TC_3d_Ri_LE"]]
-            self.addConstNeededToModell()
+        self.ConstNeeded += [TKompConstants["TC_3d_Ri_LME"], TKompConstants["TC_3d_Ri_LE"]]
+        self.addConstNeededToModell()
 
     def b_val(self) -> float:
         if self.archiv:
@@ -1818,16 +1822,16 @@ class TK_3d_Ri_WE(TMU_3dKomponente_Richtung):
                     result = 1
             else:  # Methode B
                 if e in ["Gerade", "Ebene"]:
-                    if self.modell.winkelE1 == 1:  # Gleichmäßig verteilt
+                    if self.modell.punktmusterR2 == 1:  # Gleichmäßig verteilt
                         result = math.sqrt((12 * (self.messpunkt_anzahl - 1)) / (self.messpunkt_anzahl * (self.messpunkt_anzahl + 1)))
-                    elif self.modell.winkelE1 == 2:  # Zwei Radialschnitte
+                    elif self.modell.punktmusterR2 == 2:  # Zwei Radialschnitte
                         result = math.sqrt(4 / self.messpunkt_anzahl)
-                    elif self.modell.winkelE1 == 3:  # Kreisförmig
+                    elif self.modell.punktmusterR2 == 3:  # Kreisförmig
                         result = math.sqrt(8 / self.messpunkt_anzahl)
                 elif e in ["Zylinder", "Kegel"]:
-                    if self.modell.winkelE1 == 1:  # Gleichmäßig verteilt
+                    if self.modell.punktmusterR2 == 1:  # Gleichmäßig verteilt
                         result = math.sqrt((24 * (self.messpunkt_anzahl - 1)) / (self.messpunkt_anzahl * (self.messpunkt_anzahl + 1)))
-                    elif self.modell.winkelE1 == 2:  # Zwei Radialschnitte
+                    elif self.modell.punktmusterR2 == 2:  # Zwei Radialschnitte
                         result = math.sqrt(8 / self.messpunkt_anzahl)
         return result
 
@@ -2092,7 +2096,7 @@ class TK_3d_Ri_WB(TMU_3dKomponente_Richtung):
                 if self.messpunkt_anzahl > 1:
                     # Gerade, Ebene und Punkt/NDEF
                     if self.modell.Bezug1 in ["Gerade", "Ebene"] and \
-                        self.modell.Bezug2 in ["Punkt", "NDEF"]:
+                        self.modell.Bezug2 in ["Punkt", None]:
                         result = math.sqrt((12 * (self.messpunkt_anzahl - 1)) / (self.messpunkt_anzahl * (self.messpunkt_anzahl + 1)))
                     # Gerade, Ebene und Gerade
                     elif self.modell.Bezug1 in ["Gerade", "Ebene"] and \
@@ -2111,7 +2115,7 @@ class TK_3d_Ri_WB(TMU_3dKomponente_Richtung):
                          self.modell.Bezug2 == "Gerade":
                         result = math.sqrt(8 / self.messpunkt_anzahl)
         return result
-
+    @property
     def effektiver_freiheitsgrad(self) -> float:
         if self.archiv:
             return self.arch_data.FreiEff
@@ -3776,10 +3780,10 @@ class TK_3d_Koax_WE(TMU_3DKomponente):
                         if self.modell.Element1 == "Kreis":
                             return math.sqrt(8 / self.messpunkt_anzahl)
                         elif self.modell.Element1 in ["Zylinder", "Kegel"]:
-                            if self.modell.winkelE1 == 1:  # gleichmäßige Punktanordnung
+                            if self.modell.punktmuster == 1:  # gleichmäßige Punktanordnung
                                 return math.sqrt((24 * (self.messpunkt_anzahl - 1)) /
                                                  (self.messpunkt_anzahl * (self.messpunkt_anzahl + 1)))
-                            elif self.modell.winkelE1 == 2:  # Punktanordnung auf Kreisumfang
+                            elif self.modell.punktmuster == 2:  # Punktanordnung auf Kreisumfang
                                 return math.sqrt(8 / self.messpunkt_anzahl)
         return float("nan")
 
@@ -5366,12 +5370,25 @@ class TK_3d_PktPkt_dPyKMG(TMU_3DKomponente):
             print(f"Fehler in standard_unsicherheit_su: {e}")
             return MU_NAN
 
+class Sicher:
+    def __init__(self):
+        self.dist = None
+        self.AnzSims = None
+        self.AnzBe = None
+        self.AnzTe = None
+        self.KMG_AmpX = None
+        self.KMG_AmpY = None
+        self.WinkelSegBE = None
+        self.WinkelSegTE = None
+        self.Dia1_BE = None
+        self.Dia2_TE = None
+        self.SimSU = None
 
 class TK_3d_PktPkt_dPZuf(TMU_3DKomponente):
     def __init__(self, modell, const_list, lfdnr):
         super().__init__(modell, 1393, const_list, "&delta;P<sub>Zuf</sub>")
         self.lfdnr = lfdnr
-
+        self.Sicher = Sicher()
         self.einheit = "mm"
         self.einheit_ergebnis = "mm"
         self.dez = 5
@@ -5408,57 +5425,62 @@ class TK_3d_PktPkt_dPZuf(TMU_3DKomponente):
         self.addConstNeededToModell()
 
     def standard_unsicherheit_su(self) -> float:
-        try:
-            dist = self.modell.const_list.const_map[TKompConstants.TC_3d_PktPkt_dist]
-            anz_sims = round(self.modell.const_list.const_map[TKompConstants.TC_3d_PktPkt_AnzSims])
-            anz_be = round(self.modell.const_list.const_map[TKompConstants.TC_3d_PktPkt_nTastBe])
-            anz_te = round(self.modell.const_list.const_map[TKompConstants.TC_3d_PktPkt_nTastTe])
-            winkel_seg_be = self.modell.const_list.const_map[TKompConstants.TC_3d_PktPkt_WinkelSeg_BE]
-            winkel_seg_te = self.modell.const_list.const_map[TKompConstants.TC_3d_PktPkt_WinkelSeg_TE]
-            kmg_amp_x = self.modell.const_list.const_map[TKompConstants.TC_3d_KMG_AmpX]
-            kmg_amp_y = self.modell.const_list.const_map[TKompConstants.TC_3d_KMG_AmpY]
-            dia1_be = self.modell.const_list.const_map[TKompConstants.TC_3d_PktPkt_Dia_BE]
-            dia2_te = self.modell.const_list.const_map[TKompConstants.TC_3d_PktPkt_Dia_TE]
+        # Konstanten auslesen
+        dist = self.modell.const_list.const_map[TKompConstants.TC_3d_PktPkt_dist]
+        AnzSims = round(self.modell.const_list.const_map[TKompConstants.TC_3d_PktPkt_AnzSims])
+        AnzBe = round(self.modell.const_list.const_map[TKompConstants.TC_3d_PktPkt_nTastBe])
+        AnzTe = round(self.modell.const_list.const_map[TKompConstants.TC_3d_PktPkt_nTastTe])
+        WinkelSegBE = self.modell.const_list.const_map[TKompConstants.TC_3d_PktPkt_WinkelSeg_BE]
+        WinkelSegTE = self.modell.const_list.const_map[TKompConstants.TC_3d_PktPkt_WinkelSeg_TE]
+        KMG_AmpX = self.modell.const_list.const_map[TKompConstants.TC_3d_KMG_AmpX]
+        KMG_AmpY = self.modell.const_list.const_map[TKompConstants.TC_3d_KMG_AmpY]
+        Dia1_BE = self.modell.const_list.const_map[TKompConstants.TC_3d_PktPkt_Dia_BE]
+        Dia2_TE = self.modell.const_list.const_map[TKompConstants.TC_3d_PktPkt_Dia_TE]
 
-            sicher = self.sicher
-            changed = (
-                dist != sicher['dist'] or
-                anz_sims != sicher['AnzSims'] or
-                anz_be != sicher['AnzBe'] or
-                anz_te != sicher['AnzTe'] or
-                kmg_amp_x != sicher['KMG_AmpX'] or
-                kmg_amp_y != sicher['KMG_AmpY'] or
-                winkel_seg_be != sicher['WinkelSegBE'] or
-                winkel_seg_te != sicher['WinkelSegTE'] or
-                dia1_be != sicher['Dia1_BE'] or
-                dia2_te != sicher['Dia2_TE']
-            )
+        # Prüfen ob sich Eingaben geändert haben (Cache-Check)
+        if (
+                dist != self.Sicher.dist or
+                AnzSims != self.Sicher.AnzSims or
+                AnzBe != self.Sicher.AnzBe or
+                AnzTe != self.Sicher.AnzTe or
+                KMG_AmpX != self.Sicher.KMG_AmpX or
+                KMG_AmpY != self.Sicher.KMG_AmpY or
+                WinkelSegBE != self.Sicher.WinkelSegBE or
+                WinkelSegTE != self.Sicher.WinkelSegTE or
+                Dia1_BE != self.Sicher.Dia1_BE or
+                Dia2_TE != self.Sicher.Dia2_TE
+        ):
+            # Änderungen erkannt → neu berechnen
+            self.Sicher.dist = dist
+            self.Sicher.AnzSims = AnzSims
+            self.Sicher.AnzBe = AnzBe
+            self.Sicher.AnzTe = AnzTe
+            self.Sicher.KMG_AmpX = KMG_AmpX
+            self.Sicher.KMG_AmpY = KMG_AmpY
+            self.Sicher.WinkelSegBE = WinkelSegBE
+            self.Sicher.WinkelSegTE = WinkelSegTE
+            self.Sicher.Dia1_BE = Dia1_BE
+            self.Sicher.Dia2_TE = Dia2_TE
 
-            if changed:
-                sicher['dist'] = dist
-                sicher['AnzSims'] = anz_sims
-                sicher['AnzBe'] = anz_be
-                sicher['AnzTe'] = anz_te
-                sicher['KMG_AmpX'] = kmg_amp_x
-                sicher['KMG_AmpY'] = kmg_amp_y
-                sicher['WinkelSegBE'] = winkel_seg_be
-                sicher['WinkelSegTE'] = winkel_seg_te
-                sicher['Dia1_BE'] = dia1_be
-                sicher['Dia2_TE'] = dia2_te
+            # Simulationsparameter setzen
+            global num_sims, kmg_ampx, kmg_ampy
+            num_sims = AnzSims
+            kmg_ampx = KMG_AmpX
+            kmg_ampy = KMG_AmpY
 
-                element1 = TSimKreis(1, 0, 0, dia1_be, anz_be, winkel_seg_be)
-                element2 = TSimKreis(2, dist, 0, dia2_te, anz_te, winkel_seg_te)
+            # Elemente erzeugen (entspricht TSimKreis)
+            element1 = Kreis(midx=0, midy=0, dia=Dia1_BE, numpoints=AnzBe, segment=WinkelSegBE)
+            element2 = Kreis(midx=dist, midy=0, dia=Dia2_TE, numpoints=AnzTe, segment=WinkelSegTE)
 
-                sim = FrmMCSim.doit(anz_sims, kmg_amp_x, kmg_amp_y, element1, element2)
+            # Simulation (Doit)
+            xbar, std, su = mu_position(element1, element2, AnzSims, KMG_AmpX, KMG_AmpY)
 
-                self.sim_su = self.tabelle1_su(sim)
+            self.Sicher.SimSU = self.tabelle1_su(std)  # speichern
+        else:
+            su = self.Sicher.SimSU  # unverändert
 
-                FrmMCSim.hide()
+        return self.Sicher.SimSU
 
-            return self.sim_su
-        except Exception as e:
-            print(f"Fehler in standard_unsicherheit_su: {e}")
-            return MU_NAN
     @cached_property
     def unsicherheitsbeitrag(self) -> float:
         try:

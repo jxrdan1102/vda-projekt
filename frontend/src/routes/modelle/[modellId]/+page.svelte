@@ -4,7 +4,7 @@
     import Modal from "$lib/components/Modal.svelte";
     import NewCompPage from "../[modellId]/addComponent/+page.svelte";
     import CompInfoPage from '../[modellId]/component-[componentId]/+page.svelte';
-    import {COMPONENTS} from "$lib/Mapping.js";
+    import {COMPONENTS, Components} from "$lib/Mapping.js";
 
     export let data;
 
@@ -211,7 +211,6 @@
             <tr>
                 <th class="px-2 py-1 text-left w-1"></th>
                 <th class="px-2 py-1 text-left">Komponente</th>
-                <th class="px-2 py-1 text-left">ID</th>
                 <th class="px-2 py-1 text-left">Beschreibung</th>
                 <th class="float-right p-1">
                     <svg on:click={onNewComponentClick} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-5.5 hover:text-gray-800 cursor-pointer">
@@ -226,8 +225,7 @@
                     on:click={() => selectedRow = i}
                     on:dblclick={(e) => onOpenComponent(e, comp.id)}>
                     <td class="px-2 py-1 text-left w-0.5">{i + 1}</td>
-                    <td class="px-2 py-1">{COMPONENTS[comp.kompid]}</td>
-                    <td class="px-2 py-1">{comp.kompid}</td>
+                    <td class="px-2 py-1">{Components[comp.kompid] ? Components[comp.kompid] : COMPONENTS[comp.kompid]}</td>
                     <td class="px-2 py-1">{ModelTextLabels[comp.modltxtid] ?? ''}</td>
                     <td class="float-right px-1">
                         <button type="button" on:click={() => deleteComponent(comp.id)}>

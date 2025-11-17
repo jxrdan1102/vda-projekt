@@ -1,4 +1,6 @@
 <script lang="ts">
+    import {Components} from "$lib/Mapping";
+
     export let data: { komponenten: any };
 
     const komponenten = data.komponenten;
@@ -23,7 +25,7 @@
         <select id="kompid" name="kompid" bind:value={kompid} required class="border px-2 py-1 text-sm">
             <option value="" disabled selected>Bitte Komponente wählen</option>
             {#each komponenten as komponente}
-                <option value={komponente.id}>{komponente.id}-{komponente.name}</option>
+                <option value={komponente.id}>{komponente.id}: {Components[komponente.id] ? Components[komponente.id] : komponente.name} </option>
             {/each}
         </select>
         </label>

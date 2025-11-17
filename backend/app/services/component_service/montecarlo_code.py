@@ -135,7 +135,6 @@ class Kreis(Punkt):
             self.punkt_wolke[s] = self.calc_ausgleichskreis(zufall)  # Punktwolke um Kreismittelpunkt
 
 
-
 # ----------------------------------------------------------------------------
 
 def calc_abstand(KreisA, KreisB):
@@ -157,15 +156,46 @@ def verteilung(dist, f):
     return intervall
 
 
-def mu_position(elementA, elementB):
-    d = calc_abstand(elementA, elementB)  # d als array der Mittelpunktabstände der simuierten Kreise
-
-    print("Anzahl Simulationen je Messpunkt      ", num_sims)
-    print("Anzahl Klassen  (fix?)                ", num_bins)
+def mu_position(elementA, elementB, AnzSims, KMG_AmpX, KMG_AmpY ):
+    d = calc_abstand(elementA, elementB)  # d als array der Mittelpunktabstände der simulierten Kreise
+    global num_sims, kmg_ampx, kmg_ampy  # hier sagst du Python, dass du die globalen Variablen meinst
+    num_sims = AnzSims
+    kmg_ampx = KMG_AmpX
+    kmg_ampy = KMG_AmpY
     xbar = np.mean(d)
     vstd = np.std(d)
-    print("Mittelwert(delta d(i))           %8.7f" % (xbar))
-    print("Standardabweichung( delta d(i) ) %8.7f" % (vstd))
+
+    with open(r"C:\Users\Jason\test.txt", "w", encoding="utf-8") as f:
+        # Attribute von elementA
+        f.write(f"ElementA:\n")
+        f.write(f"  coord_x: {elementA.coord_x}\n")
+        f.write(f"  coord_y: {elementA.coord_y}\n")
+        if isinstance(elementA, Kreis):
+            f.write(f"  dia: {elementA.dia}\n")
+            f.write(f"  anz_punkte: {elementA.anz_punkte}\n")
+        f.write("\n")
+
+        # Attribute von elementB
+        f.write(f"ElementB:\n")
+        f.write(f"  coord_x: {elementB.coord_x}\n")
+        f.write(f"  coord_y: {elementB.coord_y}\n")
+        if isinstance(elementB, Kreis):
+            f.write(f"  dia: {elementB.dia}\n")
+            f.write(f"  anz_punkte: {elementB.anz_punkte}\n")
+        f.write("\n")
+
+        # Statistiken
+        f.write(f"Anzahl Simulationen je Messpunkt      {num_sims}\n")
+        f.write(f"Anzahl Klassen  (fix?)                {num_bins}\n")
+        f.write(f"Mittelwert(delta d(i))           {xbar:8.7f}\n")
+        f.write(f"Standardabweichung( delta d(i) ) {vstd:8.7f}\n")
+        f.write("\n")
+
+        # Einzelne Abstände ausgeben
+        f.write("Einzelne Abstände d[i]:\n")
+        for i, val in enumerate(d):
+            f.write(f"  d[{i}] = {val:8.7f}\n")
+
     # su berechnen
     dens, densbins = np.histogram(d, num_bins, density=True)
 
@@ -181,7 +211,7 @@ def mu_position(elementA, elementB):
     vert_ueg = np.empty(shape=(6, 3))
 
     # Datei vorbereiten
-    log_file = r"C:\Users\Jason\testsPy.txt"
+    log_file = r"C:\Users\Jason\testss.txt"
     with open(log_file, "w", encoding="utf-8") as f:
 
         f.write("=== DEBUG LOG: mu_position ===\n\n")
@@ -235,27 +265,29 @@ def mu_position(elementA, elementB):
 
         f.write(f"Konfidenzintervall (95%) = {konfi95}\n")
         f.write(f"SU = {su}\n")
+    with open(r"C:\Users\Jason\tests.txt", "w", encoding="utf-8") as f:
 
-    print("OG_Intervall               %8.5f" % (oeg_intervall))
-    print("UG_Intervall               %8.5f" % (ueg_intervall))
+        f.write(f"OG_Intervall               %8.5f" % (oeg_intervall))
+        f.write(f"UG_Intervall               %8.5f" % (ueg_intervall))
 
-    print("Konfidenzintervall (95°/.) %8.5f mm" % (konfi95))
-    print("SU   =                     %8.5f mm" % (su))
-
+        f.write(f"Konfidenzintervall (95°/.) %8.5f mm" % (konfi95))
+        f.write(f"xbar = {xbar}\n")
+        f.write(f"vstd = {vstd}\n")
+        f.write(f"SU = {su}\n")
     return xbar, vstd, su
 
 
 # main
 print("Standalone=", standalone)
-standalone = 1
+
 if (standalone == 0):  # hier kommen die Daten von Delphi
     print()
 else:
-    num_sims = 10000  # Anzahl Simulationen
+    num_sims = 5000  # Anzahl Simulationen
     kmg_ampx = 0.0005  # Streuung Amplitude coord_x mm (KMG)
     kmg_ampy = 0.0005  # Streuung Amplitude coord_y mm (KMG)
-    element1 = Kreis(midx=0, midy=0, dia=50, numpoints=6, segment=320)
-    element2 = Kreis(midx=50, midy=0, dia=50, numpoints=6, segment=320)
+    element1 = Kreis(midx=0, midy=0, dia=50, numpoints=8, segment=350)
+    element2 = Kreis(midx=50, midy=0, dia=50, numpoints=8, segment=350)
     print("-----------------------------------------------------")
     print("Kreis - Kreis")
     mu_position(element1, element2)
