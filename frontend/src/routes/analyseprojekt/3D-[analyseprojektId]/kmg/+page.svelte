@@ -2,7 +2,7 @@
     import {fail} from "@sveltejs/kit";
     import {page} from "$app/stores";
     import {get} from "svelte/store";
-    import {goto} from "$app/navigation";
+    import {invalidate} from "$app/navigation";
 
     export let fk_kmg;
     export let data: { kmg: any[] };
@@ -38,7 +38,10 @@
         // Frontend-State direkt aktualisieren
         fk_kmg = id;
         selectedKMG = kmg.find(k => k.id === id) ?? null;
-        await goto(`/analyseprojekt/3D-${analyseprojektId}`);
+        await invalidate(`/api/analyseprojekt/${analyseprojektId}`);
+        console.log("Jule")
+        window.location.href = `/analyseprojekt/3D-${analyseprojektId}`;
+
     }
 
     function selectKMG(item: any) {

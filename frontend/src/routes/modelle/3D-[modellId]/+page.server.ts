@@ -60,8 +60,12 @@ export const actions: Actions = {
         payload.tsk_hoehenmessung = formData.has('tsk_hoehenmessung') ? 1 : 0;
         payload.tsk_stufenmessung = formData.has('tsk_stufenmessung') ? 1 : 0;
 
-        const aufgabe_modell = parseOptionalInt(formData.get('aufgabe_modell') as string);
+        const aufgabe_modell = parseOptionalInt('aufgabe_modell');
         if (aufgabe_modell !== undefined) payload.aufgabe_modell = aufgabe_modell;
+console.log("aufgabe_modell:: ", aufgabe_modell);
+        const aufgabe = parseOptionalInt('aufgabe');
+        if (aufgabe !== undefined) payload.aufgabe = aufgabe;
+        console.log("aufgabe", aufgabe);
 
         const bezug1 = parseOptionalString('Bezug1');
         if (bezug1 !== undefined) payload.Bezug1 = bezug1;

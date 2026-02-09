@@ -7,6 +7,7 @@ from app.schemas.anakomp import Anakomp
 from app.schemas.anakomp import AnakompForAnamuR
 from app.schemas.anakonst import Anakonst
 from app.schemas.anakonst import AnakonstForAnamuR
+from app.schemas.kmg import KMGBase
 from app.schemas.modell import ModellForAnamuR
 from app.schemas.modell import ModellIDResponse
 
@@ -48,6 +49,7 @@ class AnamuGetIdR(BaseModel):
     anakonst: list[AnakonstForAnamuR] | None = None
     fk_kmg: int | None = None
     tolfaktor: int | None = None
+    kmg: Optional[KMGBase] | None = None
     class Config:
         from_attributes = True
 

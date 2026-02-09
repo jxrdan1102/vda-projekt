@@ -278,7 +278,7 @@
                 Speichern
             </button>
             <button type="button" on:click={openKmg} name="kmg" class="bg-gray-600 mr-2 text-white text-sm px-3 py-1 rounded hover:bg-gray-700 float-right">
-                KMG
+                {analyseprojekt.kmg.kmg_ident}
             </button>
         </h1>
         <div class="flex gap-10 justify-between mt-3">

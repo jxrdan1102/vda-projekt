@@ -41,6 +41,7 @@ class ComponentGetR(BaseModel):
         from_attributes = True
 
 class ComponentGet(ComponentRefBase):
+
     pass
 
 

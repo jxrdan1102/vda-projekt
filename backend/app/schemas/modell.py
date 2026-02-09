@@ -61,6 +61,8 @@ class ModellForAnamuR(BaseModel):
 
 class ModellUpdateR(BaseModel):
     name: str | None = None
+    aufgabe_modell: int
+    aufgabe: int
     geo_me: int | None = None # Messeinrichtung
     geo_mo: int | None = None # Messobjekt
     geo_bn: int | None = None # Einstellnormal
@@ -168,6 +170,8 @@ class ModellUpdate(BaseModel):
     class Config:
         from_attributes = True
 
+class ModellAlter(ModellUpdateR):
+    aufgabe: int | None = None
 
 class ModellNameDescription(ModellBase):
     name: str

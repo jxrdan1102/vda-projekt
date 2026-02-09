@@ -225,12 +225,59 @@
 
     $: showPunktmuster = Element1 == "Zylinder";
     $: showPunktmuster1 = Bezug1 == "Zylinder";
+    let aufgabe_modell = data.modell.aufgabe_modell
+    async function saveModell() {
+        const payload = {
+            name,
+            Element1,
+            Element2,
+            abstand,
+            taster,
+            aufgabe,
+            aufgabe_modell,
+            tasterschaft1,
+            tasterschaft2,
+            artdesmasses,
+            winkelE1,
+            winkelE2,
+            Bezug1,
+            Bezug2,
+            punktmuster,
+            description,
+            formel,
+            formeldesc,
+            merkmal,
+            element,
+            punktmusterB1,
+            punktmusterR1,
+            punktmusterR2,
+            taster1,
+            taster2
+        };
+        console.log("OnChange funktioniert", payload);
+        const res = await fetch(`http://localhost:9999/modells/${modellId}/alterModell`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify(payload)
+        });
 
+        data.modell.components = await res.json()
+        // wenn die Response JSON ist
+        console.log('Response Body:', data);
+        if (!res.ok) {
+            console.error('Fehler beim Speichern', await res.text());
+        } else {
+            console.log('Modell gespeichert', payload);
+        }
+    }
 
 </script>
 <section class="w-8xl space-y-4 text-sm font-sans text-gray-800 m-auto pt-5">
     <form method="POST" class="max-w-8xl space-y-6">
     <!-- Titel -->
+        <input type="number" name="aufgabe" bind:value={data.modell.aufgabe} hidden class="w-full h-6 border border-gray-400 px-2 text-sm py-2 bg-white" />
+        <input type="number" name="aufgabe_modell" hidden bind:value={data.modell.aufgabe_modell} class="w-full h-6 border border-gray-400 px-2 text-sm py-2 bg-white" />
 
     <h1 class="text-base font-semibold border-b pb-2">{prozesstitel} {data.modell.aufgabe}
         <button type="submit" class="bg-gray-600 text-white text-sm px-3 py-1 rounded hover:bg-gray-700 float-right">
@@ -447,7 +494,7 @@
                     <!-- Element 1 (immer sichtbar) -->
                     <div>
                         <label class="block text-gray-700 text-xs mb-1">Element 1</label>
-                        <select bind:value={Element1} class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                        <select bind:value={Element1} id="Element1" name="Element1" class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
                             <option value="" disabled>Bitte wählen</option>
                             <option value="Punkt">Punkt</option>
                             <option value="Gerade">Gerade</option>
@@ -461,7 +508,7 @@
                     <!-- Bezug 1 (immer sichtbar) -->
                     <div>
                         <label class="block text-gray-700 text-xs mb-1">Bezug 1</label>
-                        <select bind:value={Bezug1} class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                        <select bind:value={Bezug1} id="Bezug1" name="Bezug1" class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
                             <option value="" disabled>Bitte wählen</option>
                             <option value="Punkt">Punkt</option>
                             <option value="Gerade">Gerade</option>
@@ -476,7 +523,7 @@
                     {#if showPunktmusterR1}
                         <div>
                             <label class="block text-gray-700 text-xs mb-1">Punktmuster R1</label>
-                            <select bind:value={punktmusterR1}
+                            <select bind:value={punktmusterR1} id="punktmusterR1" name="punktmusterR1"
                                     class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
                                 <option value="" disabled>Bitte wählen</option>
                                 {#each punktmusterOptionen as opt}
@@ -489,7 +536,7 @@
                     {#if showElement2Taster1}
                         <div>
                             <label class="block text-gray-700 text-xs mb-1">Element 2</label>
-                            <select bind:value={Element2}
+                            <select bind:value={Element2} id="Element2" name="Element2"
                                     class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
                                 <option value="" disabled>Bitte wählen</option>
                                 <option value="Punkt">Punkt</option>
@@ -503,7 +550,7 @@
 
                         <div>
                             <label class="block text-gray-700 text-xs mb-1">Taster 1</label>
-                            <select bind:value={taster1}
+                            <select bind:value={taster1} id="taster1" name="taster1"
                                     class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
                                 <option value="" disabled>Bitte wählen</option>
                                 <option value={1}>derselbe Taster</option>
@@ -516,7 +563,7 @@
                     {#if showPunktmusterR2}
                         <div>
                             <label class="block text-gray-700 text-xs mb-1">Punktmuster R2</label>
-                            <select bind:value={punktmusterR2}
+                            <select bind:value={punktmusterR2} id="punktmusterR2" name="punktmusterR2"
                                     class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
                                 <option value="" disabled>Bitte wählen</option>
                                 {#each punktmuster2Optionen as opt}
@@ -529,7 +576,7 @@
                     {#if showBezug2Taster2}
                         <div>
                             <label class="block text-gray-700 text-xs mb-1">Bezug 2</label>
-                            <select bind:value={Bezug2}
+                            <select bind:value={Bezug2} id="Bezug2" name="Bezug2"
                                     class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
                                 <option value="" disabled>Bitte wählen</option>
                                 <option value="Punkt">Punkt</option>
@@ -543,7 +590,7 @@
 
                         <div>
                             <label class="block text-gray-700 text-xs mb-1">Taster 2</label>
-                            <select bind:value={taster2}
+                            <select bind:value={taster2} id="taster2" name="taster2"
                                     class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
                                 <option value="" disabled>Bitte wählen</option>
                                 <option value={1}>derselbe Taster</option>
@@ -558,13 +605,13 @@
 
                     <div>
                         <label class="block text-gray-700 text-xs mb-1">Modell</label>
-                        <input type="text" bind:value={name}
+                        <input type="text" bind:value={name} id="name" name="name"
                                class="w-full h-6 border border-gray-400 px-2 text-sm py-2 bg-white" />
                     </div>
 
                     <div>
                         <label class="block text-gray-700 text-xs mb-1">Element 1</label>
-                        <select bind:value={Element1}
+                        <select bind:value={Element1} id="Element1" name="Element1" on:input={saveModell}
                                 class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
                             <option value="" disabled>Bitte wählen</option>
                             <option value="Punkt">Punkt</option>
@@ -579,7 +626,7 @@
 
                     <div>
                         <label class="block text-gray-700 text-xs mb-1">Element 2</label>
-                        <select bind:value={Element2}
+                        <select bind:value={Element2} id="Element2" name="Element2" on:input={saveModell}
                                 class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
                             <option value="" disabled>Bitte wählen</option>
                             <option value="Punkt">Punkt</option>
@@ -594,7 +641,7 @@
 
                     <div>
                         <label class="block text-gray-700 text-xs mb-1">Abstand</label>
-                        <select bind:value={abstand}
+                        <select bind:value={abstand} id="abstand" name="abstand" on:input={saveModell}
                                 class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
                             <option value="" disabled>Bitte wählen</option>
                             <option value={1}>in der Nullebene des Koordinatensystems</option>
@@ -604,7 +651,7 @@
 
                     <div>
                         <label class="block text-gray-700 text-xs mb-1">Taster</label>
-                        <select bind:value={taster}
+                        <select bind:value={taster} id="taster" name="taster" on:change={saveModell}
                                 class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
                             <option value="" disabled>Bitte wählen</option>
                             <option value={1}>derselbe Taster</option>
@@ -615,7 +662,7 @@
                     {#if showWinkelE1}
                         <div>
                             <label class="block text-gray-700 text-xs mb-1">Winkel zu Element 1</label>
-                            <select bind:value={winkelE1} class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                            <select bind:value={winkelE1} id="winkelE1" name="winkelE1" on:change={saveModell} class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
                                 <option value="" disabled>Bitte wählen</option>
                                 {#each optionsWinkelE1 as opt}
                                     <option value={opt.value}>{opt.label}</option>
@@ -628,7 +675,7 @@
                     {#if showWinkelE2}
                         <div>
                             <label class="block text-gray-700 text-xs mb-1">Winkel zu Element 2</label>
-                            <select bind:value={winkelE2} class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                            <select bind:value={winkelE2} id="winkelE2" name="winkelE2" on:change={saveModell} class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
                                 <option value="" disabled>Bitte wählen</option>
                                 {#each optionsWinkelE2 as opt}
                                     <option value={opt.value}>{opt.label}</option>
@@ -641,8 +688,7 @@
                     {#if showTasterschaft1}
                         <div>
                             <label class="block text-gray-700 text-xs mb-1">Tasterschaft 1</label>
-                            <select bind:value={tasterschaft1}
-                                    class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                            <select bind:value={tasterschaft1} id="tasterschaft1" on:change={saveModell} name="tasterschaft1" class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
                                 <option value="" disabled>Bitte wählen</option>
                                 <option value={1}>senkrecht</option>
                                 <option value={2}>parallel zu Auswerterichtung</option>
@@ -653,8 +699,7 @@
                     {#if showTasterschaft2}
                         <div>
                             <label class="block text-gray-700 text-xs mb-1">Tasterschaft 2</label>
-                            <select bind:value={tasterschaft2}
-                                    class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                            <select bind:value={tasterschaft2} id="tasterschaft2" on:change={saveModell} name="tasterschaft2" class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
                                 <option value="" disabled>Bitte wählen</option>
                                 <option value={1}>senkrecht</option>
                                 <option value={2}>parallel zu Auswerterichtung</option>
@@ -665,8 +710,7 @@
                     {#if showArtDesMasses}
                         <div>
                             <label class="block text-gray-700 text-xs mb-1">Art des Maßes</label>
-                            <select bind:value={artdesmasses}
-                                    class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                            <select bind:value={artdesmasses} id="artdesmasses" on:change={saveModell} name="artdesmasses" class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
                                 <option value="" disabled>Bitte wählen</option>
                                 <option value={1}>Stufenmaß</option>
                                 <option value={2}>Innen- ode Außenmaß</option>
