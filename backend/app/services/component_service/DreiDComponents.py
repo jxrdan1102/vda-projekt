@@ -1183,13 +1183,13 @@ class TK_3dA_DeltaXT1(TMU_3DKomponente):
                         elif n == 6:
                             return 0.87
                         else:
-                            return 1.8
+                            return 1.8 * math.sqrt(2 / n)
                     elif self.modell.tasterschaft1 == 1:
                         # Taster 1/E Schaft senkrecht
                         if n in (5, 6):
                             return 0.71
                         else:
-                            return 1.3
+                            return 1.3 * math.sqrt(2 / n)
         return MU_NAN
 
     @property
@@ -1488,12 +1488,12 @@ class TK_3dA_DeltaXT2(TMU_3DKomponente):
                 elif n == 6:
                     return 0.87
                 else:
-                    return 1.8
+                    return 1.8 * math.sqrt(2 / n)
             elif taster == 1:  # Schaft senkrecht
                 if n in (5, 6):
                     return 0.71
                 else:
-                    return 1.3
+                    return 1.3 * math.sqrt(2 / n)
         return float('nan')
 
     @property
