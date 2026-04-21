@@ -1,12 +1,16 @@
 import csv
-
-from fastapi import FastAPI
+from fastapi import FastAPI, Response
 from pypxlib import Table
 from starlette.middleware.cors import CORSMiddleware
 
 from app.database.database import create_tables, ping_connection
 from app.routers import KMG, ana_mu, auth, components, items, modells
 from app.services.component_service.EverythinForComponents.TMU_ConstList import export_ts_mapping, parameter_mapping
+
+from jinja2 import Environment, FileSystemLoader
+from weasyprint import HTML   # <-- hier
+from datetime import date
+import pathlib
 
 app = FastAPI()
 app.include_router(items.router)
@@ -138,3 +142,38 @@ def plot_unsicherheiten(namen: str, werte: str):
 
     return Response(content=buf.read(), media_type="image/png")
 """
+
+
+
+
+import os
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # app/
+TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
+
+env = Environment(loader=FileSystemLoader(TEMPLATES_DIR))
+
+@app.get("/report")
+def generate_report(start_date: str = None, end_date: str = None):
+    # Beispiel-Daten
+    data = [
+        {"name": "Item A", "qty": 3},
+        {"name": "Item B", "qty": 5},
+    ]
+
+    template = env.get_template("report.html")
+    html = template.render(
+        items=data,
+        start_date=start_date,
+        end_date=end_date,
+        today=date.today()
+    )
+
+    # PDF erzeugen
+    pdf = HTML(string=html).write_pdf()
+
+    return Response(
+        content=pdf,
+        media_type="application/pdf",
+        headers={"Content-Disposition": "inline; filename=report.pdf"}
+    )

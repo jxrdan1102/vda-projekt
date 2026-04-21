@@ -62,7 +62,7 @@ class ModellForAnamuR(BaseModel):
 class ModellUpdateR(BaseModel):
     name: str | None = None
     aufgabe_modell: int
-    aufgabe: int
+    aufgabe: int | None = None
     geo_me: int | None = None # Messeinrichtung
     geo_mo: int | None = None # Messobjekt
     geo_bn: int | None = None # Einstellnormal

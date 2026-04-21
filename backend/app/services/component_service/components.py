@@ -131,6 +131,7 @@ class TK_KalibrierungME(TMU_Komponente):
                 FreiN_minus_1=0,
                 Flags=1,
             )
+            self.formel = "&delta;I<sub>ME</sub>"
             self.ConstNeeded += []
             self.addConstNeededToModell()
         except Exception as e:

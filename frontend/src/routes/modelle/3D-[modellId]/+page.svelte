@@ -785,7 +785,7 @@
             </thead>
             <tbody>
             {#each data.modell.components as comp, i}
-                <tr class="{selectedRow === i ? 'bg-green-300' : 'hover:bg-green-200'} cursor-pointer"
+                <tr class="{selectedRow === i ? 'bg-cyan-800' : 'hover:bg-cyan-900'} {selectedRow === i ? 'text-white' : 'hover:text-white'} cursor-pointer"
                     on:click={() => selectedRow = i}
                     on:dblclick={(e) => onOpenComponent(e, comp.id)}>
                     <td class="px-2 py-1 text-left w-0.5">{i + 1}</td>

@@ -324,188 +324,7 @@
         </div>
     </form>
 
-    <div class="border border-gray-300 rounded overflow-hidden bg-gray-200">
-        <div class="flex items-center gap-2 px-2 py-1 bg-gray-100 border-b">
-            Komponenten
 
-        </div>
-        <table class="w-full text-sm border-t">
-            <thead class="bg-gray-200 text-gray-700">
-            <tr>
-                <th class="px-3 py-1 text-left">Komponente</th>
-                <th class="px-2 py-1 text-left">Standardabweichung</th>
-                <th class="px-2 py-1 text-left">Methode</th>
-                <th class="px-2 py-1 text-left">Anzahl Messpunkte</th>
-                <th class="px-2 py-1 text-left">Anzahl Messungen</th>
-            </tr>
-            </thead>
-            <tbody>
-            {#each analyseprojekt.anakomp as comp, i}
-                <tr class="{selectedRow === i ? 'bg-green-200' : 'hover:bg-gray-100'} cursor-pointer"
-                on:click={() => selectedRow = i}>
-                    <td class="px-3 py-1">{Components[comp.komponente.kompid] ? Components[comp.komponente.kompid] : COMPONENTS[comp.komponente.kompid]}</td>
-
-                        <td
-                                class="px-2 py-1 clickable-cell"
-                                on:dblclick={() => startEditCompField(comp, 'terml0')}
-                        >
-                            {#if editingCompField?.id === comp.id && editingCompField?.field === 'terml0' && !comp.berechnen}
-                                <form on:submit|preventDefault={(e) => saveCompField(e, comp.id)} class="flex items-center gap-1">
-                                    <div class="flex justify-end gap-2 mt-1">
-                                        <div class="flex items-center gap-2">
-                                            {#if comp.wertart == 5} <input id="berechnen"  name="berechnen" bind:checked={comp.berechnen} on:change={() => saveBerechnen(comp.id, comp.berechnen)} type="checkbox">{/if}
-                                            <input id="terml0"
-                                               name="terml0"
-                                                type="number"
-                                                step="any"
-                                                bind:this={editInput}
-                                               bind:value={compFieldValue}
-                                                class="w-full text-sm py-[2px] leading-5 bg-transparent border-0 border-b border-gray-400 focus:outline-none focus:border-black focus:ring-0"
-                                                autofocus
-                                                on:click|stopPropagation
-                                                   on:keydown={(e) => handleKeyDown(e, comp, 'terml0')}
-                                        />
-                                        <button type="submit" class="text-sm text-green-700">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                            </svg>
-                                        </button>
-                                        <button type="button" on:click={cancelEditCompField} class="text-sm text-red-600">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                            </svg>
-                                        </button>
-                                        </div>
-                                    </div>
-                                </form>
-                            {:else}
-                                {#if !comp.berechnen}
-                                    <div class="flex items-center gap-2">
-                                    {#if comp.wertart == 5} <input id="berechnen"  name="berechnen" bind:checked={comp.berechnen} on:change={() => saveBerechnen(comp.id, comp.berechnen)} type="checkbox">{/if}
-
-                                    <span class="inline-block w-full min-h-[1.2rem]">{comp.terml0 ?? '\u00A0'}</span>
-                                    </div>{:else}
-                                    <div class="flex items-center gap-2">
-                                    {#if comp.wertart == 5} <input id="berechnen"  name="berechnen" bind:checked={comp.berechnen} on:change={() => saveBerechnen(comp.id, comp.berechnen)} type="checkbox">{/if}
-
-                                    <span class="inline-block w-full min-h-[1.2rem]">A/3</span>
-                                    </div>
-                                {/if}
-                            {/if}
-                        </td>
-                    <td
-                            class="px-2 py-1 clickable-cell"
-                            on:dblclick={() => startEditCompField(comp, 'wertart')}
-                    >
-                        {#if editingCompField?.id === comp.id && editingCompField?.field === 'wertart'}
-                            <form on:submit|preventDefault={(e) => saveCompField(e, comp.id)} class="flex items-center gap-1">
-                                <div class="flex justify-end gap-2 mt-1">
-                                    <input type="hidden" name="compId" value={comp.id} />
-                                    <select id="wertart"
-                                            name="wertart"
-                                            bind:this={editInput}
-                                            bind:value={compFieldValue}
-                                            class="w-full text-sm py-[2px] leading-5 bg-transparent border-0 border-b border-gray-400 focus:outline-none focus:border-black focus:ring-0"
-                                            autofocus
-                                            on:click|stopPropagation
-                                            on:keydown={(e) => handleKeyDown(e, comp, 'wertart')}
-                                    >
-                                    <option value="" disabled>Bitte wählen</option>
-                                    <option value={4}>A</option>
-                                    <option value={5}>B</option>
-                                    </select>
-                                    <button type="submit" class="text-sm text-green-700">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                        </svg>
-                                    </button>
-                                    <button type="button" on:click={cancelEditCompField} class="text-sm text-red-600">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </form>
-                        {:else}
-                            <span class="inline-block w-full min-h-[1.2rem]">{getWertartText(comp.wertart) || '\u00A0'}</span>
-                        {/if}
-                    </td>
-                    <td
-                            class="px-2 py-1 clickable-cell"
-                            on:dblclick={() => startEditCompField(comp, 'messpunkt_anzahl')}
-                    >
-                        {#if editingCompField?.id === comp.id && editingCompField?.field === 'messpunkt_anzahl'}
-                            <form on:submit|preventDefault={(e) => saveCompField(e, comp.id)} class="flex items-center gap-1">
-                                <div class="flex justify-end gap-2 mt-1">
-                                    <input type="hidden" name="compId" value={comp.id} />
-
-                                    <input id="messpunkt_anzahl"
-                                           name="messpunkt_anzahl"
-                                            type="number"
-                                            step="any"
-                                            bind:this={editInput}
-                                           bind:value={compFieldValue}
-                                            class="w-full text-sm py-[2px] leading-5 bg-transparent border-0 border-b border-gray-400 focus:outline-none focus:border-black focus:ring-0"
-                                            autofocus
-                                            on:click|stopPropagation
-                                           on:keydown={(e) => handleKeyDown(e, comp, 'messpunkt_anzahl')}
-                                    />
-                                    <button type="submit" class="text-sm text-green-700">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                        </svg>
-                                    </button>
-                                    <button type="button" on:click={cancelEditCompField} class="text-sm text-red-600">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </form>
-                        {:else}
-                            <span class="inline-block w-full min-h-[1.2rem]">{comp.messpunkt_anzahl ?? '\u00A0'}</span>
-                        {/if}
-                    </td>
-                    <td
-                            class="px-2 py-1 clickable-cell"
-                            on:dblclick={() => startEditCompField(comp, 'anzahl_messungen')}
-                    >
-                        {#if editingCompField?.id === comp.id && editingCompField?.field === 'anzahl_messungen' && comp.wertart == 4}
-                            <form on:submit|preventDefault={(e) => saveCompField(e, comp.id)} class="flex items-center gap-1">
-                                <div class="flex justify-end gap-2 mt-1">
-
-                                    <input id="anzahl_messungen"
-                                           name="anzahl_messungen"
-                                            type="number"
-                                            step="any"
-                                            bind:this={editInput}
-                                           bind:value={compFieldValue}
-                                            class="w-full text-sm py-[2px] leading-5 bg-transparent border-0 border-b border-gray-400 focus:outline-none focus:border-black focus:ring-0"
-                                            autofocus
-                                            on:click|stopPropagation
-                                           on:keydown={(e) => handleKeyDown(e, comp, 'anzahl_messungen')}
-                                    />
-                                    <button name="komponente" type="submit" class="text-sm text-green-700">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                        </svg>
-                                    </button>
-                                    <button type="button" on:click={cancelEditCompField} class="text-sm text-red-600">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </form>
-                        {:else}
-                            <span class="inline-block w-full min-h-[1.2rem]">{comp.wertart == 4 ? comp.anzahl_messungen ?? '\u00A0' : '\u00A0'}</span>
-                        {/if}
-                    </td>
-                    </tr>
-            {/each}
-            </tbody>
-        </table>
-    </div>
 
     {#if analyseprojekt.anakonst?.length > 0}
         <h2 class="text-base font-semibold">Konstanten</h2>
@@ -564,7 +383,188 @@
         </div>
     {/if}
 
+    <div class="border border-gray-300 rounded overflow-hidden bg-gray-200">
+        <div class="flex items-center gap-2 px-2 py-1 bg-gray-100 border-b">
+            Komponenten
 
+        </div>
+        <table class="w-full text-sm border-t">
+            <thead class="bg-gray-200 text-gray-700">
+            <tr>
+                <th class="px-3 py-1 text-left">Komponente</th>
+                <th class="px-2 py-1 text-left">Standardabweichung</th>
+                <th class="px-2 py-1 text-left">Methode</th>
+                <th class="px-2 py-1 text-left">Anzahl Messpunkte</th>
+                <th class="px-2 py-1 text-left">Anzahl Messungen</th>
+            </tr>
+            </thead>
+            <tbody>
+            {#each analyseprojekt.anakomp as comp, i}
+                <tr class="{selectedRow === i ? 'bg-green-200' : 'hover:bg-gray-100'} cursor-pointer"
+                    on:click={() => selectedRow = i}>
+                    <td class="px-3 py-1">{Components[comp.komponente.kompid] ? Components[comp.komponente.kompid] : COMPONENTS[comp.komponente.kompid]}</td>
+
+                    <td
+                            class="px-2 py-1 clickable-cell"
+                            on:dblclick={() => startEditCompField(comp, 'terml0')}
+                    >
+                        {#if editingCompField?.id === comp.id && editingCompField?.field === 'terml0' && !comp.berechnen}
+                            <form on:submit|preventDefault={(e) => saveCompField(e, comp.id)} class="flex items-center gap-1">
+                                <div class="flex justify-end gap-2 mt-1">
+                                    <div class="flex items-center gap-2">
+                                        {#if comp.wertart == 5} <input id="berechnen"  name="berechnen" bind:checked={comp.berechnen} on:change={() => saveBerechnen(comp.id, comp.berechnen)} type="checkbox">{/if}
+                                        <input id="terml0"
+                                               name="terml0"
+                                               type="number"
+                                               step="any"
+                                               bind:this={editInput}
+                                               bind:value={compFieldValue}
+                                               class="w-full text-sm py-[2px] leading-5 bg-transparent border-0 border-b border-gray-400 focus:outline-none focus:border-black focus:ring-0"
+                                               autofocus
+                                               on:click|stopPropagation
+                                               on:keydown={(e) => handleKeyDown(e, comp, 'terml0')}
+                                        />
+                                        <button type="submit" class="text-sm text-green-700">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                            </svg>
+                                        </button>
+                                        <button type="button" on:click={cancelEditCompField} class="text-sm text-red-600">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        {:else}
+                            {#if !comp.berechnen}
+                                <div class="flex items-center gap-2">
+                                    {#if comp.wertart == 5} <input id="berechnen"  name="berechnen" bind:checked={comp.berechnen} on:change={() => saveBerechnen(comp.id, comp.berechnen)} type="checkbox">{/if}
+
+                                    <span class="inline-block w-full min-h-[1.2rem]">{comp.terml0 ?? '\u00A0'}</span>
+                                </div>{:else}
+                                <div class="flex items-center gap-2">
+                                    {#if comp.wertart == 5} <input id="berechnen"  name="berechnen" bind:checked={comp.berechnen} on:change={() => saveBerechnen(comp.id, comp.berechnen)} type="checkbox">{/if}
+
+                                    <span class="inline-block w-full min-h-[1.2rem]">A/3</span>
+                                </div>
+                            {/if}
+                        {/if}
+                    </td>
+                    <td
+                            class="px-2 py-1 clickable-cell"
+                            on:dblclick={() => startEditCompField(comp, 'wertart')}
+                    >
+                        {#if editingCompField?.id === comp.id && editingCompField?.field === 'wertart'}
+                            <form on:submit|preventDefault={(e) => saveCompField(e, comp.id)} class="flex items-center gap-1">
+                                <div class="flex justify-end gap-2 mt-1">
+                                    <input type="hidden" name="compId" value={comp.id} />
+                                    <select id="wertart"
+                                            name="wertart"
+                                            bind:this={editInput}
+                                            bind:value={compFieldValue}
+                                            class="w-full text-sm py-[2px] leading-5 bg-transparent border-0 border-b border-gray-400 focus:outline-none focus:border-black focus:ring-0"
+                                            autofocus
+                                            on:click|stopPropagation
+                                            on:keydown={(e) => handleKeyDown(e, comp, 'wertart')}
+                                    >
+                                        <option value="" disabled>Bitte wählen</option>
+                                        <option value={4}>A</option>
+                                        <option value={5}>B</option>
+                                    </select>
+                                    <button type="submit" class="text-sm text-green-700">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                        </svg>
+                                    </button>
+                                    <button type="button" on:click={cancelEditCompField} class="text-sm text-red-600">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </form>
+                        {:else}
+                            <span class="inline-block w-full min-h-[1.2rem]">{getWertartText(comp.wertart) || '\u00A0'}</span>
+                        {/if}
+                    </td>
+                    <td
+                            class="px-2 py-1 clickable-cell"
+                            on:dblclick={() => startEditCompField(comp, 'messpunkt_anzahl')}
+                    >
+                        {#if editingCompField?.id === comp.id && editingCompField?.field === 'messpunkt_anzahl'}
+                            <form on:submit|preventDefault={(e) => saveCompField(e, comp.id)} class="flex items-center gap-1">
+                                <div class="flex justify-end gap-2 mt-1">
+                                    <input type="hidden" name="compId" value={comp.id} />
+
+                                    <input id="messpunkt_anzahl"
+                                           name="messpunkt_anzahl"
+                                           type="number"
+                                           step="any"
+                                           bind:this={editInput}
+                                           bind:value={compFieldValue}
+                                           class="w-full text-sm py-[2px] leading-5 bg-transparent border-0 border-b border-gray-400 focus:outline-none focus:border-black focus:ring-0"
+                                           autofocus
+                                           on:click|stopPropagation
+                                           on:keydown={(e) => handleKeyDown(e, comp, 'messpunkt_anzahl')}
+                                    />
+                                    <button type="submit" class="text-sm text-green-700">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                        </svg>
+                                    </button>
+                                    <button type="button" on:click={cancelEditCompField} class="text-sm text-red-600">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </form>
+                        {:else}
+                            <span class="inline-block w-full min-h-[1.2rem]">{comp.messpunkt_anzahl ?? '\u00A0'}</span>
+                        {/if}
+                    </td>
+                    <td
+                            class="px-2 py-1 clickable-cell"
+                            on:dblclick={() => startEditCompField(comp, 'anzahl_messungen')}
+                    >
+                        {#if editingCompField?.id === comp.id && editingCompField?.field === 'anzahl_messungen' && comp.wertart == 4}
+                            <form on:submit|preventDefault={(e) => saveCompField(e, comp.id)} class="flex items-center gap-1">
+                                <div class="flex justify-end gap-2 mt-1">
+
+                                    <input id="anzahl_messungen"
+                                           name="anzahl_messungen"
+                                           type="number"
+                                           step="any"
+                                           bind:this={editInput}
+                                           bind:value={compFieldValue}
+                                           class="w-full text-sm py-[2px] leading-5 bg-transparent border-0 border-b border-gray-400 focus:outline-none focus:border-black focus:ring-0"
+                                           autofocus
+                                           on:click|stopPropagation
+                                           on:keydown={(e) => handleKeyDown(e, comp, 'anzahl_messungen')}
+                                    />
+                                    <button name="komponente" type="submit" class="text-sm text-green-700">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                        </svg>
+                                    </button>
+                                    <button type="button" on:click={cancelEditCompField} class="text-sm text-red-600">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </form>
+                        {:else}
+                            <span class="inline-block w-full min-h-[1.2rem]">{comp.wertart == 4 ? comp.anzahl_messungen ?? '\u00A0' : '\u00A0'}</span>
+                        {/if}
+                    </td>
+                </tr>
+            {/each}
+            </tbody>
+        </table>
+    </div>
 </section>
 
 <Modal open={modellDialogOpen} on:close={closeModal}>

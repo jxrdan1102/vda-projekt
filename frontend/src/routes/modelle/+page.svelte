@@ -119,7 +119,7 @@
         <div class="w-1/2 flex justify-between items-center">
             <span>Beschreibung</span>
             <button on:click={() => (showForm = !showForm)} title="Neues Modell hinzufügen" class="focus:outline-none" aria-label="Neues Modell hinzufügen">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-green-600 hover:scale-110 transition-transform">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-cyan-900 hover:scale-110 transition-transform">
                     <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 9a.75.75 0 0 0-1.5 0v2.25H9a.75.75 0 0 0 0 1.5h2.25V15a.75.75 0 0 0 1.5 0v-2.25H15a.75.75 0 0 0 0-1.5h-2.25V9Z" clip-rule="evenodd" />
                 </svg>
             </button>
@@ -169,7 +169,7 @@
 
             <button
                     type="submit"
-                    class="bg-green-100 text-green-800 hover:bg-green-200 border border-green-300 rounded px-3 py-1 text-sm font-medium transition-colors"
+                    class="bg-cyan-900 text-white hover:bg-cyan-950 border border-black-800 rounded px-3 py-1 text-sm font-medium transition-colors"
             >
                 Erstellen
             </button>

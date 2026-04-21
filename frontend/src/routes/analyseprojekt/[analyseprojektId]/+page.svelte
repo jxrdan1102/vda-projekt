@@ -1,8 +1,6 @@
 <script lang="ts">
     import {goto, preloadData, pushState} from "$app/navigation";
     import {page} from "$app/stores";
-    import Modal from "$lib/components/Modal.svelte";
-    import KmgInfoPage from "./kmgkmg/+page.svelte";
     import {COMPONENTS, Components} from "$lib/Mapping";
     import {tcMapping} from "C:\\Users\\Jason\\vda-projekt\\backend\\tcParameterMapping";
     import {tick} from 'svelte';
@@ -103,30 +101,7 @@
     function cancelEdit() {
         editingConstId = null;
     }
-    async function saveCompField(event: any, id: number) {
-        event.preventDefault();
-        const payload: Record<string, any> = {};
 
-        if (editingCompField?.field) {
-            payload[editingCompField.field] = compFieldValue;
-        }
-
-        const response = await fetch(`/api/anakomponent/${id}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-        });
-
-        if (response.ok) {
-            const index = analyseprojekt.anakomp.findIndex((k: any) => k.id === id);
-            if (index !== -1 && editingCompField?.field) {
-                analyseprojekt.anakomp[index][editingCompField.field] = compFieldValue;
-            }
-            editingCompField = null;
-        } else {
-            alert("Fehler beim Speichern der Komponente");
-        }
-    }
 
     const editableFields = ['terml0', 'terml1', 'verteilung', 'wertart', 'freigrad'];
     async function handleKeyDown(e: KeyboardEvent, comp: any, fieldName: string) {
@@ -203,18 +178,6 @@
     let remark = analyseprojekt.remark ?? "";
     let tolfaktor = analyseprojekt.tolfaktor === 1 || analyseprojekt.tolfaktor === true;
 
-    $: showKmg = !!$page.state?.kmgInfo;
-
-
-    async function openKmg() {
-        const href = `/analyseprojekt/${analyseprojektId}/kmg`;
-        const result = await preloadData(href);
-        if (result.type === 'loaded' && result.status === 200) {
-            pushState(href, { kmgInfo: result.data });
-        } else {
-            goto(href);
-        }
-    }
 
     function getVerteilungText(value: any) {
         switch(value) {
@@ -313,6 +276,190 @@
     }
 
     let fk_modell = 0;
+
+    async function saveCompField(event: Event, compId: number) {
+        event.preventDefault();
+
+        const compIndex = analyseprojekt.anakomp.findIndex(c => c.id === compId);
+        if (compIndex === -1) return;
+
+        const comp = analyseprojekt.anakomp[compIndex];
+
+        const payload = {
+            terml0: comp.terml0Temp,
+            terml1: comp.terml1Temp,
+            verteilung: comp.verteilungTemp,
+            wertart: comp.wertartTemp,
+            freigrad: comp.freigradTemp
+        };
+
+        const response = await fetch(`/api/anakomponent/${compId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+            alert("Fehler beim Speichern");
+            return;
+        }
+
+        // Alles synchronisieren
+        Object.assign(comp, payload);
+        Object.assign(comp, {
+            terml0Temp: payload.terml0,
+            terml1Temp: payload.terml1,
+            verteilungTemp: payload.verteilung,
+            wertartTemp: payload.wertart,
+            freigradTemp: payload.freigrad
+        });
+
+        analyseprojekt.anakomp = [...analyseprojekt.anakomp];
+        activeField = null;
+    }
+
+    async function handleCompKeyDown(e: KeyboardEvent, comp: any, field: string) {
+        if (e.key === 'Tab') {
+            e.preventDefault();
+
+            const fields = ['terml0', 'terml1', 'verteilung', 'wertart', 'freigrad'];
+            let idx = fields.indexOf(field);
+
+            let nextIdx = e.shiftKey ? idx - 1 : idx + 1;
+
+            if (nextIdx < 0) nextIdx = fields.length - 1;
+            if (nextIdx >= fields.length) nextIdx = 0;
+
+            const nextField = fields[nextIdx];
+
+            await tick(); // wichtig!
+
+            const nextEl = editInputs[comp.id]?.[nextField];
+            if (nextEl) {
+                nextEl.focus();
+            }
+        }
+        else if (e.key === 'Enter') {
+            e.preventDefault();
+            await saveCompField(e, comp.id);
+            return;
+        }
+    }
+
+    // Beim Laden der Tabelle sicherstellen, dass Temp-Werte existieren
+    analyseprojekt.anakomp.forEach(comp => {
+        if (comp.terml0Temp === undefined) comp.terml0Temp = comp.terml0;
+        if (comp.terml1Temp === undefined) comp.terml1Temp = comp.terml1;
+        if (comp.verteilungTemp === undefined) comp.verteilungTemp = comp.verteilung;
+        if (comp.wertartTemp === undefined) comp.wertartTemp = comp.wertart;
+        if (comp.freigradTemp === undefined) comp.freigradTemp = comp.freigrad;
+    });
+
+    let activeField: { id: number; field: string } | null = null;
+    function isActive(comp, field) {
+        return activeField?.id === comp.id && activeField?.field === field;
+    }
+
+    function isDirty(comp, field) {
+        return String(comp[field + 'Temp']) !== String(comp[field]);
+    }
+
+    async function saveAllComponents() {
+        const dirtyComps = analyseprojekt.anakomp.filter(comp => {
+            return (
+                comp.terml0Temp !== comp.terml0 ||
+                comp.terml1Temp !== comp.terml1 ||
+                comp.verteilungTemp !== comp.verteilung ||
+                comp.wertartTemp !== comp.wertart ||
+                comp.freigradTemp !== comp.freigrad
+            );
+        });
+
+        for (const comp of dirtyComps) {
+            const payload = {
+                terml0: comp.terml0Temp,
+                terml1: comp.terml1Temp,
+                verteilung: comp.verteilungTemp,
+                wertart: comp.wertartTemp,
+                freigrad: comp.freigradTemp
+            };
+
+            try {
+                const response = await fetch(`/api/anakomponent/${comp.id}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    console.error(`Fehler beim Speichern von Komponente ${comp.id}`);
+                } else {
+                    // Synchronisieren
+                    Object.assign(comp, payload);
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        // Reaktivität triggern
+        analyseprojekt.anakomp = [...analyseprojekt.anakomp];
+        alert("Alle Änderungen gespeichert!");
+    }
+
+    const editInputs: Record<number, Record<string, HTMLInputElement | HTMLSelectElement>> = {};
+
+    analyseprojekt.anakomp.forEach(comp => {
+        if (!editInputs[comp.id]) {
+            editInputs[comp.id] = {};
+        }
+    });
+
+    const unitOrder = {
+        "°C": 1,   // Temperatur
+        "1/°K": 2,
+        "K": 3,
+        "mm": 4,   // Länge
+        "N": 5,     // Kraft
+        "%": 6,
+    };
+
+    $: sortedKonstanten = [...(analyseprojekt.anakonst || [])].sort((a, b) => {
+        const unitA = tcMapping[a.constnum]?.einheit || "";
+        const unitB = tcMapping[b.constnum]?.einheit || "";
+
+        const orderA = unitOrder[unitA] ?? 999;
+        const orderB = unitOrder[unitB] ?? 999;
+
+        // zuerst nach definierter Reihenfolge
+        if (orderA !== orderB) return orderA - orderB;
+
+        // danach alphabetisch nach Einheit
+        if (unitA !== unitB) return unitA.localeCompare(unitB);
+
+        // dann alphabetisch nach Name
+        const nameA = tcMapping[a.constnum]?.übersetzung || tcMapping[a.constnum]?.key;
+        const nameB = tcMapping[b.constnum]?.übersetzung || tcMapping[b.constnum]?.key;
+
+        return nameA.localeCompare(nameB);
+    });
+
+
+    async function openReport() {
+    const start = "2024-01-01";
+    const end = "2024-12-31";
+
+    const response = await fetch(`http://localhost:9999/anamu/${analyseprojektId}/report?start_date=${start}&end_date=${end}`, {
+        method: 'GET',          // oder POST, falls dein Endpoint POST erwartet
+        credentials: 'include', // Cookies mitsenden
+        headers: { 'Content-Type': 'application/json' },
+
+    });
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    window.open(url);
+}
 </script>
 
 <section class="space-y-4 text-sm font-sans text-gray-800 m-auto pt-5">
@@ -324,9 +471,10 @@
             <button type="submit" name="speichern" class="bg-gray-600 mr-2 text-white text-sm px-3 py-1 rounded hover:bg-gray-700 float-right">
                 Speichern
             </button>
-            <button type="button" on:click={openKmg} name="kmg" class="bg-gray-600 mr-2 text-white text-sm px-3 py-1 rounded hover:bg-gray-700 float-right">
-                KMG
+            <button type="button" on:click={openReport} class="bg-gray-600 mr-2 text-white text-sm px-3 py-1 rounded hover:bg-gray-700 float-right">
+                Report öffnen
             </button>
+
         </h1>
         <div class="flex gap-10 justify-between mt-3">
 
@@ -372,223 +520,11 @@
         </div>
     </form>
 
-    <div class="border border-gray-300 rounded overflow-hidden bg-gray-200">
-        <div class="flex items-center gap-2 px-2 py-1 bg-gray-100 border-b">
-            Komponenten
 
-        </div>
-            <table class="w-full text-sm border-t">
-            <thead class="bg-gray-200 text-gray-700">
-            <tr>
-                <th class="px-3 py-1 text-left">Komponente</th>
-                <th class="px-2 py-1 text-left">L0 längenunabhängiger Term</th>
-                <th class="px-2 py-1 text-left">L1 längenunabhängiger Term</th>
-                <th class="px-2 py-1 text-left">Verteilung</th>
-                <th class="px-2 py-1 text-left">Streuungsparameter</th>
-                <th class="px-2 py-1 text-left">Freiheitsgrad</th>
-            </tr>
-            </thead>
-            <tbody>
-            {#each analyseprojekt.anakomp as comp, i}
-                <tr class="{selectedRow === i ? 'bg-green-200' : 'hover:bg-gray-100'} cursor-pointer"
-                    on:click={() => selectedRow = i}>
-                    <td class="px-3 py-1">{Components[comp.komponente.kompid] ? Components[comp.komponente.kompid] : COMPONENTS[comp.komponente.kompid]}</td>
-                    <td
-                            class="px-2 py-1 clickable-cell"
-                            on:dblclick={() => startEditCompField(comp, 'terml0')}
-                    >
-                        {#if editingCompField?.id === comp.id && editingCompField?.field === 'terml0'}
-                            <form on:submit|preventDefault={(e) => saveCompField(e, comp.id)} class="flex items-center gap-1">
-                                <div class="flex justify-end gap-2 mt-1">
-                                    <input type="hidden" name="compId" value={comp.id} />
-
-                                    <input id="terml0"
-                                           name="terml0"
-                                           type="number"
-                                           step="any"
-                                           bind:this={editInput}
-                                           bind:value={compFieldValue}
-                                           class="w-full text-sm py-[2px] leading-5 bg-transparent border-0 border-b border-gray-400 focus:outline-none focus:border-black focus:ring-0"
-                                           autofocus
-                                           on:click|stopPropagation
-                                           on:keydown={(e) => handleKeyDown(e, comp, 'terml0')}
-                                    />
-                                    <button type="submit" class="text-sm text-green-700">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                        </svg>
-                                    </button>
-                                    <button type="button" on:click={cancelEditCompField} class="text-sm text-red-600">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </form>
-                        {:else}
-                            <span class="inline-block w-full min-h-[1.2rem]">{comp.terml0 ?? '\u00A0'}</span>
-                        {/if}
-                    </td>
-                    <td
-                            class="px-2 py-1 clickable-cell"
-                            on:dblclick={() => startEditCompField(comp, 'terml1')}
-                    >
-                        {#if editingCompField?.id === comp.id && editingCompField?.field === 'terml1'}
-                            <form on:submit|preventDefault={(e) => saveCompField(e, comp.id)} class="flex items-center gap-1">
-                                <div class="flex justify-end gap-2 mt-1">
-                                    <input type="hidden" name="compId" value={comp.id} />
-
-                                    <input id="terml1"
-                                           name="terml1"
-                                           type="number"
-                                           step="any"
-                                           bind:this={editInput}
-                                           bind:value={compFieldValue}
-                                           class="w-full text-sm py-[2px] leading-5 bg-transparent border-0 border-b border-gray-400 focus:outline-none focus:border-black focus:ring-0"
-                                           autofocus
-                                           on:click|stopPropagation
-                                           on:keydown={(e) => handleKeyDown(e, comp, 'terml1')}
-                                    />
-                                    <button type="submit" class="text-sm text-green-700">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                        </svg>
-                                    </button>
-                                    <button type="button" on:click={cancelEditCompField} class="text-sm text-red-600">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </form>
-                        {:else}
-                            <span class="inline-block w-full min-h-[1.2rem]">{comp.terml1 ?? '\u00A0'}</span>
-                        {/if}
-                    </td>
-                    <td
-                            class="px-2 py-1 clickable-cell"
-                            on:dblclick={() => startEditCompField(comp, 'verteilung')}
-                    >
-                        {#if editingCompField?.id === comp.id && editingCompField?.field === 'verteilung'}
-                            <form on:submit|preventDefault={(e) => saveCompField(e, comp.id)} class="flex items-center gap-1">
-                                <div class="flex justify-end gap-2 mt-1">
-                                    <input type="hidden" name="compId" value={comp.id} />
-                                    <select id="verteilung"
-                                            name="verteilung"
-                                            bind:this={editInput}
-                                            bind:value={compFieldValue}
-                                            class="w-full text-sm py-[2px] leading-5 bg-transparent border-0 border-b border-gray-400 focus:outline-none focus:border-black focus:ring-0"
-                                            autofocus
-                                            on:click|stopPropagation
-                                            on:keydown={(e) => handleKeyDown(e, comp, 'verteilung')}
-                                    >
-                                        <option value="" disabled>Bitte wählen</option>
-                                        <option value={1}>Rechteckverteilung</option>
-                                        <option value={2}>Normalverteilung</option>
-                                        <option value={3}>Dreieckverteilung</option>
-                                    </select>
-                                    <button type="submit" class="text-sm text-green-700">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                        </svg>
-                                    </button>
-                                    <button type="button" on:click={cancelEditCompField} class="text-sm text-red-600">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </form>
-                        {:else}
-                            <span class="inline-block w-full min-h-[1.2rem]">{getVerteilungText(comp.verteilung) || '\u00A0'}</span>
-                        {/if}
-                    </td>
-
-                    <td
-                            class="px-2 py-1 clickable-cell"
-                            on:dblclick={() => startEditCompField(comp, 'wertart')}
-                    >
-                        {#if editingCompField?.id === comp.id && editingCompField?.field === 'wertart'}
-                            <form on:submit|preventDefault={(e) => saveCompField(e, comp.id)} class="flex items-center gap-1">
-                                <div class="flex justify-end gap-2 mt-1">
-                                    <input type="hidden" name="compId" value={comp.id} />
-                                    <select id="wertart"
-                                            name="wertart"
-                                            bind:this={editInput}
-                                            bind:value={compFieldValue}
-                                            class="w-full text-sm py-[2px] leading-5 bg-transparent border-0 border-b border-gray-400 focus:outline-none focus:border-black focus:ring-0"
-                                            autofocus
-                                            on:click|stopPropagation
-                                            on:keydown={(e) => handleKeyDown(e, comp, 'wertart')}
-                                    >
-                                        <option value="" disabled>Bitte wählen</option>
-                                        <option value={1}>Halbweite</option>
-                                        <option value={2}>Spannweite</option>
-                                        <option value={3}>Standardabweichung</option>
-                                    </select>
-                                    <button type="submit" class="text-sm text-green-700">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                        </svg>
-                                    </button>
-                                    <button type="button" on:click={cancelEditCompField} class="text-sm text-red-600">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </form>
-                        {:else}
-                            <span class="inline-block w-full min-h-[1.2rem]">{getWertartText(comp.wertart) || '\u00A0'}</span>
-                        {/if}
-                    </td>
-                    <td
-                            class="px-2 py-1 clickable-cell"
-                            on:dblclick={() => startEditCompField(comp, 'freigrad')}
-                    >
-                        {#if editingCompField?.id === comp.id && editingCompField?.field === 'freigrad'}
-                            <form on:submit|preventDefault={(e) => saveCompField(e, comp.id)} class="flex items-center gap-1">
-                                <div class="flex justify-end gap-2 mt-1">
-                                    <input type="hidden" name="compId" value={comp.id} />
-
-                                    <select id="freigrad"
-                                           name="freigrad"
-                                           bind:this={editInput}
-                                           bind:value={compFieldValue}
-                                           class="w-full text-sm py-[2px] leading-5 bg-transparent border-0 border-b border-gray-400 focus:outline-none focus:border-black focus:ring-0"
-                                           autofocus
-                                           on:click|stopPropagation
-                                           on:keydown={(e) => handleKeyDown(e, comp, 'freigrad')}>
-                                        <option value="" disabled>Bitte wählen</option>
-                                        <option value={1}>Unbegrenzt</option>
-                                        <option value={2}>N-1</option>
-                                    </select>
-
-                                    <button type="submit" class="text-sm text-green-700">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                        </svg>
-                                    </button>
-                                    <button type="button" on:click={cancelEditCompField} class="text-sm text-red-600">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </form>
-                        {:else}
-                            <span class="inline-block w-full min-h-[1.2rem]">{getFreigradText(comp.freigrad) || '\u00A0'}</span>
-                        {/if}
-                    </td>
-                </tr>
-            {/each}
-            </tbody>
-        </table>
-    </div>
     {#if analyseprojekt.anakonst?.length > 0}
         <h2 class="text-base font-semibold">Konstanten</h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 lg:grid-cols-4 lg:grid-cols-5 gap-3">
-            {#each analyseprojekt.anakonst as konst, index}
+            {#each sortedKonstanten as konst, index}
                 {#if (konst.constnum != 2 && konst.constnum != 3 && konst.constnum != 4) || tolfaktor == true }
                 <div class="bg-white border border-gray-300 rounded px-3 py-1 hover:shadow
       {isKMG(konst.constnum) ? 'opacity-70 cursor-not-allowed' : 'cursor-text'}"
@@ -644,9 +580,143 @@
         </div>
     {/if}
 
+    <div class="border border-gray-300 rounded overflow-hidden bg-gray-200">
+        <div class="flex items-center gap-2 px-2 py-1 bg-gray-100 border-b justify-between">
+        <span>Komponenten</span>
+        <button
+                class="bg-gray-600 text-white text-sm px-3 py-1 rounded hover:bg-gray-700 float-right"
+                on:click={saveAllComponents}
+        >
+            Alle speichern
+        </button>
+    </div>
+        <table class="w-full text-sm border-t">
+            <thead class="bg-gray-200 text-gray-700">
+            <tr>
+                <th class="px-5 py-1 text-left ">Komponente</th>
+                <th class="px-5 py-1 text-left w-10">L0 längenunabhängiger Term</th>
+                <th class="px-5 py-1 text-left w-10">L1 längenabhängiger Term</th>
+                <th class="px-5 py-1 text-left w-50">Verteilung</th>
+                <th class="px-5 py-1 text-left w-50">Streuungsparameter</th>
+                <th class="px-5 py-1 text-left w-50">Freiheitsgrad</th>
+            </tr>
+            </thead>
+            <tbody class="border-t divide-y divide-gray-500">
+            {#each analyseprojekt.anakomp as comp, i}
+                {@const terml0Ref = undefined}
+                {@const terml1Ref = undefined}
+                {@const verteilungRef = undefined}
+                {@const wertartRef = undefined}
+                {@const freigradRef = undefined}
+                <tr class="{selectedRow === i ? 'bg-green-200' : 'hover:bg-gray-100'} cursor-pointer" on:click={() => selectedRow = i}>
+                    <td class="px-5 py-1">{Components[comp.komponente.kompid] ?? COMPONENTS[comp.komponente.kompid]}</td>
+
+                    <!-- L0 -->
+                    <td class="px-5 py-1">
+                        <form on:submit|preventDefault={(e) => saveCompField(e, comp.id, 'terml0')} class="flex items-center gap-1">
+                            <input type="number"
+                                   name="terml0"
+                                   step="any"
+                                   bind:this={editInputs[comp.id]['terml0']}
+                                   bind:value={comp.terml0Temp}
+                                   class="w-full text-sm py-[2px] leading-5 bg-transparent border-0 border-b border-gray-400 focus:outline-none focus:border-black focus:ring-0
+                                   {isActive(comp,'terml0') ? 'bg-gray-100 border-black' : 'bg-transparent border-gray-400'}
+                                   {isDirty(comp,'terml0') ? 'text-blue-600' : ''}"
+
+                                    on:focus={() => activeField = { id: comp.id, field: 'terml0' }}
+                                    on:blur={() => activeField = null}
+                                   on:keydown={(e) => handleCompKeyDown(e, comp, 'terml0')}
+                            />
+                        </form>
+                    </td>
+
+                    <!-- L1 -->
+                    <td class="px-5 py-1">
+                        <form on:submit|preventDefault={(e) => saveCompField(e, comp.id, 'terml1')} class="flex items-center gap-1">
+                            <input type="number"
+                                   name="terml1"
+                                   step="any"
+                                   bind:this={editInputs[comp.id]['terml1']}
+                                   bind:value={comp.terml1Temp}
+                                   class="w-full text-sm py-[2px] leading-5 bg-transparent border-0 border-b border-gray-400 focus:outline-none focus:border-black focus:ring-0
+                                   {isActive(comp,'terml1') ? 'bg-gray-100 border-black' : 'bg-transparent border-gray-400'}
+                                   {isDirty(comp,'terml1') ? 'text-blue-600' : ''}"
+
+                                   on:focus={() => activeField = { id: comp.id, field: 'terml1' }}
+                                   on:blur={() => activeField = null}
+                                   on:keydown={(e) => handleCompKeyDown(e, comp, 'terml1')}
+                            />
+                        </form>
+                    </td>
+
+                    <!-- Verteilung -->
+                    <td class="px-5 py-1">
+                        <form on:submit|preventDefault={(e) => saveCompField(e, comp.id, 'verteilung')} class="flex items-center gap-1">
+                            <select bind:value={comp.verteilungTemp}
+                                    bind:this={editInputs[comp.id]['verteilung']}
+                                    name="verteilung"
+                                    class="w-full text-sm py-[2px] leading-5 bg-transparent border-0 border-b border-gray-400 focus:outline-none focus:border-black focus:ring-0
+                                    {isActive(comp,'verteilung') ? 'bg-gray-100 border-black' : 'bg-transparent border-gray-400'}
+                                   {isDirty(comp,'verteilung') ? 'text-blue-600' : ''}"
+
+                                    on:focus={() => activeField = { id: comp.id, field: 'verteilung' }}
+                                    on:blur={() => activeField = null}
+                                    on:keydown={(e) => handleCompKeyDown(e, comp, 'verteilung')}>
+                                <option value="" disabled>Bitte wählen</option>
+                                <option value={1}>Rechteckverteilung</option>
+                                <option value={2}>Normalverteilung</option>
+                                <option value={3}>Dreieckverteilung</option>
+                            </select>
+                        </form>
+                    </td>
+
+                    <!-- Wertart -->
+                    <td class="px-5 py-1">
+                        <form on:submit|preventDefault={(e) => saveCompField(e, comp.id, 'wertart')} class="flex items-center gap-1">
+                            <select bind:value={comp.wertartTemp}
+                                    bind:this={editInputs[comp.id]['wertart']}
+                                    name="wertart"
+                                    class="w-full text-sm py-[2px] leading-5 bg-transparent border-0 border-b border-gray-400 focus:outline-none focus:border-black focus:ring-0
+                                    {isActive(comp,'wertart') ? 'bg-gray-100 border-black' : 'bg-transparent border-gray-400'}
+                                    {isDirty(comp,'wertart') ? 'text-blue-600' : ''}"
+
+                                    on:focus={() => activeField = { id: comp.id, field: 'wertart' }}
+                                    on:blur={() => activeField = null}
+                                    on:keydown={(e) => handleCompKeyDown(e, comp, 'wertart')}>
+                                <option value="" disabled>Bitte wählen</option>
+                                <option value={1}>Halbweite</option>
+                                <option value={2}>Spannweite</option>
+                                <option value={3}>Standardabweichung</option>
+                            </select>
+                        </form>
+                    </td>
+
+                    <!-- Freiheitsgrad -->
+                    <td class="px-5 py-1">
+                        <form on:submit|preventDefault={(e) => saveCompField(e, comp.id, 'freigrad')} class="flex items-center gap-1">
+                            <select bind:value={comp.freigradTemp}
+                                    bind:this={editInputs[comp.id]['freigrad']}
+                                    name="freigrad"
+                                    class="w-full text-sm py-[2px] leading-5 bg-transparent border-0 border-b border-gray-400 focus:outline-none focus:border-black focus:ring-0
+                                    {isActive(comp,'freigrad') ? 'bg-gray-100 border-black' : 'bg-transparent border-gray-400'}
+                                    {isDirty(comp,'freigrad') ? 'text-blue-600' : ''}"
+
+                                    on:focus={() => activeField = { id: comp.id, field: 'freigrad' }}
+                                    on:blur={() => activeField = null}
+                                    on:keydown={(e) => handleCompKeyDown(e, comp, 'freigrad')}     on:focus={() => editingCompField = { id: comp.id, field: 'terml0' }}>
+                                <option value="" disabled>Bitte wählen</option>
+                                <option value={1}>Unbegrenzt</option>
+                                <option value={2}>N-1</option>
+                            </select>
+                        </form>
+                    </td>
+                </tr>
+            {/each}
+            </tbody>
+        </table>
+    </div>
+
 </section>
 
 
-<Modal open={showKmg} on:close={closeModal}>
-    <KmgInfoPage data={$page.state.kmgInfo} />
-</Modal>
+

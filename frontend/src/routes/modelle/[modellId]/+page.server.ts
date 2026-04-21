@@ -1,5 +1,5 @@
 import type {Actions, PageServerLoad} from './$types';
-import {fail} from "@sveltejs/kit";
+import {fail, redirect} from '@sveltejs/kit';
 
 export const load: PageServerLoad = async ({ params, fetch }) => {
     const { modellId } = params;
@@ -60,7 +60,7 @@ export const actions: Actions = {
         payload.tsk_hoehenmessung = formData.has('tsk_hoehenmessung') ? 1 : 0;
         payload.tsk_stufenmessung = formData.has('tsk_stufenmessung') ? 1 : 0;
 
-        const aufgabe_modell = parseOptionalInt(formData.get('aufgabe_modell') as string);
+        const aufgabe_modell = parseOptionalInt('aufgabe_modell');
         if (aufgabe_modell !== undefined) payload.aufgabe_modell = aufgabe_modell;
 
         const description = parseOptionalString('description');
@@ -72,7 +72,12 @@ export const actions: Actions = {
         const formeldesc = parseOptionalString('formeldesc');
         if (formeldesc !== undefined) payload.formeldesc = formeldesc;
 
-        console.log(payload);
+        const actionType = formData.get('action');
+
+        const aufgabe = parseOptionalInt('aufgabe');
+        if (aufgabe !== undefined) payload.aufgabe = aufgabe;
+
+        console.log("JULE",payload);
         // Update an Backend senden
         const res = await fetch(`http://localhost:9999/modells/${modellId}/r`, {
             method: 'POST',
@@ -89,9 +94,18 @@ export const actions: Actions = {
         }
 
         const result = await res.json();
+
+        if (actionType === 'close') {
+            throw redirect(303, '/analyseprojekt'); // z.B. Übersicht
+        }
+
+        if (actionType === 'continue') {
+            throw redirect(303, `/modelle`); // z.B. nächste Seite
+        }
+
         return {
             success: true,
-            message: result.detail
+            message: result.detail,
         };
     }
 };

@@ -110,10 +110,14 @@
 <section class="w-8xl space-y-4 text-sm font-sans text-gray-800 m-auto pt-5">
     <form method="POST" class="max-w-8xl space-y-6">
     <!-- Titel -->
+        <input type="number" name="aufgabe_modell" hidden bind:value={data.modell.aufgabe_modell} class="w-full h-6 border border-gray-400 px-2 text-sm py-2 bg-white" />
 
     <h1 class="text-base font-semibold border-b pb-2">{prozesstitel}
-        <button type="submit" class="bg-gray-600 text-white text-sm px-3 py-1 rounded hover:bg-gray-700 float-right">
-            Speichern
+        <button type="submit" name="action" value="continue" class="ml-2 bg-gray-600 text-white text-sm px-3 py-1 rounded hover:bg-gray-700 float-right">
+            Speichern & Schließen
+        </button>
+        <button type="submit" name="action" value="close" class="bg-gray-600 text-white text-sm px-3 py-1 rounded hover:bg-gray-700 float-right">
+            Speichern & Weiter
         </button>
     </h1>
 
@@ -221,7 +225,7 @@
             </thead>
             <tbody>
             {#each data.modell.components as comp, i}
-                <tr class="{selectedRow === i ? 'bg-green-300' : 'hover:bg-green-200'} cursor-pointer"
+                <tr class="{selectedRow === i ? 'bg-cyan-800' : 'hover:bg-cyan-900'} {selectedRow === i ? 'text-white' : 'hover:text-white'} cursor-pointer"
                     on:click={() => selectedRow = i}
                     on:dblclick={(e) => onOpenComponent(e, comp.id)}>
                     <td class="px-2 py-1 text-left w-0.5">{i + 1}</td>
