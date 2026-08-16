@@ -24,7 +24,7 @@
     }
 
     function closeModal() {
-        history.back(); // entfernt state und schließt modal
+        history.back();
     }
 
     async function deleteModell(modellId: number) {
@@ -42,11 +42,10 @@
             data.modelle = data.modelle.filter((c: any) => c.id !== modellId);
         } catch (err) {
             console.error(err);
-            console.log('Fehler im Catch-Block:', err); // <-- was steht hier?
-
             alert('Löschen fehlgeschlagen');
         }
     }
+
     let showDuplicateModal = false;
     let duplicateModelId: number | null = null;
     let duplicateName = "";
@@ -70,70 +69,166 @@
         if (res.ok) {
             const result = await res.json();
             console.log("Duplikat erstellt:", result);
-            // Optional: Liste aktualisieren
             showDuplicateModal = false;
         } else {
             alert("Fehler beim Duplizieren");
         }
     }
+
     function goToModell(id: number, prozess: number) {
-        console.log("einzigartig",prozess);
         if (prozess === 3) goto(`http://localhost:5173/modelle/3D-${id}`)
         else goto(`http://localhost:5173/modelle/${id}`)
     }
 
     let showForm = false;
+
+
+    
+    // Filter-Variablen
+    let filterName = '';
+    let filterProzess = '';
+    let filterAufgabe = '';
+    let filterMethode = '';
+    let filterMesseinrichtung = '';
+    let filterMessobjekt = '';
+
+    const prozessMap: Record<number, string> = {
+        1: 'Prüfprozess',
+        2: 'Kalibrierprozess',
+        3: '3D-Prüfprozess'
+    };
+
+    const methodenMap: Record<number, string> = {
+        1: 'Direkt',
+        2: 'Direkt mit Einstellung',
+        3: 'Substitution',
+        4: 'Differenziell'
+    };
+
+    const geoMap: Record<number, string> = {
+        1: 'Fläche',
+        2: 'Kugel',
+        3: 'Zylinder',
+        4: 'Bohrung'
+    };
+
+
+$: gefilterteModelle = data.modelle.filter((m: any) => {
+    let aufgabeMatch = true;
+    if (filterAufgabe) {
+        if (filterProzess === '3') {
+            aufgabeMatch = m.aufgabe === parseInt(filterAufgabe);
+        } else {
+            aufgabeMatch = m[filterAufgabe] === 1;
+        }
+    }
+    return (
+        (!filterName || m.name?.toLowerCase().includes(filterName.toLowerCase())) &&
+        (!filterProzess || m.aufgabe_modell === parseInt(filterProzess)) &&
+        aufgabeMatch &&
+        (!filterMethode || m.methode === parseInt(filterMethode)) &&
+        (!filterMesseinrichtung || m.geo_me === parseInt(filterMesseinrichtung)) &&
+        (!filterMessobjekt || m.geo_mo === parseInt(filterMessobjekt))
+    );
+});
+$: if (filterProzess) filterAufgabe = '';
 </script>
 
-
-
 <style>
-    tbody tr:nth-child(odd) {
-        background-color: rgba(200, 200, 200, 0.3);
+    .table-row:nth-child(odd) {
+        background-color: #f5f5f5;
+    }
+    .table-row:hover {
+        background-color: #e8eef5;
     }
 </style>
 
-<div class="max-w-7xl mx-auto px-4 py-6">
+<div class="max-w-7xl mx-auto px-4 py-6 flex flex-col h-[calc(100vh-2rem)]">
     <!-- Page Header -->
-    <div class="flex items-center gap-4 text-2xl font-semibold text-gray-600 mb-6">
+    <div class="flex items-center gap-4 text-2xl font-semibold mb-6" style="color: #1f3b5e;">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
             <path fill-rule="evenodd" d="M12 6.75a5.25 5.25 0 0 1 6.775-5.025.75.75 0 0 1 .313 1.248l-3.32 3.319c.063.475.276.934.641 1.299.365.365.824.578 1.3.64l3.318-3.319a.75.75 0 0 1 1.248.313 5.25 5.25 0 0 1-5.472 6.756c-1.018-.086-1.87.1-2.309.634L7.344 21.3A3.298 3.298 0 1 1 2.7 16.657l8.684-7.151c.533-.44.72-1.291.634-2.309A5.342 5.342 0 0 1 12 6.75ZM4.117 19.125a.75.75 0 0 1 .75-.75h.008a.75.75 0 0 1 .75.75v.008a.75.75 0 0 1-.75.75h-.008a.75.75 0 0 1-.75-.75v-.008Z" clip-rule="evenodd" />
             <path d="m10.076 8.64-2.201-2.2V4.874a.75.75 0 0 0-.364-.643l-3.75-2.25a.75.75 0 0 0-.916.113l-.75.75a.75.75 0 0 0-.113.916l2.25 3.75a.75.75 0 0 0 .643.364h1.564l2.062 2.062 1.575-1.297Z" />
             <path fill-rule="evenodd" d="m12.556 17.329 4.183 4.182a3.375 3.375 0 0 0 4.773-4.773l-3.306-3.305a6.803 6.803 0 0 1-1.53.043c-.394-.034-.682-.006-.867.042a.589.589 0 0 0-.167.063l-3.086 3.748Zm3.414-1.36a.75.75 0 0 1 1.06 0l1.875 1.876a.75.75 0 1 1-1.06 1.06L15.97 17.03a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
         </svg>
-        <span>Modelle</span>
+        <span style="text-color: #1f3b5e;">Modelle</span>
     </div>
 
-    <!-- Filter Row -->
-    <div class="grid grid-cols-5 gap-2 mb-4">
-        <input class="border rounded px-2 py-1" placeholder="Prozess" />
-        <input class="border rounded px-2 py-1" placeholder="Aufgabe" />
-        <input class="border rounded px-2 py-1" placeholder="Methode" />
-        <input class="border rounded px-2 py-1" placeholder="Messeinrichtung" />
-        <input class="border rounded px-2 py-1" placeholder="Messobjekt" />
-    </div>
+<!-- Filter Row -->
+<div class="grid grid-cols-6 gap-2 rounded-t-md bg-[#F8FAFC] p-3 border-x border-t border-gray-300">
+    <input
+        bind:value={filterName}
+        class="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:border-blue-400"
+        placeholder="Name"
+    />
+    <select bind:value={filterProzess} class="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:border-blue-400">
+        <option value="">Prozess</option>
+        <option value="1">Prüfprozess</option>
+        <option value="2">Kalibrierprozess</option>
+        <option value="3">3D-Prüfprozess</option>
+    </select>
+    <select bind:value={filterAufgabe} class="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:border-blue-400">
+        <option value="">Aufgabe</option>
+        {#if filterProzess === '3'}
+            <option value="1">Durchmesser</option>
+            <option value="2">Abstand</option>
+            <option value="3">Richtung</option>
+            <option value="4">Koaxialität</option>
+            <option value="5">Form</option>
+            <option value="6">Winkel</option>
+            <option value="7">Position</option>
+        {:else}
+<option value="tsk_ausenmessung">Außenmessung</option>
+<option value="tsk_innenmessung">Innenmessung</option>
+<option value="tsk_hoehenmessung">Höhenmessung</option>
+<option value="tsk_tiefenmessung">Tiefenmessung</option>
+<option value="tsk_stufenmessung">Stufenmessung</option>
+        {/if}
+    </select>
+    <select bind:value={filterMethode} class="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:border-blue-400">
+        <option value="">Methode</option>
+        <option value="1">Direkt</option>
+        <option value="2">Direkt mit Einstellung</option>
+        <option value="3">Substitution</option>
+        <option value="4">Differenziell</option>
+    </select>
+    <select bind:value={filterMesseinrichtung} class="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:border-blue-400">
+        <option value="">Messeinrichtung</option>
+        <option value="1">Fläche</option>
+        <option value="2">Kugel</option>
+        <option value="3">Zylinder</option>
+        <option value="4">Bohrung</option>
+    </select>
+    <select bind:value={filterMessobjekt} class="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:border-blue-400">
+        <option value="">Messobjekt</option>
+        <option value="1">Fläche</option>
+        <option value="2">Kugel</option>
+        <option value="3">Zylinder</option>
+        <option value="4">Bohrung</option>
+    </select>
+</div>
 
     <!-- Table Header -->
-    <div class="bg-gray-200 border border-gray-300 rounded-t-md flex items-center font-semibold px-4 py-2">
+    <div class="border border-gray-300 grid grid-cols-2 items-center font-semibold px-4 py-2 text-sm" style="background-color: #fafafb; color: #2B6CB0;">
         <div class="w-1/2">Modell</div>
-        <div class="w-1/2 flex justify-between items-center">
+        <div class="flex justify-between items-center">
             <span>Beschreibung</span>
             <button on:click={() => (showForm = !showForm)} title="Neues Modell hinzufügen" class="focus:outline-none" aria-label="Neues Modell hinzufügen">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-cyan-900 hover:scale-110 transition-transform">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 hover:scale-110 transition-transform" style="color: #2B6CB0;">
                     <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 9a.75.75 0 0 0-1.5 0v2.25H9a.75.75 0 0 0 0 1.5h2.25V15a.75.75 0 0 0 1.5 0v-2.25H15a.75.75 0 0 0 0-1.5h-2.25V9Z" clip-rule="evenodd" />
                 </svg>
             </button>
         </div>
     </div>
+
     {#if showForm}
-        <!-- Eingabeformular -->
-        <form method="POST" class="bg-gray-100 border border-t-0 border-gray-300 px-4 py-3 flex flex-wrap items-center gap-4">
+        <form method="POST" class="border border-t-0 border-gray-300 px-4 py-3 flex flex-wrap items-center gap-4" style="background-color: #F8FAFC;">
             <select
-                    id="aufgabe_modell"
-                    name="aufgabe_modell"
-                    bind:value={aufgabe_modell}
-                    required
-                    class="border border-gray-300 rounded px-2 py-1 w-36 text-sm"
+                id="aufgabe_modell"
+                name="aufgabe_modell"
+                bind:value={aufgabe_modell}
+                required
+                class="border border-gray-300 rounded px-2 py-1 w-36 text-sm focus:outline-none focus:border-blue-400"
             >
                 <option value="" disabled selected>Bitte wählen</option>
                 <option value="1">Prüfprozess</option>
@@ -142,19 +237,19 @@
             </select>
 
             <input
-                    id="name"
-                    name="name"
-                    required
-                    placeholder="Name"
-                    class="border border-gray-300 rounded px-2 py-1 w-48 text-sm"
+                id="name"
+                name="name"
+                required
+                placeholder="Name"
+                class="border border-gray-300 rounded px-2 py-1 w-48 text-sm focus:outline-none focus:border-blue-400"
             />
 
             {#if aufgabe_modell === '3'}
                 <select
-                        id="aufgabe"
-                        name="aufgabe"
-                        required
-                        class="border border-gray-300 rounded px-2 py-1 w-40 text-sm"
+                    id="aufgabe"
+                    name="aufgabe"
+                    required
+                    class="border border-gray-300 rounded px-2 py-1 w-40 text-sm focus:outline-none focus:border-blue-400"
                 >
                     <option value="" disabled selected>Bitte wählen</option>
                     <option value="1">Durchmesser</option>
@@ -168,22 +263,24 @@
             {/if}
 
             <button
-                    type="submit"
-                    class="bg-cyan-900 text-white hover:bg-cyan-950 border border-black-800 rounded px-3 py-1 text-sm font-medium transition-colors"
+                type="submit"
+                class="text-white rounded px-3 py-1 text-sm font-medium transition-colors hover:opacity-90"
+                style="background-color: #244263;"
             >
                 Erstellen
             </button>
         </form>
     {/if}
+
     <!-- Table Body -->
-    <div class="border border-t-0 border-gray-300 divide-y divide-gray-200">
-        {#each data.modelle as modell}
-            <div class="flex px-4 py-1 hover:bg-gray-100 cursor-pointer" on:dblclick={() => goToModell(modell.id,modell.aufgabe_modell)}>
+<div class="border border-t-0 border-gray-300 divide-y divide-gray-200 overflow-y-auto flex-1">
+            {#each gefilterteModelle as modell, i}
+            <div class="grid grid-cols-2 px-4 py-2 cursor-pointer text-sm odd:bg-[#ebebec] even:bg-[#fafafb]" on:dblclick={() => goToModell(modell.id, modell.aufgabe_modell)}>
                 <div class="w-1/2">{modell.name}</div>
-                <div class="w-1/2 flex justify-between items-center">
-                    <span>{modell.description}</span>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">{modell.description}</span>
                     <div class="flex gap-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" on:click={() => openDuplicateModal(modell.id)} fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-5 h-5 text-gray-500 hover:text-blue-500 cursor-pointer">
+                        <svg xmlns="http://www.w3.org/2000/svg" on:click={() => openDuplicateModal(modell.id)} fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-5 h-5 cursor-pointer transition-colors" style="color: #4a90d9;" on:mouseenter={e => e.currentTarget.style.color='#1f3b5e'} on:mouseleave={e => e.currentTarget.style.color='#4a90d9'}>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16.5 8.25V6a2.25 2.25 0 0 0-2.25-2.25H6A2.25 2.25 0 0 0 3.75 6v8.25A2.25 2.25 0 0 0 6 16.5h2.25m8.25-8.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-7.5A2.25 2.25 0 0 1 8.25 18v-1.5m8.25-8.25h-6a2.25 2.25 0 0 0-2.25 2.25v6" />
                         </svg>
                         <svg xmlns="http://www.w3.org/2000/svg" on:click={() => deleteModell(modell.id)} fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-5 h-5 text-red-500 hover:text-red-700 cursor-pointer">
@@ -197,28 +294,29 @@
 </div>
 
 {#if showDuplicateModal}
-    <div class="fixed inset-0 flex items-center justify-center z-50">
+    <div class="fixed inset-0 flex items-center justify-center z-50" style="background-color: rgba(26,43,74,0.4);">
         <div class="bg-white rounded-xl p-6 shadow-xl w-full max-w-md">
-            <h2 class="text-xl font-semibold mb-4">Modell duplizieren</h2>
+            <h2 class="text-xl font-semibold mb-4" style="color: #1f3b5e;">Modell duplizieren</h2>
 
             <label class="block text-sm font-medium text-gray-700 mb-1">Neuer Modellname</label>
             <input
-                    type="text"
-                    bind:value={duplicateName}
-                    class="w-full border border-gray-300 rounded px-3 py-2 mb-4 focus:outline-none focus:ring focus:border-blue-500"
-                    placeholder="z. B. Mein Modell (Kopie)"
+                type="text"
+                bind:value={duplicateName}
+                class="w-full border border-gray-300 rounded px-3 py-2 mb-4 focus:outline-none focus:ring focus:border-blue-400"
+                placeholder="z. B. Mein Modell (Kopie)"
             />
 
             <div class="flex justify-end gap-3">
                 <button
-                        on:click={() => (showDuplicateModal = false)}
-                        class="px-4 py-2 text-gray-600 hover:text-gray-800"
+                    on:click={() => (showDuplicateModal = false)}
+                    class="px-4 py-2 text-gray-600 hover:text-gray-800"
                 >
                     Abbrechen
                 </button>
                 <button
-                        on:click={confirmDuplicate}
-                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+                    on:click={confirmDuplicate}
+                    class="text-white px-4 py-2 rounded hover:opacity-90 transition-opacity"
+                    style="background-color: #2d4a7a;"
                 >
                     Kopieren
                 </button>
@@ -226,6 +324,7 @@
         </div>
     </div>
 {/if}
+
 <!-- Modal -->
 <Modal open={modellDialogOpen} on:close={closeModal}>
     <NewModelPage data={$page.state.newModell} />

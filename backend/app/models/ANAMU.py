@@ -2,7 +2,7 @@ from sqlalchemy import DATETIME, Column, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
 from app.database.database import Base
-
+from sqlalchemy import func
 
 class ANAMU(Base):
     __tablename__ = "ana_mu"
@@ -14,8 +14,8 @@ class ANAMU(Base):
     identnr = Column(Integer)
     partno = Column(Integer)
     remark = Column(String(255))
-    creation = Column(DATETIME)
-    modify = Column(DATETIME)
+    creation = Column(DATETIME, server_default=func.now())
+    modify = Column(DATETIME, server_default=func.now(), onupdate=func.now())
     tolfaktor = Column(Integer)
     tsk_aufgabe = Column(Integer)
     fk_kmg = Column(Integer, ForeignKey("kmgs.id"))

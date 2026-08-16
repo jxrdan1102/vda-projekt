@@ -20,6 +20,15 @@ class ModellGetAllR(BaseModel):
     name: str
     description: str | None = None
     aufgabe_modell: int | None = None
+    aufgabe: int | None = None
+    methode: int | None = None
+    geo_me: int | None = None
+    geo_mo: int | None = None
+    tsk_innenmessung: int | None = None
+    tsk_ausenmessung: int | None = None
+    tsk_tiefennmessung: int | None = None
+    tsk_hoehenmessung: int | None = None
+    tsk_stufenmessung: int | None = None
 
     class Config:
         from_attributes = True
@@ -27,6 +36,7 @@ class ModellGetAllR(BaseModel):
 class ModellBase(BaseModel):
     id: int
     aufgabe: int
+    is_builtin: bool
 
     class Config:
         from_attributes = True
@@ -52,9 +62,10 @@ class ModellForAnamuR(BaseModel):
     geo_mo: int | None = None
     tsk_innenmessung: int | None = None
     tsk_ausenmessung: int | None = None
-    tsk_tiefennmessung: int | None = None
+    tsk_tiefenmessung: int | None = None
     tsk_hoehenmessung: int | None = None
     tsk_stufenmessung: int | None = None
+    modcreation: str | None = None
 
     class Config:
         from_attributes = True
@@ -94,7 +105,7 @@ class ModellUpdateR(BaseModel):
     description: str | None = None
     formel: str | None = None
     formeldesc: str | None = None
-
+    is_builtin: int | None = None
     class Config:
         from_attributes = True
 
@@ -229,6 +240,7 @@ class ModellGetIdR(BaseModel):
     formel: str | None = None
     formeldesc: str | None = None
     aufgabe_modell: int
+    is_builtin: int
 
     components: list[ComponentGetR] | None = None
 

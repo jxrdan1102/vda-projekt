@@ -2,16 +2,26 @@ import type {Actions, PageServerLoad} from './$types';
 import {fail, redirect} from "@sveltejs/kit";
 
 export const load: PageServerLoad = async ({ params, fetch }) => {
+    const { modellId } = params;
 
-    const response = await fetch(`http://localhost:9999/components`, {
-        method: 'GET',
-        credentials: 'include'  // ← WICHTIG
-    });
+    const [response, textsRes] = await Promise.all([
+        fetch(`http://localhost:9999/components`, {
+            method: 'GET',
+            credentials: 'include'
+        }),
+        fetch(`http://localhost:9999/modells/modell-texts`, {
+            method: 'GET',
+            credentials: 'include'
+        })
+    ]);
+
     const responseBody = await response.json();
-    console.log(responseBody);
+    const texts = await textsRes.json();
+
     return {
         title: 'Komponenten:',
-        komponenten: responseBody
+        komponenten: responseBody,
+        texts,
     }
 }
 
@@ -30,7 +40,7 @@ export const actions: Actions = {
         function parseOptionalFloat(key: string): number | undefined {
             const val = formData.get(key);
             if (val === null || val === '') return undefined;
-            const parsed = parseFloat(val.toString());
+            const parsed = parseFloat(val.toString().replace(',', '.')); // ← diese Änderung
             return isNaN(parsed) ? undefined : parsed;
         }
         const payload : Record<string, any> = {};
@@ -62,7 +72,7 @@ export const actions: Actions = {
         }
 
         const result = await res.json();
-        throw redirect(303, `/modelle/${modellId}`)
+        throw redirect(303, `/modelle/${modellId}?added=1`);
         return {
             success: true,
             message: result.detail

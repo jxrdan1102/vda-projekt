@@ -2,16 +2,24 @@ import type {Actions, PageServerLoad} from './$types';
 import {fail, redirect} from "@sveltejs/kit";
 
 export const load: PageServerLoad = async ({ params, fetch }) => {
+    const [response, textsRes] = await Promise.all([
+        fetch(`http://localhost:9999/components`, {
+            method: 'GET',
+            credentials: 'include'
+        }),
+        fetch(`http://localhost:9999/modells/modell-texts`, {
+            method: 'GET',
+            credentials: 'include'
+        })
+    ]);
 
-    const response = await fetch(`http://localhost:9999/components`, {
-        method: 'GET',
-        credentials: 'include'  // ← WICHTIG
-    });
     const responseBody = await response.json();
-    console.log(responseBody);
+    const texts = await textsRes.json();
+
     return {
         title: 'Komponenten:',
-        komponenten: responseBody
+        komponenten: responseBody,
+        texts,
     }
 }
 
@@ -59,7 +67,7 @@ export const actions: Actions = {
         }
 
         const result = await res.json();
-        throw redirect(303, `/modelle/3D-${modellId}`)
+        throw redirect(303, `/modelle/3D-${modellId}?added=1`);
         return {
             success: true,
             message: result.detail

@@ -136,7 +136,7 @@ async def login_for_access_token(login_request: LoginRequest,
         httponly=True,
         secure=False,  # ⛔ Bei Entwicklung lokal False, im Livebetrieb auf True stellen!
         samesite="Lax",
-        max_age=60  # 5 Minuten
+        max_age=3600  # 5 Minuten
         ,path = "/"
     )
 

@@ -1,9 +1,15 @@
 import type {Actions, PageServerLoad} from './$types';
-import {fail} from "@sveltejs/kit";
+import {fail,redirect} from "@sveltejs/kit";
 
-export const load: PageServerLoad = async ({ params, fetch }) => {
+export const load: PageServerLoad = async ({ params, fetch, setHeaders }) => {
     const { modellId } = params;
 
+
+            setHeaders({
+        'cache-control': 'no-store'
+    });
+
+    
     const response = await fetch(`http://localhost:9999/modells/${modellId}/r`, {
         method: 'GET',
         credentials: 'include'  // ← WICHTIG
@@ -105,6 +111,9 @@ console.log("aufgabe_modell:: ", aufgabe_modell);
             }
         }
 
+        const actionType = formData.get('action');
+
+
         console.log("Senden",payload);
         // Update an Backend senden
         const res = await fetch(`http://localhost:9999/modells/${modellId}/r`, {
@@ -115,13 +124,32 @@ console.log("aufgabe_modell:: ", aufgabe_modell);
         });
 
         if (!res.ok) {
-            const err = await res.json();
-            return fail(res.status, {
-                error: err.detail || 'Fehler beim Speichern'
-            });
-        }
+    const err = await res.json();
+    const detail = err.detail;
+
+    if (detail?.code === 'FK_IN_USE') {
+        return fail(res.status, {
+            code: detail.code,
+            count: detail.count,
+            error: detail.message,
+        });
+    }
+
+    return fail(res.status, {
+        error: typeof detail === 'string' ? detail : 'Fehler beim Speichern',
+    });
+}
 
         const result = await res.json();
+
+        if (actionType === 'close') {
+            throw redirect(303, `/analyseprojekt?open=${modellId}`); // z.B. Übersicht
+        }
+        
+        if (actionType === 'continue') {
+            throw redirect(303, `/modelle`); // z.B. nächste Seite
+        }
+
         return {
             success: true,
             message: result.detail

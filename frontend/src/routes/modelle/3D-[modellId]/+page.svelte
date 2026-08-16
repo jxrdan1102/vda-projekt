@@ -4,9 +4,71 @@
     import Modal from "$lib/components/Modal.svelte";
     import NewCompPage from "../3D-[modellId]/addComponent/+page.svelte";
     import CompInfoPage from '../3D-[modellId]/component-[componentId]/+page.svelte';
-    import {COMPONENTS, Components} from "$lib/Mapping.js";
-
+    import {COMPONENTS, Components, prozessMapping} from "$lib/Mapping.js";
+    import ComponentTable from '$lib/components/modelle/ComponentTable.svelte';
+    import ModellRightPanel from '$lib/components/modelle/ModellRightPanel.svelte';
+    import EditToggle from '$lib/components/modelle/EditToggle.svelte';
     export let data;
+    let editable = !data.modell.is_builtin;
+
+import { browser } from '$app/environment';
+
+import { onMount } from 'svelte';
+
+onMount(async () => {
+    if (aufgabe && (!data.modell.components || data.modell.components.length === 0)) {
+        await saveModell();
+    }
+});
+// Reaktiv bei jeder Änderung speichern
+$: if (browser) {
+    sessionStorage.setItem('pendingModellData', JSON.stringify({
+        name, Element1, Element2, Bezug1, Bezug2,
+        aufgabe, aufgabe_modell, taster, merkmal, element,
+        punktmusterB1, tasterschaft1, tasterschaft2, artdesmasses,
+        punktmusterR1, punktmusterR2, taster1, taster2,
+        abstand, winkelE1, winkelE2,
+        punktmuster: punktmuster ? parseInt(punktmuster) : null,
+        description, formel, formeldesc
+    }));
+}
+
+$: if (form?.code === 'FK_IN_USE') {
+    if (browser) {
+        const saved = sessionStorage.getItem('pendingModellData');
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            name = parsed.name;
+            Element1 = parsed.Element1;
+            Element2 = parsed.Element2;
+            Bezug1 = parsed.Bezug1;
+            Bezug2 = parsed.Bezug2;
+            aufgabe = parsed.aufgabe;
+            taster = parsed.taster;
+            merkmal = parsed.merkmal;
+            element = parsed.element;
+            punktmusterB1 = parsed.punktmusterB1;
+            tasterschaft1 = parsed.tasterschaft1;
+            tasterschaft2 = parsed.tasterschaft2;
+            artdesmasses = parsed.artdesmasses;
+            punktmusterR1 = parsed.punktmusterR1;
+            punktmusterR2 = parsed.punktmusterR2;
+            taster1 = parsed.taster1;
+            taster2 = parsed.taster2;
+            abstand = parsed.abstand;
+            winkelE1 = parsed.winkelE1;
+            winkelE2 = parsed.winkelE2;
+            punktmuster = parsed.punktmuster?.toString() ?? null;
+            description = parsed.description;
+            formel = parsed.formel;
+            formeldesc = parsed.formeldesc;
+        }
+    }
+    conflictCount = form.count ?? 0;
+    showConflictDialog = true;
+}
+
+
     const ModelTextLabels: Record<number, string> = {
         0: '',
         1: 'Das ist eine tolle Komponente',
@@ -41,15 +103,161 @@
     let formel = data.modell.formel ?? '';
     let modellId = data.modellId;
 
-    export let form: {
-        success?: boolean;
-        message?: string;
-        error?: string;
-    } | null = null;
+    $: fieldClass = `w-full h-6 border border-gray-400 px-2 text-sm py-0 ${editable ? 'bg-white' : 'bg-gray-50 cursor-not-allowed opacity-60'}`;
+    $: inputClass = `w-full h-6 border border-gray-400 px-2 text-sm py-2 ${editable ? 'bg-white' : 'bg-gray-50 cursor-not-allowed opacity-60'}`;
+
+export let form: {
+    success?: boolean;
+    message?: string;
+    error?: string;
+    code?: string;
+    count?: number;
+} | null = null;
+let showConflictDialog = false;
+let conflictCount = 0;
+
+$: if (form?.code === 'FK_IN_USE') {
+    conflictCount = form.count ?? 0;
+    showConflictDialog = true;
+}
     $: modellId = $page.params.modellId;
     $: componentDialogOpen = !!$page.state?.newComponent;
     $: showComponent = !!$page.state?.componentInfo;
+function buildPayload(formEl: HTMLFormElement) {
+    const formData = new FormData(formEl);
 
+    function parseOptionalInt(key: string): number | undefined {
+        const value = formData.get(key);
+        if (value === null || value === '') return undefined;
+        const parsed = parseInt(value.toString());
+        return isNaN(parsed) ? undefined : parsed;
+    }
+
+    function parseOptionalString(key: string): string | undefined {
+        const value = formData.get(key);
+        if (value === null || value === '') return undefined;
+        return value.toString();
+    }
+
+    const payload: Record<string, any> = {};
+
+    const name = parseOptionalString('name');
+    if (name !== undefined) payload.name = name;
+
+    payload.tsk_ausenmessung = formData.has('tsk_ausenmessung') ? 1 : 0;
+    payload.tsk_innenmessung = formData.has('tsk_innenmessung') ? 1 : 0;
+    payload.tsk_tiefenmessung = formData.has('tsk_tiefenmessung') ? 1 : 0;
+    payload.tsk_hoehenmessung = formData.has('tsk_hoehenmessung') ? 1 : 0;
+    payload.tsk_stufenmessung = formData.has('tsk_stufenmessung') ? 1 : 0;
+
+    const aufgabe_modell = parseOptionalInt('aufgabe_modell');
+    if (aufgabe_modell !== undefined) payload.aufgabe_modell = aufgabe_modell;
+
+    const aufgabe = parseOptionalInt('aufgabe');
+    if (aufgabe !== undefined) payload.aufgabe = aufgabe;
+
+    const bezug1 = parseOptionalString('Bezug1');
+    if (bezug1 !== undefined) payload.Bezug1 = bezug1;
+
+    const bezug2 = parseOptionalString('Bezug2');
+    if (bezug2 !== undefined) payload.Bezug2 = bezug2;
+
+    const element1 = parseOptionalString('Element1');
+    if (element1 !== undefined) payload.Element1 = element1;
+
+    const element2 = parseOptionalString('Element2');
+    if (element2 !== undefined) payload.Element2 = element2;
+
+    const punktmuster = parseOptionalInt('punktmuster');
+    if (punktmuster !== undefined) payload.punktmuster = punktmuster;
+
+    const description = parseOptionalString('description');
+    if (description !== undefined) payload.description = description;
+
+    const formel = parseOptionalString('formel');
+    if (formel !== undefined) payload.formel = formel;
+
+    const formeldesc = parseOptionalString('formeldesc');
+    if (formeldesc !== undefined) payload.formeldesc = formeldesc;
+
+    const optionalIntFields = [
+        'taster', 'merkmal', 'element',
+        'punktmusterB1', 'tasterschaft1', 'tasterschaft2', 'artdesmasses',
+        'punktmusterR1', 'punktmusterR2', 'taster1', 'taster2',
+        'abstand', 'winkelE1', 'winkelE2'
+    ];
+    for (const key of optionalIntFields) {
+        const val = parseOptionalInt(key);
+        if (val !== undefined) payload[key] = val;
+    }
+
+    return payload;
+}
+
+async function createCopy() {
+    
+    const copyRes = await fetch(`http://localhost:9999/modells/${data.modellId}/copy`, {
+        method: 'POST',
+        credentials: 'include'
+    });
+    if (!copyRes.ok) {
+        alert('Fehler beim Erstellen der Kopie');
+        return;
+    }
+    const copyJson = await copyRes.json();
+    const newId = copyJson.new_id;
+
+    // Direkt Svelte-Variablen nutzen statt FormData
+    const payload: Record<string, any> = {
+        name,
+        aufgabe_modell,
+        aufgabe,
+        description,
+        formel,
+        formeldesc,
+        Element1,
+        Element2,
+        Bezug1,
+        Bezug2,
+        punktmuster: punktmuster ? parseInt(punktmuster) : undefined,
+        taster,
+        merkmal,
+        element,
+        punktmusterB1,
+        tasterschaft1,
+        tasterschaft2,
+        artdesmasses,
+        punktmusterR1,
+        punktmusterR2,
+        taster1,
+        taster2,
+        abstand,
+        winkelE1,
+        winkelE2,
+    };
+
+    // null/undefined rausfiltern
+    Object.keys(payload).forEach(k => {
+        if (payload[k] === undefined || payload[k] === null) delete payload[k];
+    });
+
+    const saveRes = await fetch(`http://localhost:9999/modells/${newId}/r`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(payload)
+    });
+
+    if (!saveRes.ok) {
+        alert('Kopie erstellt, aber Änderungen konnten nicht gespeichert werden');
+    }
+
+    showConflictDialog = false;
+    // sessionStorage leeren bevor wir navigieren
+    if (browser) sessionStorage.removeItem('pendingModellData');
+    
+    goto(`/modelle/3D-${newId}`);
+}
     async function onNewComponentClick(e: MouseEvent & { currentTarget: SVGElement }) {
         if (e.metaKey || e.ctrlKey) return;
         e.preventDefault();
@@ -69,7 +277,7 @@
 
         const href = `/modelle/3D-${modellId}/component-${compId}`;
         const result = await preloadData(href);
-
+    console.log('preload result:', result.data); // texts drin?
         if (result.type === 'loaded' && result.status === 200) {
             pushState(href, { componentInfo: result.data });
         } else {
@@ -95,23 +303,43 @@
     })();
 
 
-    async function deleteComponent(compId: number) {
-        const confirmed = confirm("Möchtest du diese Komponente wirklich löschen?");
-        if (!confirmed) return;
 
-        try {
-            const res = await fetch(`http://localhost:9999/components/${compId}`, {
-                method: 'DELETE',
-                credentials: 'include'
-            });
-            if (!res.ok) throw new Error('Fehler beim Löschen der Komponente');
-
-            data.modell.components = data.modell.components.filter((c: any) => c.id !== compId);
-        } catch (err) {
-            console.error(err);
-            alert('Löschen fehlgeschlagen');
-        }
+onMount(() => {
+    const added = $page.url.searchParams.get('added');
+    if (added) {
+        showToast('Komponente wurde hinzugefügt');
+        history.replaceState({}, '', window.location.pathname);
     }
+    const edited = $page.url.searchParams.get('edited');
+    if (edited) {
+        showToast('Komponente wurde aktualisiert');
+        history.replaceState({}, '', window.location.pathname);
+    }
+});
+    async function deleteComponent(compId: number) {
+    const confirmed = confirm("Möchtest du diese Komponente wirklich löschen?");
+    if (!confirmed) return;
+    try {
+        const res = await fetch(`http://localhost:9999/components/${compId}`, {
+            method: 'DELETE',
+            credentials: 'include'
+        });
+        if (!res.ok) throw new Error('Fehler beim Löschen der Komponente');
+        data.modell.components = data.modell.components.filter((c: any) => c.id !== compId);
+        showToast('Komponente wurde gelöscht');
+    } catch (err) {
+        console.error(err);
+        showToast('Löschen fehlgeschlagen', 'error');
+    }
+}
+let toast: { message: string; type: 'success' | 'error' } | null = null;
+let toastTimeout: ReturnType<typeof setTimeout>;
+
+function showToast(message: string, type: 'success' | 'error' = 'success') {
+    toast = { message, type };
+    clearTimeout(toastTimeout);
+    toastTimeout = setTimeout(() => toast = null, 3000);
+}
     // Reaktiv: Optionen hängen von Element1 ab
     $: punktmusterOptionen = (() => {
         switch (Element1) {
@@ -271,19 +499,190 @@
             console.log('Modell gespeichert', payload);
         }
     }
+let showSaveMenu = false;
 
+import { hasUnsavedChanges } from '$lib/stores/unsaved';
+import { beforeNavigate } from '$app/navigation';
+
+let showUnsavedDialog = false;
+let pendingNavigation: (() => void) | null = null;
+
+let isSaving = false;
+
+let originalData = {
+    name: data.modell?.name ?? '',
+    aufgabe: data.modell?.aufgabe != null ? data.modell.aufgabe.toString() : null,
+    Element1: data.modell?.Element1 ?? null,
+    Element2: data.modell?.Element2 ?? null,
+    Bezug1: data.modell?.Bezug1 ?? null,
+    Bezug2: data.modell?.Bezug2 ?? null,
+    abstand: data.modell?.abstand != null ? data.modell.abstand.toString() : null,
+    taster: data.modell?.taster != null ? data.modell.taster.toString() : null,
+    merkmal: data.modell?.merkmal != null ? data.modell.merkmal.toString() : null,
+    element: data.modell?.element != null ? data.modell.element.toString() : null,
+    punktmuster: data.modell?.punktmuster != null ? data.modell.punktmuster.toString() : null,
+    punktmusterB1: data.modell?.punktmusterB1 != null ? data.modell.punktmusterB1.toString() : null,
+    punktmusterR1: data.modell?.punktmusterR1 != null ? data.modell.punktmusterR1.toString() : null,
+    punktmusterR2: data.modell?.punktmusterR2 != null ? data.modell.punktmusterR2.toString() : null,
+    tasterschaft1: data.modell?.tasterschaft1 != null ? data.modell.tasterschaft1.toString() : null,
+    tasterschaft2: data.modell?.tasterschaft2 != null ? data.modell.tasterschaft2.toString() : null,
+    taster1: data.modell?.taster1 != null ? data.modell.taster1.toString() : null,
+    taster2: data.modell?.taster2 != null ? data.modell.taster2.toString() : null,
+    winkelE1: data.modell?.winkelE1 != null ? data.modell.winkelE1.toString() : null,
+    winkelE2: data.modell?.winkelE2 != null ? data.modell.winkelE2.toString() : null,
+    description: data.modell?.description ?? '',
+    formel: data.modell?.formel ?? '',
+    formeldesc: data.modell?.formeldesc ?? '',
+};
+let originalComponents = JSON.stringify(data.modell?.components ?? []);
+
+hasUnsavedChanges.set(false);
+
+$: hasUnsavedChanges.set(
+    name !== originalData.name ||
+    (aufgabe?.toString() ?? null) !== originalData.aufgabe ||
+    Element1 !== originalData.Element1 ||
+    Element2 !== originalData.Element2 ||
+    Bezug1 !== originalData.Bezug1 ||
+    Bezug2 !== originalData.Bezug2 ||
+    (abstand?.toString() ?? null) !== originalData.abstand ||
+    (taster?.toString() ?? null) !== originalData.taster ||
+    (merkmal?.toString() ?? null) !== originalData.merkmal ||
+    (element?.toString() ?? null) !== originalData.element ||
+    (punktmuster?.toString() ?? null) !== originalData.punktmuster ||
+    (punktmusterB1?.toString() ?? null) !== originalData.punktmusterB1 ||
+    (punktmusterR1?.toString() ?? null) !== originalData.punktmusterR1 ||
+    (punktmusterR2?.toString() ?? null) !== originalData.punktmusterR2 ||
+    (tasterschaft1?.toString() ?? null) !== originalData.tasterschaft1 ||
+    (tasterschaft2?.toString() ?? null) !== originalData.tasterschaft2 ||
+    (taster1?.toString() ?? null) !== originalData.taster1 ||
+    (taster2?.toString() ?? null) !== originalData.taster2 ||
+    (winkelE1?.toString() ?? null) !== originalData.winkelE1 ||
+    (winkelE2?.toString() ?? null) !== originalData.winkelE2 ||
+    description !== originalData.description ||
+    formel !== originalData.formel ||
+    formeldesc !== originalData.formeldesc ||
+    JSON.stringify(data.modell?.components ?? []) !== originalComponents
+);
+
+$: if (form?.success) {
+    originalData = {
+        name,
+        aufgabe: aufgabe?.toString() ?? null,
+        Element1, Element2, Bezug1, Bezug2,
+        abstand: abstand?.toString() ?? null,
+        taster: taster?.toString() ?? null,
+        merkmal: merkmal?.toString() ?? null,
+        element: element?.toString() ?? null,
+        punktmuster: punktmuster?.toString() ?? null,
+        punktmusterB1: punktmusterB1?.toString() ?? null,
+        punktmusterR1: punktmusterR1?.toString() ?? null,
+        punktmusterR2: punktmusterR2?.toString() ?? null,
+        tasterschaft1: tasterschaft1?.toString() ?? null,
+        tasterschaft2: tasterschaft2?.toString() ?? null,
+        taster1: taster1?.toString() ?? null,
+        taster2: taster2?.toString() ?? null,
+        winkelE1: winkelE1?.toString() ?? null,
+        winkelE2: winkelE2?.toString() ?? null,
+        description, formel, formeldesc,
+    };
+    originalComponents = JSON.stringify(data.modell?.components ?? []);
+    hasUnsavedChanges.set(false);
+}
+
+beforeNavigate(({ cancel, to }) => {
+    if (isSaving) return;
+    if ($hasUnsavedChanges) {
+        cancel();
+        showUnsavedDialog = true;
+        pendingNavigation = () => {
+            hasUnsavedChanges.set(false);
+            if (to?.url) window.location.href = to.url.href;
+        };
+    }
+});
+async function handleSubmit(actionValue: string) {
+    isSaving = true;
+    hasUnsavedChanges.set(false);
+    const formEl = document.querySelector('form') as HTMLFormElement;
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'action';
+    input.value = actionValue;
+    formEl.appendChild(input);
+    formEl.submit();
+}
 </script>
+<svelte:window on:click={(e) => {
+    if (showSaveMenu && !(e.target as HTMLElement).closest('.relative')) {
+        showSaveMenu = false;
+    }
+}}/>
+{#if showConflictDialog}
+  <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-lg p-6 w-96 space-y-3">
+      <h2 class="text-base font-semibold text-gray-800">Modell wird verwendet</h2>
+      <p class="text-sm text-gray-600">
+        Dieses Modell wird in <strong>{conflictCount}</strong>
+        {conflictCount === 1 ? 'Datensatz' : 'Datensätzen'} verwendet
+        und kann nicht geändert werden.
+      </p>
+      <p class="text-sm text-gray-600">
+        Möchtest du stattdessen eine Kopie erstellen und diese bearbeiten?
+      </p>
+      <div class="flex gap-2 pt-2">
+        <button
+          on:click={createCopy}
+          class="flex-1 bg-gray-700 text-white text-sm px-4 py-2 rounded hover:bg-gray-800"
+        >
+          Kopie erstellen
+        </button>
+        <button
+          on:click={() => showConflictDialog = false}
+          class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 rounded hover:bg-gray-100"
+        >
+          Abbrechen
+        </button>
+      </div>
+    </div>
+  </div>
+{/if}
 <section class="w-8xl space-y-4 text-sm font-sans text-gray-800 m-auto pt-5">
     <form method="POST" class="max-w-8xl space-y-6">
     <!-- Titel -->
-        <input type="number" name="aufgabe" bind:value={data.modell.aufgabe} hidden class="w-full h-6 border border-gray-400 px-2 text-sm py-2 bg-white" />
-        <input type="number" name="aufgabe_modell" hidden bind:value={data.modell.aufgabe_modell} class="w-full h-6 border border-gray-400 px-2 text-sm py-2 bg-white" />
+        <input type="number" name="aufgabe" bind:value={data.modell.aufgabe} hidden disabled={!editable} class={inputClass} />
+        <input type="number" name="aufgabe_modell" hidden bind:value={data.modell.aufgabe_modell} disabled={!editable} class={inputClass} />
 
-    <h1 class="text-base font-semibold border-b pb-2">{prozesstitel} {data.modell.aufgabe}
-        <button type="submit" class="bg-gray-600 text-white text-sm px-3 py-1 rounded hover:bg-gray-700 float-right">
+<h1 class="text-base font-semibold border-b pb-2">{prozesstitel}: {prozessMapping[data.modell.aufgabe]}
+    <div class="float-right flex">
+        <button type="submit" name="action" value="save" disabled={data.modell.is_builtin}
+            on:click={() => handleSubmit('save')} class="disabled:opacity-40 disabled:cursor-not-allowed bg-gray-600 text-white text-sm px-3 py-1 rounded-l hover:bg-gray-700">
             Speichern
         </button>
-    </h1>
+        <div class="relative">
+            <button type="button"
+                disabled={data.modell.is_builtin}
+                on:click={() => showSaveMenu = !showSaveMenu}
+                class="disabled:opacity-40 disabled:cursor-not-allowed bg-gray-600 text-white text-sm px-2 py-1 rounded-r border-l border-gray-500 hover:bg-gray-700">
+                ▾
+            </button>
+            {#if showSaveMenu}
+                <div class="absolute right-0 mt-1 bg-white border border-gray-200 rounded shadow-lg z-50 w-44">
+                    <button type="button" on:click={() => { showSaveMenu = false; handleSubmit('continue'); }}
+                        class="bg-gray-600 text-white text-sm px-3 py-1 rounded-l hover:bg-gray-700">
+                        Speichern & Schließen
+                    </button>
+                    <button type="button" on:click={() => { showSaveMenu = false; handleSubmit('close'); }}
+                        class="bg-gray-600 text-white text-sm px-3 py-1 rounded-l hover:bg-gray-700">
+                        Speichern & Weiter
+                    </button>
+                </div>
+            {/if}
+        </div>
+    </div>
+</h1>
+            
+
         {#if form?.success}
             <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-2 rounded">
                 {form.message}
@@ -302,10 +701,10 @@
             {#if aufgabe === 7}
                 <div class="mb-3 w-lg pl-5">
                     <label class="block text-gray-700 text-xs mb-1">Modell</label>
-                    <input type="text" name="name" bind:value={name} class="w-full h-6 border border-gray-400 px-2 text-sm py-2 bg-white" />
+                    <input type="text" name="name" bind:value={name} disabled={!editable} class={inputClass} />
                     <div>
                         <label class="block text-gray-700 text-xs mb-1">Taster</label>
-                        <select id="taster" name="taster" bind:value={taster}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                        <select id="taster" name="taster" bind:value={taster}  disabled={!editable} on:change={saveModell} class={fieldClass}>
                             <option value="" disabled>Bitte wählen</option>
                             <option value={1}>derselbe Taster</option>
                             <option value={2}>verschiedene Taster</option>
@@ -313,7 +712,7 @@
                     </div>
                     <div>
                         <label class="block text-gray-700 text-xs mb-1">Element 1</label>
-                        <select id="Element1" name="Element1" bind:value={Element1}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                        <select id="Element1" name="Element1" bind:value={Element1}  disabled={!editable} class={fieldClass}>
                             <option value="" disabled>Bitte wählen</option>
                             <option value="Punkt">Punkt</option>
                             <option value="Gerade">Gerade</option>
@@ -324,7 +723,7 @@
                     </div>
                     <div>
                         <label class="block text-gray-700 text-xs mb-1">Element 2</label>
-                        <select id="Element2" name="Element2" bind:value={Element2}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                        <select id="Element2" name="Element2" bind:value={Element2} on:change={saveModell} disabled={!editable} class={fieldClass}>
                             <option value="" disabled>Bitte wählen</option>
                             <option value="Punkt">Punkt</option>
                             <option value="Gerade">Gerade</option>
@@ -338,11 +737,11 @@
             {#if aufgabe === 6}
                 <div class="mb-3 w-lg pl-5">
                     <label class="block text-gray-700 text-xs mb-1">Modell</label>
-                    <input type="text" name="name" bind:value={name} class="w-full h-6 border border-gray-400 px-2 text-sm py-2 bg-white" />
+                    <input type="text" name="name" bind:value={name} disabled={!editable} class={inputClass} />
 
                     <div>
                         <label class="block text-gray-700 text-xs mb-1">Element 1</label>
-                        <select id="Element1" name="Element1" bind:value={Element1}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                        <select id="Element1" name="Element1" bind:value={Element1} on:change={saveModell} disabled={!editable} class={fieldClass}>
                             <option value="" disabled>Bitte wählen</option>
                             <option value="Gerade">Gerade</option>
                             <option value="Ebene">Ebene</option>
@@ -352,7 +751,7 @@
                     </div>
                     <div>
                         <label class="block text-gray-700 text-xs mb-1">Bezug 1</label>
-                        <select id="Bezug1" name="Bezug1" bind:value={Bezug1}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                        <select id="Bezug1" name="Bezug1" bind:value={Bezug1} on:change={saveModell} disabled={!editable} class={fieldClass}>
                             <option value="" disabled>Bitte wählen</option>
                             <option value="Gerade">Gerade</option>
                             <option value="Ebene">Ebene</option>
@@ -362,7 +761,7 @@
                     </div>
                     <div>
                         <label class="block text-gray-700 text-xs mb-1">Punktmuster</label>
-                        <select id="punktmuster" name="punktmuster" bind:value={punktmuster}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                        <select id="punktmuster" name="punktmuster" bind:value={punktmuster} on:change={saveModell} disabled={!editable} class={fieldClass}>
                             <option value="" disabled>Bitte wählen</option>
                             <option value="1">gleichmäßig verteilt</option>
                             <option value="2">zwei Radialschnitte</option>
@@ -374,11 +773,11 @@
             {#if aufgabe === 5}
                 <div class="mb-3 w-lg pl-5">
                     <label class="block text-gray-700 text-xs mb-1">Modell</label>
-                    <input type="text" name="name" bind:value={name} class="w-full h-6 border border-gray-400 px-2 text-sm py-2 bg-white" />
+                    <input type="text" name="name" bind:value={name} disabled={!editable} class={inputClass} />
 
                     <div>
                         <label class="block text-gray-700 text-xs mb-1">Element</label>
-                        <select id="element" name="element" bind:value={element}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                        <select id="element" name="element" bind:value={element} on:change={saveModell} disabled={!editable} class={fieldClass}>
                             <option value="" disabled>Bitte wählen</option>
                             <option value={2}>Gerade</option>
                             <option value={3}>Ebene</option>
@@ -390,7 +789,7 @@
                     </div>
                     <div>
                         <label class="block text-gray-700 text-xs mb-1">Merkmal</label>
-                        <select id="merkmal" name="merkmal" bind:value={merkmal}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                        <select id="merkmal" name="merkmal" bind:value={merkmal} on:change={saveModell} disabled={!editable} class={fieldClass}>
                             <option value="" disabled>Bitte wählen</option>
                             <option value={1}>Geradheit</option>
                             <option value={2}>Ebenheit</option>
@@ -405,11 +804,11 @@
                 <div class="mb-3 w-lg pl-5 grid grid-cols-3 gap-2">
                     <div>
                         <label class="block text-gray-700 text-xs mb-1">Modell</label>
-                        <input type="text" name="name" bind:value={name} class="w-full h-6 border border-gray-400 px-2 text-sm py-2 bg-white" />
+                        <input type="text" name="name" bind:value={name} disabled={!editable} class={inputClass} />
                     </div>
                     <div>
                         <label class="block text-gray-700 text-xs mb-1">Taster</label>
-                        <select id="taster" name="taster" bind:value={taster}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                        <select id="taster" name="taster" bind:value={taster} on:change={saveModell} disabled={!editable} class={fieldClass}>
                             <option value="" disabled>Bitte wählen</option>
                             <option value={1}>derselbe Taster</option>
                             <option value={2}>verschiedene Taster</option>
@@ -417,7 +816,7 @@
                     </div>
                     <div>
                         <label class="block text-gray-700 text-xs mb-1">Element</label>
-                        <select id="Element1" name="Element1" bind:value={Element1}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                        <select id="Element1" name="Element1" bind:value={Element1} on:change={saveModell} disabled={!editable} class={fieldClass}>
                             <option value="" disabled>Bitte wählen</option>
                             <option value="Gerade">Gerade</option>
                             <option value="Ebene">Ebene</option>
@@ -430,7 +829,7 @@
                     {#if showPunktmuster}
                         <div>
                             <label class="block text-gray-700 text-xs mb-1">Punktmuster</label>
-                            <select id="punktmuster" name="punktmuster" bind:value={punktmuster}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                            <select id="punktmuster" name="punktmuster" bind:value={punktmuster} on:change={saveModell} disabled={!editable} class={fieldClass}>
                                 <option value="" disabled>Bitte wählen</option>
                                 <option value=1>gleichmäßig verteilt</option>
                                 <option value=2>zwei Radialschnitte</option>
@@ -439,7 +838,7 @@
                     {/if}
                     <div>
                         <label class="block text-gray-700 text-xs mb-1">Bezug1</label>
-                        <select id="Bezug1" name="Bezug1" bind:value={Bezug1}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                        <select id="Bezug1" name="Bezug1" bind:value={Bezug1} on:change={saveModell} disabled={!editable} class={fieldClass}>
                             <option value="" disabled>Bitte wählen</option>
                             <option value="Kreis">Kreis</option>
                             <option value="Zylinder">Zylinder</option>
@@ -449,7 +848,7 @@
                     {#if showPunktmuster1}
                         <div>
                             <label class="block text-gray-700 text-xs mb-1">Punktmuster 1</label>
-                            <select id="punktmusterB1" name="punktmusterB1" bind:value={punktmusterB1}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                            <select id="punktmusterB1" name="punktmusterB1" bind:value={punktmusterB1} on:change={saveModell} disabled={!editable} class={fieldClass}>
                                 <option value="" disabled>Bitte wählen</option>
                                 <option value={1}>gleichmäßig verteilt</option>
                                 <option value={2}>zwei Radialschnitte</option>
@@ -458,7 +857,7 @@
                     {/if}
                     <div>
                         <label class="block text-gray-700 text-xs mb-1">Bezug2</label>
-                        <select id="Bezug2" name="Bezug2" bind:value={Bezug2}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                        <select id="Bezug2" name="Bezug2" bind:value={Bezug2} on:change={saveModell} disabled={!editable} class={fieldClass}>
                             <option value="" disabled>Bitte wählen</option>
                             <option value=0>-</option>
                             <option value="Kreis">Kreis</option>
@@ -468,7 +867,7 @@
                     </div>
                     <div>
                         <label class="block text-gray-700 text-xs mb-1">Tasterschaft 1</label>
-                        <select id="tasterschaft1" name="tasterschaft1" bind:value={tasterschaft1}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                        <select id="tasterschaft1" name="tasterschaft1" bind:value={tasterschaft1} on:change={saveModell} disabled={!editable} class={fieldClass}>
                             <option value="" disabled>Bitte wählen</option>
                             <option value={1}>senkrecht</option>
                             <option value={2}>parallel zu Auswerterichtung</option>
@@ -476,7 +875,7 @@
                     </div>
                     <div>
                         <label class="block text-gray-700 text-xs mb-1">Tasterschaft 2</label>
-                        <select id="tasterschaft2" name="tasterschaft2" bind:value={tasterschaft2}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                        <select id="tasterschaft2" name="tasterschaft2" bind:value={tasterschaft2} on:change={saveModell} disabled={!editable} class={fieldClass}>
                             <option value="" disabled>Bitte wählen</option>
                             <option value={1}>senkrecht</option>
                             <option value={2}>parallel zu Auswerterichtung</option>
@@ -488,13 +887,13 @@
                 <div class="mb-3 w-lg pl-5 grid grid-cols-3 gap-2">
                     <div>
                         <label class="block text-gray-700 text-xs mb-1">Modell</label>
-                        <input type="text" name="name" bind:value={name} class="w-full h-6 border border-gray-400 px-2 text-sm py-2 bg-white" />
+                        <input type="text" name="name" bind:value={name} disabled={!editable} class={inputClass} />
                     </div>
                     <!-- Merkmal (immer sichtbar) -->
                     <div>
                         <label class="block text-gray-700 text-xs mb-1">Merkmal</label>
-                        <select id="merkmal" name="merkmal" bind:value={merkmal}
-                                class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                        <select id="merkmal" name="merkmal" bind:value={merkmal} on:change={saveModell}
+                                disabled={!editable} class={fieldClass}>
                             <option value="" disabled>Bitte wählen</option>
                             <option value={1}>Parallelität</option>
                             <option value={2}>Rechtwinkligkeit</option>
@@ -505,7 +904,7 @@
                     <!-- Element 1 (immer sichtbar) -->
                     <div>
                         <label class="block text-gray-700 text-xs mb-1">Element 1</label>
-                        <select bind:value={Element1} id="Element1" name="Element1" class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                        <select bind:value={Element1} id="Element1" name="Element1" disabled={!editable} on:change={saveModell} class={fieldClass}>
                             <option value="" disabled>Bitte wählen</option>
                             <option value="Punkt">Punkt</option>
                             <option value="Gerade">Gerade</option>
@@ -519,7 +918,7 @@
                     <!-- Bezug 1 (immer sichtbar) -->
                     <div>
                         <label class="block text-gray-700 text-xs mb-1">Bezug 1</label>
-                        <select bind:value={Bezug1} id="Bezug1" name="Bezug1" class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                        <select bind:value={Bezug1} id="Bezug1" name="Bezug1" disabled={!editable} on:change={saveModell} class={fieldClass}>
                             <option value="" disabled>Bitte wählen</option>
                             <option value="Punkt">Punkt</option>
                             <option value="Gerade">Gerade</option>
@@ -534,8 +933,8 @@
                     {#if showPunktmusterR1}
                         <div>
                             <label class="block text-gray-700 text-xs mb-1">Punktmuster R1</label>
-                            <select bind:value={punktmusterR1} id="punktmusterR1" name="punktmusterR1"
-                                    class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                            <select bind:value={punktmusterR1} id="punktmusterR1" name="punktmusterR1" on:change={saveModell}
+                                    disabled={!editable} class={fieldClass}>
                                 <option value="" disabled>Bitte wählen</option>
                                 {#each punktmusterOptionen as opt}
                                     <option value={opt.value}>{opt.label}</option>
@@ -547,8 +946,8 @@
                     {#if showElement2Taster1}
                         <div>
                             <label class="block text-gray-700 text-xs mb-1">Element 2</label>
-                            <select bind:value={Element2} id="Element2" name="Element2"
-                                    class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                            <select bind:value={Element2} id="Element2" name="Element2" on:change={saveModell}
+                                    disabled={!editable} class={fieldClass}>
                                 <option value="" disabled>Bitte wählen</option>
                                 <option value="Punkt">Punkt</option>
                                 <option value="Gerade">Gerade</option>
@@ -561,8 +960,8 @@
 
                         <div>
                             <label class="block text-gray-700 text-xs mb-1">Taster 1</label>
-                            <select bind:value={taster1} id="taster1" name="taster1"
-                                    class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                            <select bind:value={taster1} id="taster1" name="taster1" on:change={saveModell}
+                                    disabled={!editable} class={fieldClass}>
                                 <option value="" disabled>Bitte wählen</option>
                                 <option value={1}>derselbe Taster</option>
                                 <option value={2}>verschiedene Taster</option>
@@ -574,8 +973,8 @@
                     {#if showPunktmusterR2}
                         <div>
                             <label class="block text-gray-700 text-xs mb-1">Punktmuster R2</label>
-                            <select bind:value={punktmusterR2} id="punktmusterR2" name="punktmusterR2"
-                                    class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                            <select bind:value={punktmusterR2} id="punktmusterR2" name="punktmusterR2" on:change={saveModell}
+                                    disabled={!editable} class={fieldClass}>
                                 <option value="" disabled>Bitte wählen</option>
                                 {#each punktmuster2Optionen as opt}
                                     <option value={opt.value}>{opt.label}</option>
@@ -587,8 +986,8 @@
                     {#if showBezug2Taster2}
                         <div>
                             <label class="block text-gray-700 text-xs mb-1">Bezug 2</label>
-                            <select bind:value={Bezug2} id="Bezug2" name="Bezug2"
-                                    class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                            <select bind:value={Bezug2} id="Bezug2" name="Bezug2" on:change={saveModell}
+                                    disabled={!editable} class={fieldClass}>
                                 <option value="" disabled>Bitte wählen</option>
                                 <option value="Punkt">Punkt</option>
                                 <option value="Gerade">Gerade</option>
@@ -601,8 +1000,8 @@
 
                         <div>
                             <label class="block text-gray-700 text-xs mb-1">Taster 2</label>
-                            <select bind:value={taster2} id="taster2" name="taster2"
-                                    class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                            <select bind:value={taster2} id="taster2" name="taster2" on:change={saveModell}
+                                    disabled={!editable} class={fieldClass}>
                                 <option value="" disabled>Bitte wählen</option>
                                 <option value={1}>derselbe Taster</option>
                                 <option value={2}>verschiedene Taster</option>
@@ -617,13 +1016,13 @@
                     <div>
                         <label class="block text-gray-700 text-xs mb-1">Modell</label>
                         <input type="text" bind:value={name} id="name" name="name"
-                               class="w-full h-6 border border-gray-400 px-2 text-sm py-2 bg-white" />
+                               disabled={!editable} class={inputClass} />
                     </div>
 
                     <div>
                         <label class="block text-gray-700 text-xs mb-1">Element 1</label>
                         <select bind:value={Element1} id="Element1" name="Element1" on:input={saveModell}
-                                class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                                disabled={!editable} class={fieldClass}>
                             <option value="" disabled>Bitte wählen</option>
                             <option value="Punkt">Punkt</option>
                             <option value="Kreis">Kreis</option>
@@ -638,7 +1037,7 @@
                     <div>
                         <label class="block text-gray-700 text-xs mb-1">Element 2</label>
                         <select bind:value={Element2} id="Element2" name="Element2" on:input={saveModell}
-                                class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                                disabled={!editable} class={fieldClass}>
                             <option value="" disabled>Bitte wählen</option>
                             <option value="Punkt">Punkt</option>
                             <option value="Kreis">Kreis</option>
@@ -653,7 +1052,7 @@
                     <div>
                         <label class="block text-gray-700 text-xs mb-1">Abstand</label>
                         <select bind:value={abstand} id="abstand" name="abstand" on:input={saveModell}
-                                class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                                disabled={!editable} class={fieldClass}>
                             <option value="" disabled>Bitte wählen</option>
                             <option value={1}>in der Nullebene des Koordinatensystems</option>
                             <option value={2}>im Schwerpunkt</option>
@@ -663,7 +1062,7 @@
                     <div>
                         <label class="block text-gray-700 text-xs mb-1">Taster</label>
                         <select bind:value={taster} id="taster" name="taster" on:change={saveModell}
-                                class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                                disabled={!editable} class={fieldClass}>
                             <option value="" disabled>Bitte wählen</option>
                             <option value={1}>derselbe Taster</option>
                             <option value={2}>verschiedene Taster</option>
@@ -673,7 +1072,7 @@
                     {#if showWinkelE1}
                         <div>
                             <label class="block text-gray-700 text-xs mb-1">Winkel zu Element 1</label>
-                            <select bind:value={winkelE1} id="winkelE1" name="winkelE1" on:change={saveModell} class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                            <select bind:value={winkelE1} id="winkelE1" name="winkelE1" on:change={saveModell} disabled={!editable} class={fieldClass}>
                                 <option value="" disabled>Bitte wählen</option>
                                 {#each optionsWinkelE1 as opt}
                                     <option value={opt.value}>{opt.label}</option>
@@ -686,7 +1085,7 @@
                     {#if showWinkelE2}
                         <div>
                             <label class="block text-gray-700 text-xs mb-1">Winkel zu Element 2</label>
-                            <select bind:value={winkelE2} id="winkelE2" name="winkelE2" on:change={saveModell} class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                            <select bind:value={winkelE2} id="winkelE2" name="winkelE2" on:change={saveModell} disabled={!editable} class={fieldClass}>
                                 <option value="" disabled>Bitte wählen</option>
                                 {#each optionsWinkelE2 as opt}
                                     <option value={opt.value}>{opt.label}</option>
@@ -699,7 +1098,7 @@
                     {#if showTasterschaft1}
                         <div>
                             <label class="block text-gray-700 text-xs mb-1">Tasterschaft 1</label>
-                            <select bind:value={tasterschaft1} id="tasterschaft1" on:change={saveModell} name="tasterschaft1" class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                            <select bind:value={tasterschaft1} id="tasterschaft1" on:change={saveModell} name="tasterschaft1" disabled={!editable} class={fieldClass}>
                                 <option value="" disabled>Bitte wählen</option>
                                 <option value={1}>senkrecht</option>
                                 <option value={2}>parallel zu Auswerterichtung</option>
@@ -710,7 +1109,7 @@
                     {#if showTasterschaft2}
                         <div>
                             <label class="block text-gray-700 text-xs mb-1">Tasterschaft 2</label>
-                            <select bind:value={tasterschaft2} id="tasterschaft2" on:change={saveModell} name="tasterschaft2" class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                            <select bind:value={tasterschaft2} id="tasterschaft2" on:change={saveModell} name="tasterschaft2" disabled={!editable} class={fieldClass}>
                                 <option value="" disabled>Bitte wählen</option>
                                 <option value={1}>senkrecht</option>
                                 <option value={2}>parallel zu Auswerterichtung</option>
@@ -721,7 +1120,7 @@
                     {#if showArtDesMasses}
                         <div>
                             <label class="block text-gray-700 text-xs mb-1">Art des Maßes</label>
-                            <select bind:value={artdesmasses} id="artdesmasses" on:change={saveModell} name="artdesmasses" class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                            <select bind:value={artdesmasses} id="artdesmasses" on:change={saveModell} name="artdesmasses" disabled={!editable} class={fieldClass}>
                                 <option value="" disabled>Bitte wählen</option>
                                 <option value={1}>Stufenmaß</option>
                                 <option value={2}>Innen- ode Außenmaß</option>
@@ -733,11 +1132,11 @@
             {#if aufgabe === 1}
                 <div class="mb-3 w-lg pl-5">
                     <label class="block text-gray-700 text-xs mb-1">Modell</label>
-                    <input type="text" name="name" bind:value={name} class="w-full h-6 border border-gray-400 px-2 text-sm py-2 bg-white" />
+                    <input type="text" name="name" bind:value={name} disabled={!editable} class={inputClass} />
 
                     <div>
                         <label class="block text-gray-700 text-xs mb-1">Element</label>
-                        <select id="Element1" name="Element1" bind:value={Element1}  class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white">
+                        <select id="Element1" name="Element1" bind:value={Element1}  disabled={!editable} class={fieldClass}>
                             <option value="" disabled>Bitte wählen</option>
                             <option value='Kreis'>Kreis</option>
                             <option value='Halbkugel'>Halbkugel</option>
@@ -747,63 +1146,69 @@
                 </div>
             {/if}
         </div>
-        <div class="border-l p-3 pl-20 w-xl">
-            <div class="mb-1">
-                <label class="block text-gray-700 text-xs mb-1">Beschreibung – Modell</label>
-                <textarea bind:value={description} name="description" class="w-full h-10 border border-gray-400 px-2 text-sm py-0 bg-white" rows="2"></textarea>
-            </div>
-            <div class="mb-1">
-                <label class="block text-gray-700 text-xs mb-1">Formel</label>
-                <input type="text" bind:value={formel} name="formel" class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white" />
-            </div>
-            <div class="mb-1">
-                <label class="block text-gray-700 text-xs mb-1">Beschreibung – Formel</label>
-                <input type="text" bind:value={formeldesc} name="formeldesc" class="w-full h-6 border border-gray-400 px-2 text-sm py-0 bg-white" />
-            </div>
-        </div>
+        <ModellRightPanel
+  bind:description
+  bind:formel
+  bind:formeldesc
+  {editable}
+/>
     </div>
 
     <!-- Komponentenliste -->
-    <div class="border border-gray-300 rounded overflow-hidden bg-gray-200">
-        <div class="flex items-center gap-2 p-2 bg-gray-100 border-b">
-
-        </div>
-
-        <!-- Tabelle -->
-        <table class="w-full text-sm border-t">
-            <thead class="bg-gray-200 text-gray-700">
-            <tr>
-                <th class="px-2 py-1 text-left w-1"></th>
-                <th class="px-2 py-1 text-left">Komponente</th>
-                <th class="px-2 py-1 text-left">Beschreibung</th>
-                <th class="float-right p-1">
-                    <svg on:click={onNewComponentClick} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-5.5 hover:text-gray-800 cursor-pointer">
-                        <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 9a.75.75 0 0 0-1.5 0v2.25H9a.75.75 0 0 0 0 1.5h2.25V15a.75.75 0 0 0 1.5 0v-2.25H15a.75.75 0 0 0 0-1.5h-2.25V9Z" clip-rule="evenodd" />
-                    </svg>
-                </th>
-            </tr>
-            </thead>
-            <tbody>
-            {#each data.modell.components as comp, i}
-                <tr class="{selectedRow === i ? 'bg-cyan-800' : 'hover:bg-cyan-900'} {selectedRow === i ? 'text-white' : 'hover:text-white'} cursor-pointer"
-                    on:click={() => selectedRow = i}
-                    on:dblclick={(e) => onOpenComponent(e, comp.id)}>
-                    <td class="px-2 py-1 text-left w-0.5">{i + 1}</td>
-                    <td class="px-2 py-1">{Components[comp.kompid] ? Components[comp.kompid] : COMPONENTS[comp.kompid]}</td>
-                    <td class="px-2 py-1">{ModelTextLabels[comp.modltxtid] ?? ''}</td>
-                    <td class="float-right px-1">
-                        <button type="button" on:click={() => deleteComponent(comp.id)}>
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-5 h-5 text-red-500 hover:text-red-700 cursor-pointer">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-                            </svg>
-                        </button>
-                    </td>
-                </tr>
-            {/each}
-            </tbody>
-        </table>
-    </div>
+    <ComponentTable
+  components={data.modell.components}
+  {editable}
+  on:addComponent={onNewComponentClick}
+  on:openComponent={(e) => onOpenComponent(e.detail.event, e.detail.compId)}
+  on:deleteComponent={(e) => deleteComponent(e.detail)}
+/>
     </form>
+    {#if toast}
+    <div class="fixed bottom-6 right-6 z-50 px-4 py-3 rounded shadow-lg text-sm text-white transition-all
+        {toast.type === 'success' ? 'bg-[#1f3b5e]' : 'bg-red-600'}">
+        {toast.message}
+    </div>
+{/if}
+
+{#if showUnsavedDialog}
+    <div class="fixed inset-0 flex items-center justify-center z-50" style="background: rgba(0,0,0,0.45);">
+        <div class="bg-white rounded-lg shadow-xl w-[400px] overflow-hidden">
+            <div class="px-5 py-4" style="background-color: #1f3b5e;">
+                <h2 class="text-white font-semibold text-base">Ungespeicherte Änderungen</h2>
+            </div>
+            <div class="px-5 py-4 space-y-2">
+                <p class="text-sm text-gray-700">
+                    Es gibt ungespeicherte Änderungen. Möchtest du die Seite wirklich verlassen?
+                </p>
+                <p class="text-xs text-gray-500">
+                    Alle nicht gespeicherten Änderungen gehen verloren.
+                </p>
+            </div>
+            <div class="px-5 py-3 flex justify-end gap-2 border-t border-gray-200" style="background-color: #f0f0f0;">
+                <button
+                    on:click={() => {
+                        showUnsavedDialog = false;
+                        pendingNavigation = null;
+                    }}
+                    class="px-4 py-1.5 text-sm text-gray-600 border border-gray-300 rounded hover:bg-gray-200 transition"
+                >
+                    Abbrechen
+                </button>
+                <button
+                    on:click={() => {
+                        showUnsavedDialog = false;
+                        pendingNavigation?.();
+                        pendingNavigation = null;
+                    }}
+                    class="px-4 py-1.5 text-sm text-white rounded transition"
+                    style="background-color: #1f3b5e;"
+                >
+                    Trotzdem verlassen
+                </button>
+            </div>
+        </div>
+    </div>
+{/if}
 </section>
 
 <Modal open={componentDialogOpen} on:close={closeModal} >

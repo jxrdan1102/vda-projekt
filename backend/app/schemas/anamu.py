@@ -31,6 +31,7 @@ class AnamuBase(BaseModel):
 
 class AnamuGetR(AnamuBase):
     modell: ModellForAnamuR
+    creation: datetime | None
 
     pass
 

@@ -1,4 +1,4 @@
-from sqlalchemy import DATETIME, Column, ForeignKey, Integer, String
+from sqlalchemy import DATETIME, Column, ForeignKey, Integer, String, Boolean
 from sqlalchemy.orm import relationship
 
 from app.database.database import Base
@@ -48,6 +48,7 @@ class Modell(Base):
     taster1 = Column(Integer)
     taster2 = Column(Integer)
     abstand = Column(Integer)
+    is_builtin = Column(Boolean, nullable=False, default=False)
 
     formel = Column(String(512))
     formeldesc = Column(String(512))

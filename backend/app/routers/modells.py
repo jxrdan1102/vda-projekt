@@ -12,6 +12,9 @@ from app.schemas.modell import ModellGetAllR
 from app.schemas.modell import ModellGetIdR
 from app.schemas.modell import ModellUpdateR
 from app.services import ModellService
+from app.models import ANAMU, Modell, ModellText
+from sqlalchemy import select, func
+from fastapi import HTTPException
 
 router = APIRouter(prefix="/modells", tags=["modells"])
 
@@ -29,21 +32,80 @@ async def create_modellr(modell: ModellCreateR, db: AsyncSession = Depends(get_d
     return modell
 
 @router.post("/{id}/r")
-async def update_modellr(id: int, modell: ModellUpdateR, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
-    print(modell.model_dump(exclude_unset=True))
+async def update_modellr(
+    id: int,
+    modell: ModellUpdateR,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    print("Katharina Sokolov")
+    # Builtin-Check
+    existing = await db.get(Modell, id)
+    if existing and existing.is_builtin:
+        raise HTTPException(
+            status_code=403,
+            detail="Dieses Modell ist schreibgeschützt und kann nicht geändert werden."
+        )
+
+    print("RECEIVED:", modell.model_dump(exclude_unset=True))
+    # FK-Check: wird dieses Modell irgendwo als FK verwendet?
+    usage_count = await db.scalar(
+        select(func.count()).where(ANAMU.fk_modell == id)
+    )
+
+    from fastapi.responses import JSONResponse
+
+    if usage_count and usage_count > 0:
+        return JSONResponse(
+            status_code=409,
+            content={
+                "detail": {
+                    "code": "FK_IN_USE",
+                    "count": usage_count,
+                    "message": f"Modell wird in {usage_count} Datensatz/Datensätzen verwendet."
+                }
+            }
+        )
+    # Normales Update
     await ModellService.update_modell(db, id, modell.model_dump(exclude_unset=True), current_user.id)
     if modell.aufgabe_modell == 3:
         stmt = delete(Component).where(Component.fk_modell == id)
         await db.execute(stmt)
         await db.commit()
-
         components = await alterModell(modell)
         for component in components:
-            db.add(Component(**component.model_dump(), fk_modell=id))
-
+            db.add(Component(**component.model_dump(), fk_modell=id, fk_user_id=current_user.id))
         await db.commit()
 
     return {"detail": "Modell wurde erfolgreich geändert"}
+
+
+@router.post("/{id}/copy")
+async def copy_modell(
+    id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    original = await db.get(Modell, id)
+    if not original:
+        raise HTTPException(status_code=404, detail="Modell nicht gefunden")
+    data = {c.name: getattr(original, c.name) for c in Modell.__table__.columns if c.name != "id"}
+    data["name"] = f"{original.name} (Kopie)"
+    data["fk_user_id"] = current_user.id
+    new_modell = Modell(**data)
+    db.add(new_modell)
+    await db.flush()  # neue ID ohne commit
+
+    old_components = (await db.execute(
+        select(Component).where(Component.fk_modell == id)
+    )).scalars().all()
+    for comp in old_components:
+        comp_data = {c.name: getattr(comp, c.name) for c in Component.__table__.columns if c.name != "id"}
+        comp_data["fk_modell"] = new_modell.id
+        comp_data["fk_user_id"] = current_user.id
+        db.add(Component(**comp_data))
+    await db.commit()
+    return {"detail": "Kopie erstellt", "new_id": new_modell.id}
 
 @router.post("/{id}/addComponent")
 async def addComponent(id: int, component: ComponentAddR, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
@@ -52,6 +114,14 @@ async def addComponent(id: int, component: ComponentAddR, db: AsyncSession = Dep
     return {"detail": "Component wurde erfolgreich erstellt"}
 @router.delete("/{id}")
 async def delete_modell_by_id(id: int, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
+
+    existing = await db.get(Modell, id)
+    if existing and existing.is_builtin:
+        raise HTTPException(
+            status_code=403,
+            detail="Dieses Modell ist schreibgeschützt und kann nicht gelöscht werden."
+        )
+
     await ModellService.delete_modell_with_components(db, id, current_user.id)
     print ("testiei")
     return {"detail": f"Modell mit ID {id} wurde gelöscht"}
@@ -86,6 +156,7 @@ async def alterModell(modell: ModellUpdateR):
         add(1325)
         add(1326)
         add(1377)
+
 
     # -------------------------------------------------------------
     # ABSTAND
@@ -134,6 +205,83 @@ async def alterModell(modell: ModellUpdateR):
         add(1326)
         add(1377)
 
+        # -------------------------------------------------------------
+    # RICHTUNG (aufgabe == 3)
+    # -------------------------------------------------------------
+    elif modell.aufgabe == 3:
+        if alle_komp or modell.Element1 in ["Gerade", "Ebene", "Zylinder", "Kegel"]:
+            add(1327)
+        if alle_komp or modell.Element1 in ["Punkt", "Kreis"]:
+            add(1328)
+            add(1329)
+        if alle_komp or (modell.Element1 in ["Punkt", "Kreis"] and modell.taster1 == 2):
+            add(1330)
+        if alle_komp or (modell.Element2 in ["Punkt", "Kreis"] and modell.taster1 == 2):
+            add(1331)
+        if alle_komp or modell.Bezug1 in ["Gerade", "Ebene", "Zylinder", "Kegel"]:
+            add(1332)
+        if alle_komp or modell.Bezug1 in ["Punkt", "Kreis"]:
+            add(1333)
+        if alle_komp or modell.Bezug2 in ["Punkt", "Kreis"]:
+            add(1334)
+        if alle_komp or (modell.Bezug1 in ["Punkt", "Kreis"] and modell.taster2 == 2):
+            add(1335)
+        if alle_komp or (modell.Bezug2 in ["Punkt", "Kreis"] and modell.taster2 == 2):
+            add(1336)
+        if alle_komp or modell.taster1 == 2:
+            add(1371)
+            add(1372)
+        # immer:
+        add(1338)
+        add(1376)
+
+    # -------------------------------------------------------------
+    # KOAXIALITÄT (aufgabe == 4)
+    # -------------------------------------------------------------
+    elif modell.aufgabe == 4:
+        add(1350)
+        add(1351)
+        add(1352)
+        add(1353)
+        if alle_komp or modell.Bezug2:
+            add(1355)
+        add(1356)
+        add(1374)
+        add(1357)
+
+    # -------------------------------------------------------------
+    # FORM (aufgabe == 5)
+    # -------------------------------------------------------------
+    elif modell.aufgabe == 5:
+        if alle_komp or modell.element in [4, 5, 6, 7]:  # Kreis, Halbkugel, Zylinder, Kegel
+            add(1310)
+        add(1311)
+        add(1376)
+
+    # -------------------------------------------------------------
+    # WINKEL (aufgabe == 6)
+    # -------------------------------------------------------------
+    elif modell.aufgabe == 6:
+        add(1378)
+        add(1379)
+        add(1380)
+        add(1381)
+
+    # -------------------------------------------------------------
+    # POSITION (aufgabe == 7)
+    # -------------------------------------------------------------
+    elif modell.aufgabe == 7:
+        add(1391)
+        add(1392)
+        add(1393)
+        add(1394)
+        add(1395)
+        add(1396)
+        add(1397)
+        add(1398)
+        add(1399)
+
+
     result = []
 
     for kompid in komp_liste:
@@ -141,3 +289,10 @@ async def alterModell(modell: ModellUpdateR):
         result.append(entry)
 
     return result
+
+
+@router.get("/modell-texts")
+async def get_modell_texts(db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(ModellText))
+    texts = result.scalars().all()
+    return texts

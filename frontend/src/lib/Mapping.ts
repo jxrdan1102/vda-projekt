@@ -593,3 +593,13 @@ export const tcMapping: Record<number, string> = {
     184: "TC_3d_KMG_AmpX",
     185: "TC_3d_KMG_AmpY",
 };
+
+export const prozessMapping: Record<number, string> = {
+  1: "Durchmesser",
+  2: "Abstand",
+  3: "Richtung",
+  4: "Koaxialität",
+  5: "Form",
+  6: "Winkel",
+  7: "Position",
+};

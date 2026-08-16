@@ -2,12 +2,16 @@
     import {onMount} from "svelte";
     import Chart from "chart.js/auto";
     import ChartDataLabels from "chartjs-plugin-datalabels";
+    import { COMPONENTS, Components } from '$lib/Mapping';
 
     export let data;
     let analyseprojekt = data.analyseprojekt;
     let messunsicherheit = data.messunsicherheit;
     let canvas;
 
+    const COMPONENT_IDS = Object.fromEntries(
+        Object.entries(COMPONENTS).map(([id, value]) => [value, Number(id)])
+        );
     // Sortierte Komponenten nach Unsicherheitsbeitrag
     let komponenten = [...messunsicherheit.Komponenten]
         .filter(([_, ub]) => ub !== null && ub !== undefined)
@@ -17,7 +21,9 @@
         new Chart(canvas, {
             type: "bar",
             data: {
-                labels: komponenten.map(([klasse, _]) => klasse),
+                labels: komponenten.map(([klasse]) =>
+                Components[COMPONENT_IDS[klasse]] ?? klasse
+                ),
                 datasets: [
                     {
                         label: "Unsicherheitsbeitrag",
@@ -90,13 +96,13 @@
 
 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6 max-w-2xl mx-auto">
     <div class="bg-white rounded-lg p-3 border shadow-sm">
-        <p class="text-gray-500 text-xs">Gesamtunsicherheit (k × u<sub>y</sub>)</p>
+        <p class="text-gray-500 text-xs">Erweiterte Messunsicherheit (µm)</p>
         <p class="text-indigo-600 font-semibold text-lg">
             {messunsicherheit.Unsicherheit.toFixed(3)}
         </p>
     </div>
     <div class="bg-white rounded-lg p-3 border shadow-sm">
-        <p class="text-gray-500 text-xs">Erweiterungsfaktor (k)</p>
+        <p class="text-gray-500 text-xs">Erweiterungsfaktor k</p>
         <p class="text-indigo-600 font-semibold text-lg">
             {messunsicherheit.Erweiterungsfaktor.toFixed(3)}
         </p>
@@ -104,6 +110,7 @@
 </div>
 
 <!-- Abschnitt: Komponenten als Diagramm -->
-<div class="w-full h-[320px] max-w-4xl mx-auto mt-8">
+<div class="w-full h-[320px] max-w-4xl mx-auto mt-8" style="text-align: center;">
+Unsicherheitsbeiträge (µm)
     <canvas bind:this={canvas}></canvas>
 </div>

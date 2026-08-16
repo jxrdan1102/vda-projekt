@@ -1,245 +1,575 @@
 ﻿<!DOCTYPE html>
 <html lang="de">
+
 <head>
     <meta charset="UTF-8">
     <title>Analyse Report</title>
     <style>
         body {
-            font-family: "Times New Roman", serif;
+            font-family: "Helvetica Neue", Arial, sans-serif;
             font-size: small;
-            margin: 1rm;
+            margin: 0;
+            color: #2c333a;
         }
-        h1, h2 {
+
+        h1,
+        h2 {
             text-align: center;
         }
+
         table {
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 20px;
         }
-        table, th, td {
-            border: 1px solid #333;
-        }
-        th, td {
-            padding: 8px;
-            text-align: left;
-        }
-        p.formel {
-            font-family: "Times New Roman", serif;
-            font-size: 16px;
-            margin: 10px 0;
-        }
-        sup, sub {
+
+        sup,
+        sub {
             font-size: 0.8em;
         }
-        .metadaten {
-            margin-bottom: 0.5em;
+
+        /* ── Report-Kopfbereich ── */
+        .report-banner {
+            background-color: #1f3b5e;
+            color: white;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+            padding: 10px 0;
+            border-radius: 6px 6px 0 0;
         }
-        .grid-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr; /* 2 Spalten */
-            gap: 2px 20px; /* minimaler Abstand */
+
+        .report-meta-bar {
+            display: flex;
+            gap: 4em;
+            border: 1px solid #d8dee5;
+            border-top: none;
+            border-radius: 0 0 6px 6px;
+            padding: 10px 1.5em;
+            margin-bottom: 1.2em;
+            background-color: #f0f0f0;
+        }
+
+        .meta-col {
+            flex: 1;
+            padding-top: 0.2em;
+        }
+
+        .metadaten {
+            margin-bottom: 0.45em;
             font-size: 11px;
         }
 
+        .metadaten strong {
+            color: #2B6CB0;
+            font-weight: 600;
+        }
+
+        /* ── Formel + Legende ── */
+        .formel-block {
+            font-size: 0.9em;
+            font-weight: 600;
+            color: #1f3b5e;
+            margin: 1em 0 0.8em 0;
+            padding: 8px 12px;
+            background-color: #eaf1f8;
+            border-radius: 4px;
+        }
+
+        .legende-block {
+            font-size: 0.8em;
+            line-height: 1.5;
+            margin-top: 1.5em;
+        }
+
+        .legende-row {
+            display: flex;
+            gap: 3em;
+            padding: 3px 0;
+            border-bottom: 1px solid #eef1f4;
+        }
+
+        .legende-formel {
+            font-weight: 600;
+            color: #2B6CB0;
+            min-width: 6em;
+        }
+
+        .legende-text {
+            flex: 1;
+            color: #444;
+        }
+
+        /* ── Konstanten Grid ── */
+        .grid-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px 24px;
+            font-size: 11px;
+            padding: 10px 12px;
+            background-color: #f0f0f0;
+            border: 1px solid #d8dee5;
+            border-radius: 6px;
+            margin-bottom: 1em;
+        }
+
         .entry {
-            white-space: nowrap; /* alles in einer Zeile */
+            color: #1f3b5e;
+            white-space: normal;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+        }
+
+        /* ── Komponenten-Tabellen (Seite 2 & 4) ── */
+        .komp-table-wrap {
+            border: 1px solid #d8dee5;
+            border-radius: 6px;
+            overflow: hidden;
         }
 
         .komp-table {
-    display: grid;
-    grid-template-columns: 2fr 0.7fr 0.7fr 1fr 0.5fr;
-    font-size: 10px;
-    gap: 2px 8px;
-    margin-top: 10px;
-}
-        .komp-table {
-    display: grid;
-    grid-template-columns: 2fr 0.7fr 0.7fr 1fr 0.5fr;
-    font-size: 10px;
-    gap: 2px 8px;
-    margin-top: 10px;
-}
+            display: grid;
+            grid-template-columns: 2fr 0.3fr 0.3fr 0.6fr 0.4fr;
+            font-size: 10px;
+        }
 
         .komp-table-page3 {
-    display: grid;
-    grid-template-columns: 2fr 0.5fr;
-    font-size: 10px;
-    gap: 2px 8px;
-    margin-top: 10px;
-}
+            display: grid;
+            grid-template-columns: 2fr 0.5fr;
+            font-size: 10px;
+        }
 
-.head {
-    font-weight: bold;
-    border-bottom: 1px solid #000;
-    padding-bottom: 2px;
-}
+        .head {
+            font-weight: 600;
+            background-color: #1f3b5e;
+            color: white;
+            padding: 6px 8px;
+        }
 
-.cell {
-    padding: 2px 0;
-}
+        .cell {
+            padding: 5px 8px;
+            border-bottom: 1px solid #eef1f4;
+        }
 
-.komp {
-    white-space: nowrap;
-}
+        .komp-table>div:nth-child(10n+1):not(.head),
+        .komp-table>div:nth-child(10n+2):not(.head),
+        .komp-table>div:nth-child(10n+3):not(.head),
+        .komp-table>div:nth-child(10n+4):not(.head),
+        .komp-table>div:nth-child(10n+5):not(.head) {
+            background-color: #f7f9fb;
+        }
 
-.smallstack {
-    display: flex;
-    flex-direction: column;
-    line-height: 1.2;
-    font-size: 9px;
-}
+        .komp-table-page3>div:nth-child(4n+1):not(.head),
+        .komp-table-page3>div:nth-child(4n+2):not(.head) {
+            background-color: #f7f9fb;
+        }
+
+        .komp {
+            max-width: 100rem;
+            white-space: normal;
+            word-break: break-word;
+        }
+
+        .smallstack {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.3;
+            font-size: 9px;
+            color: #555;
+        }
+
+        /* ── Ergebnis-Box (Seite 4) ── */
+        .result-box {
+            border: 1px solid #1f3b5e;
+            border-radius: 6px;
+            text-align: center;
+            padding: 10px 0;
+            margin-bottom: 1.2em;
+            background-color: #eaf1f8;
+        }
+
+        .result-box div {
+            font-size: 12px;
+            color: #1f3b5e;
+            font-weight: 600;
+            padding: 2px 0;
+        }
+
+        /* ── Extended Section (bereits vorhanden) ── */
+        .extended-section {
+            margin-top: 24px;
+        }
+
+        .extended-title {
+            color: #1f3b5e;
+            font-size: 16px;
+            font-weight: 600;
+            border-bottom: 2px solid #1f3b5e;
+            padding-bottom: 6px;
+            margin-bottom: 16px;
+        }
+
+        .komponente-card {
+            border: 1px solid #d8dee5;
+            border-radius: 6px;
+            margin-bottom: 14px;
+            overflow: hidden;
+            page-break-inside: avoid;
+        }
+
+        .komponente-header {
+            background-color: #1f3b5e;
+            color: white;
+            padding: 8px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+        }
+
+        .komponente-name {
+            font-weight: 600;
+        }
+
+        .komponente-count {
+            font-size: 10px;
+            color: #a9c2db;
+        }
+
+        .komponente-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding: 10px 12px;
+            background-color: #f0f0f0;
+            border-bottom: 1px solid #d8dee5;
+        }
+
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+            min-width: 120px;
+        }
+
+        .meta-full {
+            width: 100%;
+        }
+
+        .meta-label {
+            font-size: 9px;
+            color: #2B6CB0;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .meta-value {
+            font-size: 11px;
+            color: #1f3b5e;
+            font-weight: 500;
+        }
+
+        .komponente-block {
+            padding: 8px 12px;
+        }
+
+        .block-title {
+            font-size: 10px;
+            font-weight: 600;
+            color: #2B6CB0;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            margin-bottom: 4px;
+        }
+
+        .werte-tabelle {
+            width: 100%;
+            font-size: 11px;
+            border-collapse: collapse;
+        }
+
+        .werte-tabelle td {
+            padding: 3px 8px;
+            border-bottom: 1px solid #eef1f4;
+        }
+
+        .werte-tabelle td:first-child {
+            color: #444;
+            width: 65%;
+        }
+
+        .wert-zelle {
+            text-align: right;
+            font-family: monospace;
+            color: #1f3b5e;
+        }
+
+        .row-highlight {
+            background-color: #eaf1f8;
+        }
+
+        .row-highlight td {
+            font-weight: 600;
+        }
+
+        .bar-row {
+            height: 4px;
+            background-color: #e8eef5;
+            border-radius: 2px;
+            margin-bottom: 3px;
+            width: 100%;
+        }
+
+        .bar {
+            height: 4px;
+            background-color: #1f3b5e;
+            border-radius: 2px;
+            min-width: 1px;
+        }
     </style>
 </head>
-<body>
-    <section>
-        <div style="border: 1px solid black; text-align: center; font-size: large; font-weight: bolder;">
-            Q7 Messunsicherheitsanalyse
-        </div>
-        
-        <div style="display:flex; gap:5em; border:1px solid black; padding:0 1em;">
-            <div style="flex:1; padding-top: 0.5em">
-                <div class="metadaten">Projekt: {{projekt.name}}</div>
-                <div class="metadaten">Änderungsstand: {{projekt.aenderungszustand}}</div>
-                <div class="metadaten">Modell: {{projekt.modell.name}}</div>
-                <div class="metadaten">Aufgabe: {{aufgabe}}</div>
-                <div class="metadaten">Methode: {{methode}}</div>
-                <div class="metadaten">Messeinrichtung: {{messeinrichtung}}</div>
-                <div class="metadaten">Messobjekt: {{messobjekt}}</div>
-            </div>
-            <div style="flex:1; padding-top: 0.5em">
-                <div class="metadaten">Sachnummer: {{projekt.partno}}</div>
-                <div class="metadaten">Identnummer (Prüfmittel): {{projekt.identnr}}</div>
-                <div class="metadaten">Bemerkung: {{projekt.remark}}</div>
-            </div>
-        </div>
-        <p class="formel">
-            l<sub>x</sub> = {{ formeln | join(' + ') }}
-        </p>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>Teilformel</th>
-                    <th>Bedeutung</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for entry in legende %}
-                <tr>
-                    <td>{{ entry.formel }}</td>
-                    <td>{{ entry.text }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </section>
-    <section style="page-break-before: always;">
-        <div style="border: 1px solid black; text-align: center; font-size: large; font-weight: bolder;">
-            Q7 Messunsicherheitsanalyse
-        </div>
-        
-        <div style="display:flex; gap:5em; border:1px solid black; padding:0 1em; margin-bottom: 0.5em;">
-            <div style="flex:1; padding-top: 0.5em">
-                <div class="metadaten">Projekt: {{projekt.name}}</div>
-                <div class="metadaten">Änderungsstand: {{projekt.aenderungszustand}}</div>
-                <div class="metadaten">Modell: {{projekt.modell.name}}</div>
-                <div class="metadaten">Aufgabe: {{aufgabe}}</div>
-                <div class="metadaten">Methode: {{methode}}</div>
-                <div class="metadaten">Messeinrichtung: {{messeinrichtung}}</div>
-                <div class="metadaten">Messobjekt: {{messobjekt}}</div>
+<body>
+
+    <!-- ── Seite 1: Formel & Legende ── -->
+    <section>
+        <div class="report-banner">Q7 Messunsicherheitsanalyse</div>
+
+        <div class="report-meta-bar">
+            <div class="meta-col">
+                <div class="metadaten"><strong>Projekt:</strong> {{projekt.name}}</div>
+                <div class="metadaten"><strong>Änderungsstand:</strong> {{projekt.aenderungszustand}}</div>
+                <div class="metadaten"><strong>Modell:</strong> {{projekt.modell.name}}</div>
+                <div class="metadaten"><strong>Aufgabe:</strong> {{aufgabe}}</div>
+                <div class="metadaten"><strong>Methode:</strong> {{methode}}</div>
+                <div class="metadaten"><strong>Messeinrichtung:</strong> {{messeinrichtung}}</div>
+                <div class="metadaten"><strong>Messobjekt:</strong> {{messobjekt}}</div>
             </div>
-            <div style="flex:1; padding-top: 0.5em">
-                <div class="metadaten">Sachnummer: {{projekt.partno}}</div>
-                <div class="metadaten">Identnummer (Prüfmittel): {{projekt.identnr}}</div>
-                <div class="metadaten">Bemerkung: {{projekt.remark}}</div>
+            <div class="meta-col">
+                <div class="metadaten"><strong>Sachnummer:</strong> {{projekt.partno}}</div>
+                <div class="metadaten"><strong>Identnummer (Prüfmittel):</strong> {{projekt.identnr}}</div>
+                <div class="metadaten"><strong>Bemerkung:</strong> {{projekt.remark}}</div>
+            </div>
+        </div>
+
+        <div class="formel-block">
+            l<sub>x</sub> = {{ formeln | join(' + ') }}
+        </div>
+
+        <div class="legende-block">
+            {% for entry in legende %}
+            <div class="legende-row">
+                <div class="legende-formel">{{ entry.formel }}</div>
+                <div class="legende-text">{{ entry.text if entry.text is not none else '' }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- ── Seite 2: Konstanten & Komponententabelle ── -->
+    <section style="page-break-before: always;">
+        <div class="report-banner">Q7 Messunsicherheitsanalyse</div>
+
+        <div class="report-meta-bar">
+            <div class="meta-col">
+                <div class="metadaten"><strong>Projekt:</strong> {{projekt.name}}</div>
+                <div class="metadaten"><strong>Änderungsstand:</strong> {{projekt.aenderungszustand}}</div>
+                <div class="metadaten"><strong>Modell:</strong> {{projekt.modell.name}}</div>
+                <div class="metadaten"><strong>Aufgabe:</strong> {{aufgabe}}</div>
+                <div class="metadaten"><strong>Methode:</strong> {{methode}}</div>
+                <div class="metadaten"><strong>Messeinrichtung:</strong> {{messeinrichtung}}</div>
+                <div class="metadaten"><strong>Messobjekt:</strong> {{messobjekt}}</div>
+            </div>
+            <div class="meta-col">
+                <div class="metadaten"><strong>Sachnummer:</strong> {{projekt.partno}}</div>
+                <div class="metadaten"><strong>Identnummer (Prüfmittel):</strong> {{projekt.identnr}}</div>
+                <div class="metadaten"><strong>Bemerkung:</strong> {{projekt.remark}}</div>
             </div>
         </div>
 
         <div class="grid-container">
             {% for konst in anakonst %}
-                <div class="entry">
-                    {{ konst.name }}: {{ konst.wert }}{% if konst.einheit %} {{ konst.einheit }}{% endif %}
-                </div>
+            <div class="entry">
+                {{ konst.name }}: {{ konst.wert }}{% if konst.einheit %} {{ konst.einheit }}{% endif %}
+            </div>
             {% endfor %}
         </div>
 
-        <div class="komp-table">
-            <!-- Header -->
-            <div class="head">Komponente</div>
-            <div class="head">L0</div>
-            <div class="head">L1</div>
-            <div class="head">Wert / FG / Verteilung</div>
-            <div class="head">u</div>
+        <div class="komp-table-wrap">
+            <div class="komp-table">
+                <div class="head">Komponente</div>
+                <div class="head">L0</div>
+                <div class="head">L1</div>
+                <div class="head">Wert / FG / Verteilung</div>
+                <div class="head">u</div>
 
-            {% for entry in everything_komp %}
-                <!-- Komponente -->
-                <div class="cell komp">
-                    {{ entry.text }}: {{ entry.formel }}
-                </div>
-
-                <!-- L0 -->
-                <div class="cell">{{ entry.terml0 }}</div>
-
-                <!-- L1 -->
-                <div class="cell">{{ entry.terml1 }}</div>
-
-                <!-- Dreifeld -->
+                {% for entry in everything_komp %}
+                <div class="cell komp">{{ entry.text }}: {{ entry.formel }}</div>
+                <div class="cell">{{ entry.terml0 | default('', true) }} µm</div>
+                <div class="cell">{{ entry.terml1 | default('', true) }}</div>
                 <div class="cell smallstack">
                     <div>{{ entry.wertart }}</div>
                     <div>{{ entry.freigrad }}</div>
                     <div>{{ entry.verteilung }}</div>
                 </div>
-
-                <!-- µ (leer) -->
-                <div class="cell">{{ "%.3f"|format(entry.unsicherheit) }} µm</div>
-            {% endfor %}
+                <div class="cell">{{ "%.3f"|format(entry.unsicherheit | default(0, true)) }} µm</div>
+                {% endfor %}
+            </div>
         </div>
     </section>
+
+    <!-- ── Seite 3: Erweiterter Report (optional) ── -->
+    {% if extended and extended_data %}
     <section style="page-break-before: always;">
-                <div style="border: 1px solid black; text-align: center; font-size: large; font-weight: bolder;">
-            Q7 Messunsicherheitsanalyse
-        </div>
-        
-        <div style="display:flex; gap:5em; border:1px solid black; padding:0 1em; margin-bottom: 0.5em;">
-            <div style="flex:1; padding-top: 0.5em">
-                <div class="metadaten">Projekt: {{projekt.name}}</div>
-                <div class="metadaten">Änderungsstand: {{projekt.aenderungszustand}}</div>
-                <div class="metadaten">Modell: {{projekt.modell.name}}</div>
-                <div class="metadaten">Aufgabe: {{aufgabe}}</div>
-                <div class="metadaten">Methode: {{methode}}</div>
-                <div class="metadaten">Messeinrichtung: {{messeinrichtung}}</div>
-                <div class="metadaten">Messobjekt: {{messobjekt}}</div>
-            </div>
-            <div style="flex:1; padding-top: 0.5em">
-                <div class="metadaten">Sachnummer: {{projekt.partno}}</div>
-                <div class="metadaten">Identnummer (Prüfmittel): {{projekt.identnr}}</div>
-                <div class="metadaten">Bemerkung: {{projekt.remark}}</div>
-            </div>
-        </div>
-        <div style="border: 1px solid black; text-align: center;">
-            <div>Erweiterte Messunsicherheit: {{ "%.3f"|format(unsicherheit)|replace('.', ',') }}</div>
-            <div>Erweiterungsfaktor: {{ "%.2f"|format(erweiterungsfaktor)|replace('.', ',') }}µm</div>
-        </div>
-
-
-
-
-        <div class="komp-table-page3">
-            <!-- Header -->
-            <div class="head">Komponente</div>
-            <div class="head">u</div>
-
-            {% for entry in everything_komp %}
-                <!-- Komponente -->
-                <div class="cell komp">
-                    {{ entry.text }}: {{ entry.formel }}
+        <div class="extended-section">
+            <h2 class="extended-title">Detaillierte Berechnung der Komponenten</h2>
+            {% for komp in extended_data %}
+            <div class="komponente-card">
+                <div class="komponente-header">
+                    <span class="komponente-name">{{ komp.name }}{{ komp.formel }}</span>
+                    <span class="komponente-count">{{ komp.anzahl_im_modell }}× im Modell</span>
                 </div>
 
-                <!-- µ (leer) -->
-                <div class="cell">{{ "%.3f"|format(entry.unsicherheit) }} µm</div>
+                <div class="komponente-meta">
+                    <div class="meta-item">
+                        <span class="meta-label">Verteilung</span>
+                        <span class="meta-value">{{ komp.verteilung }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Freiheitsgrad</span>
+                        <span class="meta-value">{{ komp.freiheitsgrad }}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Streuungsparameter</span>
+                        <span class="meta-value">{{ komp.streuungsparameter }}</span>
+                    </div>
+                    {% if komp.bemerkung %}
+                    <div class="meta-item meta-full">
+                        <span class="meta-label">Bemerkung</span>
+                        <span class="meta-value">{{ komp.bemerkung }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                {% if komp.benoetigte_konstanten %}
+                <div class="komponente-block">
+                    <div class="block-title">Benötigte Konstanten</div>
+                    <table class="werte-tabelle">
+                        {% for k in komp.benoetigte_konstanten %}
+                        <tr>
+                            <td>{{ k.name }}</td>
+                            <td class="wert-zelle">{{ k.wert if k.wert is not none else '–' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+                {% endif %}
+
+                <div class="komponente-block">
+                    <div class="block-title">Berechnung</div>
+                    <table class="werte-tabelle">
+                        <tr>
+                            <td>a</td>
+                            <td class="wert-zelle">{{ komp.a if komp.a is not none else '–' }}</td>
+                        </tr>
+                        <tr>
+                            <td>b</td>
+                            <td class="wert-zelle">{{ komp.b if komp.b is not none else '–' }}</td>
+                        </tr>
+                        <tr>
+                            <td>Standardunsicherheit l0</td>
+                            <td class="wert-zelle">{{ komp.standardunsicherheit_l0 if komp.standardunsicherheit_l0 is
+                                not none else '–' }}</td>
+                        </tr>
+                        <tr>
+                            <td>Standardunsicherheit l1</td>
+                            <td class="wert-zelle">{{ komp.standardunsicherheit_l1 if komp.standardunsicherheit_l1 is
+                                not none else '–' }}</td>
+                        </tr>
+                        <tr>
+                            <td>Sensitivitätskoeffizient c1</td>
+                            <td class="wert-zelle">{{ komp.sensitivitaetskoeffizient_c1 if
+                                komp.sensitivitaetskoeffizient_c1 is not none else '–' }}</td>
+                        </tr>
+                        <tr>
+                            <td>Sensitivitätskoeffizient c2</td>
+                            <td class="wert-zelle">{{ komp.sensitivitaetskoeffizient_c2 if
+                                komp.sensitivitaetskoeffizient_c2 is not none else '–' }}</td>
+                        </tr>
+                        <tr>
+                            <td>Effektiver Freiheitsgrad</td>
+                            <td class="wert-zelle">{{ komp.effektiver_freiheitsgrad if komp.effektiver_freiheitsgrad is
+                                not none else '–' }}</td>
+                        </tr>
+                        <tr>
+                            <td>Unsicherheitsbeitrag l0</td>
+                            <td class="wert-zelle">{{ komp.unsicherheitsbeitrag_l0 if komp.unsicherheitsbeitrag_l0 is
+                                not none else '–' }}</td>
+                        </tr>
+                        <tr>
+                            <td>Unsicherheitsbeitrag l1</td>
+                            <td class="wert-zelle">{{ komp.unsicherheitsbeitrag_l1 if komp.unsicherheitsbeitrag_l1 is
+                                not none else '–' }}</td>
+                        </tr>
+                        <tr class="row-highlight">
+                            <td>Unsicherheitsbeitrag</td>
+                            <td class="wert-zelle">{{ komp.unsicherheitsbeitrag if komp.unsicherheitsbeitrag is not none
+                                else '–' }}</td>
+                        </tr>
+                        <tr class="row-highlight">
+                            <td>Varianz</td>
+                            <td class="wert-zelle">{{ komp.varianz if komp.varianz is not none else '–' }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
             {% endfor %}
         </div>
     </section>
+    {% endif %}
+
+    <!-- ── Letzte Seite: Ergebnis ── -->
+    <section style="page-break-before: always;">
+        <div class="report-banner">Q7 Messunsicherheitsanalyse</div>
+
+        <div class="report-meta-bar">
+            <div class="meta-col">
+                <div class="metadaten"><strong>Projekt:</strong> {{projekt.name}}</div>
+                <div class="metadaten"><strong>Änderungsstand:</strong> {{projekt.aenderungszustand}}</div>
+                <div class="metadaten"><strong>Modell:</strong> {{projekt.modell.name}}</div>
+                <div class="metadaten"><strong>Aufgabe:</strong> {{aufgabe}}</div>
+                <div class="metadaten"><strong>Methode:</strong> {{methode}}</div>
+                <div class="metadaten"><strong>Messeinrichtung:</strong> {{messeinrichtung}}</div>
+                <div class="metadaten"><strong>Messobjekt:</strong> {{messobjekt}}</div>
+            </div>
+            <div class="meta-col">
+                <div class="metadaten"><strong>Sachnummer:</strong> {{projekt.partno}}</div>
+                <div class="metadaten"><strong>Identnummer (Prüfmittel):</strong> {{projekt.identnr}}</div>
+                <div class="metadaten"><strong>Bemerkung:</strong> {{projekt.remark}}</div>
+            </div>
+        </div>
+
+        <div class="result-box">
+            <div>Erweiterte Messunsicherheit: {{ "%.3f"|format(unsicherheit)|replace('.', ',') }} µm</div>
+            <div>Erweiterungsfaktor: {{ "%.2f"|format(erweiterungsfaktor)|replace('.', ',') }}</div>
+        </div>
+
+        <div class="komp-table-wrap">
+            <div class="komp-table-page3">
+                <div class="head">Komponente</div>
+                <div class="head">u</div>
+
+{% for entry in everything_komp %}
+    <div class="cell komp" style="background: linear-gradient(to right, #d0dff0 {{ entry.unsicherheit_pct | default(0) }}%, transparent {{ entry.unsicherheit_pct | default(0) }}%);">
+        {{ entry.text }}: {{ entry.formel }}
+    </div>
+    <div class="cell" style="background: transparent">
+        {% if entry.unsicherheit is not none %}{{ "%.3f"|format(entry.unsicherheit) | replace('.', ',') }} µm{% else %}–{% endif %}
+    </div>
+{% endfor %}
+            </div>
+        </div>
+    </section>
+
 </body>
+
 </html>

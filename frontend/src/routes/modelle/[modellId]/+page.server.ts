@@ -1,8 +1,12 @@
 import type {Actions, PageServerLoad} from './$types';
 import {fail, redirect} from '@sveltejs/kit';
 
-export const load: PageServerLoad = async ({ params, fetch }) => {
+export const load: PageServerLoad = async ({ params, fetch, setHeaders }) => {
     const { modellId } = params;
+
+        setHeaders({
+        'cache-control': 'no-store'
+    });
 
     const response = await fetch(`http://localhost:9999/modells/${modellId}/r`, {
         method: 'GET',
@@ -20,6 +24,7 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
 
 export const actions: Actions = {
     default: async ({ params, request, fetch }) => {
+                console.log('ACTION WURDE AUFGERUFEN'); // ← ganz oben
         const { modellId } = params;
         const formData = await request.formData();
 
@@ -77,7 +82,6 @@ export const actions: Actions = {
         const aufgabe = parseOptionalInt('aufgabe');
         if (aufgabe !== undefined) payload.aufgabe = aufgabe;
 
-        console.log("JULE",payload);
         // Update an Backend senden
         const res = await fetch(`http://localhost:9999/modells/${modellId}/r`, {
             method: 'POST',
@@ -86,21 +90,33 @@ export const actions: Actions = {
             body: JSON.stringify(payload)
         });
 
-        if (!res.ok) {
-            const err = await res.json();
-            return fail(res.status, {
-                error: err.detail || 'Fehler beim Speichern'
-            });
-        }
+if (!res.ok) {
+    const err = await res.json();
+    console.log('Backend error raw:', JSON.stringify(err)); // ← temporär
+    
+    const detail = err.detail;
+    
+    if (detail?.code === 'FK_IN_USE') {
+        return fail(res.status, {
+            code: detail.code,
+            count: detail.count,
+            error: detail.message,
+        });
+    }
+    
+    return fail(res.status, {
+        error: typeof detail === 'string' ? detail : 'Fehler beim Speichern',
+    });
+}
 
         const result = await res.json();
 
-        if (actionType === 'close') {
-            throw redirect(303, '/analyseprojekt'); // z.B. Übersicht
+        if (actionType === 'continue') {
+            throw redirect(303, `/analyseprojekt?open=${modellId}`); // z.B. Übersicht
         }
 
-        if (actionType === 'continue') {
-            throw redirect(303, `/modelle`); // z.B. nächste Seite
+        if (actionType === 'close') {
+            
         }
 
         return {
