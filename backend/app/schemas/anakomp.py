@@ -13,6 +13,7 @@ class AnakompBase(BaseModel):
     freigrad: int | None = None
     frei_n_1: int | None = None
     verteilung: int | None = None
+    fk_company: int | None = None
 
     class Config:
         from_attributes = True

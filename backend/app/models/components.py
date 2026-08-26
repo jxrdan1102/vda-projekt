@@ -23,6 +23,7 @@ class Component(Base):
     anzahl_messungen = Column(Integer)
     fk_user_id = Column(Integer, ForeignKey("users.id"))
 
+    fk_company = Column(Integer, ForeignKey("companies.id"), nullable=True)
     user = relationship("User", back_populates="components")
     modell = relationship("Modell", back_populates="components")
     anakomp = relationship("ANAKOMP", back_populates="komponente")

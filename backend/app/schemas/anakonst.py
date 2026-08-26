@@ -6,7 +6,8 @@ class AnakonstBase(BaseModel):
     constnum: int | None = None
     constval: float | None = None
     remark: int | None = None
-
+    fk_company: int | None = None
+    
     class Config:
         from_attributes = True
 

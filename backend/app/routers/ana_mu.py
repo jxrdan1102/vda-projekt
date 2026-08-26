@@ -4,7 +4,7 @@ import os
 from app.models import Component, TEXTKAT, ANAMU, ANAKOMP  # Component = mod_components
 from app.database.database import get_db
 from app.models.user import User
-from app.routers.auth import get_current_user
+from app.routers.auth import get_current_user, get_company_id, require_write
 from app.schemas.anakomp import AnakompUpdateR, AnakompForAnamuR
 from app.schemas.anakonst import AnakonstUpdateR, AnakonstForAnamuR
 from app.schemas.anamu import AnamuCreateR, AnamuUpdate, DuplicateAnamu
@@ -28,36 +28,35 @@ from fastapi import HTTPException
 router = APIRouter(prefix="/anamu", tags=["anamu"])
 
 
-@router.get("/r", response_model=list[AnamuGetR])
-async def get_all_anamusr(db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
-    return await AnamuService.get_all_anamus(db, current_user.id)
-
-
-@router.get("/{id}/r", response_model=AnamuGetIdR)
-async def get_anamu_by_idr(id: int, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
-    return await AnamuService.get_anamu_by_id(db, id, current_user.id)
-
+from app.routers.auth import get_current_user, get_company_id, require_write
 
 @router.post("/r")
-async def create_anamur(anamu: AnamuCreateR, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
-    anamu = await AnamuService.create_anamu_with_dependencies(db, anamu, current_user.id)
+async def create_anamur(anamu: AnamuCreateR, db: AsyncSession = Depends(get_db), current_user: User = Depends(require_write), company_id: int | None = Depends(get_company_id)):
+    anamu = await AnamuService.create_anamu_with_dependencies(db, anamu, current_user.id, company_id)
     return anamu
 
 @router.post("/{id}/r")
-async def update_anamu(id: int, anamu: AnamuUpdate, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
-    await AnamuService.update_anamu(db, id, anamu.model_dump(exclude_unset=True), current_user.id)
+async def update_anamu(id: int, anamu: AnamuUpdate, db: AsyncSession = Depends(get_db), current_user: User = Depends(require_write), company_id: int | None = Depends(get_company_id)):
+    await AnamuService.update_anamu(db, id, anamu.model_dump(exclude_unset=True), current_user.id, company_id)
     return {"detail": "Analyseprojekt wurde erfolgreich geändert"}
 
 @router.post("/anakomp/{id}/r")
-async def update_anakompr(id: int, anakomp: AnakompUpdateR, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
-    await AnamuService.update_anakompr(db, id, anakomp.model_dump(exclude_unset=True), current_user.id)
+async def update_anakompr(id: int, anakomp: AnakompUpdateR, db: AsyncSession = Depends(get_db), current_user: User = Depends(require_write), company_id: int | None = Depends(get_company_id)):
+    await AnamuService.update_anakompr(db, id, anakomp.model_dump(exclude_unset=True), current_user.id, company_id)
     return {"detail": "Komponente wurde erfolgreich geändert"}
 
-
 @router.post("/anakonst/{id}/r")
-async def update_anakonstr(id: int, anakonst: AnakonstUpdateR, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
-    await AnamuService.update_anakonstr(db, id, anakonst.model_dump(exclude_unset=True), current_user.id)
+async def update_anakonstr(id: int, anakonst: AnakonstUpdateR, db: AsyncSession = Depends(get_db), current_user: User = Depends(require_write), company_id: int | None = Depends(get_company_id)):
+    await AnamuService.update_anakonstr(db, id, anakonst.model_dump(exclude_unset=True), current_user.id, company_id)
     return {"detail": "Konstante wurde erfolgreich geändert"}
+
+@router.get("/r", response_model=list[AnamuGetR])
+async def get_all_anamusr(db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user), company_id: int | None = Depends(get_company_id)):
+    return await AnamuService.get_all_anamus(db, current_user.id, company_id)
+
+@router.get("/{id}/r", response_model=AnamuGetIdR)
+async def get_anamu_by_idr(id: int, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user), company_id: int | None = Depends(get_company_id)):
+    return await AnamuService.get_anamu_by_id(db, id, current_user.id, company_id)
 @router.get("/anakomp/{id}", response_model=AnakompForAnamuR)
 async def get_anakomp(id: int, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
     return await AnamuService.get_anakomp(db, id, current_user.id)
@@ -67,8 +66,8 @@ async def get_anakonst(id: int, db: AsyncSession = Depends(get_db), current_user
     return await AnamuService.get_anakonst(db, id, current_user.id)
 
 @router.get("/{id}/calc/r")
-async def calc_uncertainty_route(id: int, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
-    return await calc_uncertainty(db, id, current_user.id)
+async def calc_anamur(id: int, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user), company_id: int | None = Depends(get_company_id)):
+    return await calc_uncertainty(db, id, current_user.id, company_id)
 
 
 @router.delete("/{id}")
@@ -77,8 +76,8 @@ async def delete_anamu_by_id(id: int, db: AsyncSession = Depends(get_db), curren
     return {"detail": f"Analyseprojekt mit ID {id} wurde gelöscht"}
 
 @router.post("/{id}/duplicate")
-async def duplicate_anamu(id: int, req: DuplicateAnamu, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
-    return await AnamuService.duplicate_anamu(db, id, current_user.id, req.name)
+async def duplicate_anamu(id: int, req: DuplicateAnamu, db: AsyncSession = Depends(get_db), current_user: User = Depends(require_write), company_id: int | None = Depends(get_company_id)):
+    return await AnamuService.duplicate_anamu(db, id, current_user.id, company_id, req.name)
 
 def get_id_by_classname(name: str):
     for comp_id, cls in ComponentFactory.COMPONENTS.items():
@@ -275,7 +274,7 @@ async def get_anakonst_data(projekt):
     return result
 
 @router.get("/{id}/report")
-async def generate_report(id: int, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user), start_date: str = None, end_date: str = None, extended: bool = False):
+async def generate_report(id: int, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user), company_id: int | None = Depends(get_company_id), start_date: str = None, end_date: str = None, extended: bool = False):
     result = await db.execute(
         select(ANAMU)
         .options(
@@ -291,7 +290,7 @@ async def generate_report(id: int, db: AsyncSession = Depends(get_db), current_u
         raise HTTPException(status_code=404, detail="Analyseprojekt nicht gefunden")
 
     # ── Zentrales TMU_Modell EINMAL bauen ──
-    modell_db = await get_modell_by_id(db, projekt.fk_modell, current_user.id)
+    modell_db = await get_modell_by_id(db, projekt.fk_modell, company_id)
     tschema = TMU_ModellSchema.model_validate(modell_db)
     tmodell = TMU_Modell(tschema)
 

@@ -10,7 +10,7 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String(255), unique=True, index=True)
     hashed_password = Column(String(255))
-    role = Column(String(8), default="user")
+    role = Column(String(16), default="user")
     fk_company = Column(Integer, ForeignKey("companies.id"))
 
     components = relationship("Component", back_populates="user")

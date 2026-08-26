@@ -205,6 +205,30 @@ async def get_current_user(request: Request, db: db_dependency):
     except jwt.PyJWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Could not validate user.')
 
+
+# app/routers/auth.py — neue Dependencies
+
+def require_superadmin(current_user: User = Depends(get_current_user)):
+    if current_user.role != "superadmin":
+        raise HTTPException(status_code=403, detail="Nur Superadmin erlaubt")
+    return current_user
+
+def require_admin(current_user: User = Depends(get_current_user)):
+    if current_user.role not in ["superadmin", "admin"]:
+        raise HTTPException(status_code=403, detail="Nur Admin erlaubt")
+    return current_user
+
+def get_company_id(current_user: User = Depends(get_current_user)) -> int | None:
+    """Superadmin hat keine company_id → sieht alles."""
+    if current_user.role == "superadmin":
+        return None
+    return current_user.fk_company
+
+def require_write(current_user: User = Depends(get_current_user)) -> User:
+    if current_user.role == "readonly":
+        raise HTTPException(status_code=403, detail="Kein Schreibzugriff")
+    return current_user
+
 @router.get("/me")
 async def user(user: Annotated[dict, Depends(get_current_user)], db: db_dependency):
     if user is None:

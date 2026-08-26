@@ -6,11 +6,14 @@ from starlette.middleware.cors import CORSMiddleware
 from app.database.database import create_tables, ping_connection
 from app.routers import KMG, ana_mu, auth, components, items, modells
 from app.services.component_service.EverythinForComponents.TMU_ConstList import export_ts_mapping, parameter_mapping
+from app.routers.import_modell import router as import_router
 
 from jinja2 import Environment, FileSystemLoader
 from weasyprint import HTML   # <-- hier
 from datetime import date
 import pathlib
+from app.routers.admin import router as admin_router
+
 
 app = FastAPI()
 app.include_router(items.router)
@@ -19,9 +22,12 @@ app.include_router(modells.router)
 app.include_router(ana_mu.router)
 app.include_router(auth.router)
 app.include_router(KMG.router)
+app.include_router(import_router)
+app.include_router(admin_router)
+
 
 table = Table(
-    "C:\\Program Files (x86)\\Kistner Messtechnik\\QUEEN VDA5 GUM\\MUDB\\FREIKAT.DB"
+    "C:\\Program Files (x86)\\Kistner Messtechnik\\QUEEN VDA5 GUM\\MUDB\\ANAKOMP.DB"
 )
 
 fieldnames = list(table.fields.keys())
