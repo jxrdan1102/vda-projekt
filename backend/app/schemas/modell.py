@@ -65,7 +65,7 @@ class ModellForAnamuR(BaseModel):
     tsk_tiefenmessung: int | None = None
     tsk_hoehenmessung: int | None = None
     tsk_stufenmessung: int | None = None
-    modcreation: str | None = None
+    modcreation: datetime | None = None
 
     class Config:
         from_attributes = True
