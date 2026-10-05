@@ -80,14 +80,9 @@ export const handleProtect: Handle = async ({ event, resolve }) => {
 
 
     if (event.url.pathname.startsWith('/admin')) {
-        const res = await event.fetch('http://localhost:9999/auth/admin', {
-            credentials: 'include'
-        });
-
-        const isAdmin = res.ok && (await res.json()) === true;
-
-        if (!isAdmin) {
-            throw redirect(303, '/login');
+        const role = event.locals.user?.role;
+        if (role !== 'admin' && role !== 'superadmin') {
+            throw redirect(303, '/dashboard');
         }
     }
 

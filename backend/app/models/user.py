@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, true
 from sqlalchemy.orm import relationship
 
 from app.database.database import Base
@@ -12,6 +12,7 @@ class User(Base):
     hashed_password = Column(String(255))
     role = Column(String(16), default="user")
     fk_company = Column(Integer, ForeignKey("companies.id"))
+    is_active = Column(Boolean, nullable=False, default=True, server_default=true())
 
     components = relationship("Component", back_populates="user")
     company = relationship("Company", back_populates="users")
@@ -20,6 +21,3 @@ class User(Base):
     anamu = relationship("ANAMU", back_populates="user")
     anakomp = relationship("ANAKOMP", back_populates="user")
     anakonst = relationship("ANAKONST", back_populates="user")
-    fk_company = Column(Integer, ForeignKey("companies.id"), nullable=True)
-
-

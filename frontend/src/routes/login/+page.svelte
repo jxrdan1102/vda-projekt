@@ -1,6 +1,5 @@
 <script lang="ts">
     import {goto} from '$app/navigation';
-    import {browser} from '$app/environment';
     import {page} from '$app/stores';
 
     let username = '';
@@ -31,14 +30,9 @@
                 throw new Error(data.detail || 'Login fehlgeschlagen');
             }
 
-            const data = await response.json();
-
-            if (browser) {
-                localStorage.setItem('access_token', data.access_token);
-                localStorage.setItem('refresh_token', data.refresh_token);
-            }
             if (from === '/') from = '/dashboard';
-            goto(from); // direkte Navigation auf Ziel-URL ohne encodeURIComponent
+            // invalidateAll: Layout neu laden, damit Navigation/Rolle sofort stimmen
+            goto(from, { invalidateAll: true });
 
         } catch (e: any) {
             errorMessage = e.message || 'Ein Fehler ist aufgetreten';
@@ -51,7 +45,7 @@
 <!-- Tailwind-Stil -->
 <div class="min-h-screen flex items-center justify-center bg-gray-100 px-4">
     <div class="w-full max-w-md bg-white p-8 rounded-xl shadow-md border border-gray-200">
-        <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">Kister Metrologie – Login</h2>
+        <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">Kistner Metrologie – Login</h2>
 
         {#if errorMessage}
             <p class="text-red-600 text-sm mb-4 text-center">{errorMessage}</p>
@@ -88,9 +82,5 @@
                 {#if loading}Wird gesendet...{:else}Anmelden{/if}
             </button>
         </form>
-
-        <div class="text-center mt-6">
-            <a href="/admin" class="text-sm text-blue-600 hover:underline">Admin-Zugang</a>
-        </div>
     </div>
 </div>

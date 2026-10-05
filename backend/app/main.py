@@ -3,7 +3,10 @@ from fastapi import FastAPI, Response
 from pypxlib import Table
 from starlette.middleware.cors import CORSMiddleware
 
-from app.database.database import create_tables, ping_connection
+import os
+
+from app.database.database import SessionLocal, create_tables, ping_connection
+from app.services.user_service import ensure_superadmin
 from app.routers import KMG, ana_mu, auth, components, items, modells
 from app.services.component_service.EverythinForComponents.TMU_ConstList import export_ts_mapping, parameter_mapping
 from app.routers.import_modell import router as import_router
@@ -60,6 +63,11 @@ app.add_middleware(
 async def startup():
     await create_tables()
     await ping_connection()
+    # Optional: ersten Superadmin aus Umgebungsvariablen anlegen (nur wenn noch keiner existiert)
+    sa_user, sa_pw = os.getenv("SUPERADMIN_USERNAME"), os.getenv("SUPERADMIN_PASSWORD")
+    if sa_user and sa_pw:
+        async with SessionLocal() as db:
+            await ensure_superadmin(db, sa_user, sa_pw)
     value = 257
     export_ts_mapping(parameter_mapping)
     """

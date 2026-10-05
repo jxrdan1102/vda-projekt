@@ -6,6 +6,10 @@ declare global {
 			user: {
 				sub: string;
 				id: number;
+				/** superadmin | admin | user | readonly */
+				role: string;
+				/** Firma des Nutzers, null beim Superadmin */
+				company: number | null;
 			} | null;
 		}
 		interface PageState {
@@ -18,9 +22,7 @@ declare global {
 			newModelPage?: any;
 		}
 		// interface Error {}
-		// interface Locals {}
 		// interface PageData {}
-		// interface PageState {}
 		// interface Platform {}
 	}
 }

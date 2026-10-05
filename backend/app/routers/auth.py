@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session
 from starlette import status
 from starlette.responses import JSONResponse
 
+from app.core import roles
 from app.database.database import get_db
 from app.models import RefreshToken
 from app.models.LoginAttempts import LoginAttempt
@@ -63,12 +64,6 @@ LOCKOUT_TIME = timedelta(minutes=15)  # Sperrzeit bei zu vielen Fehlversuchen
 bcrypt_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 oauth2_bearer = OAuth2PasswordBearer(tokenUrl="/auth/token")
 
-class CreateUserRequest(BaseModel):
-    username: str
-    password: str
-    role: str
-
-
 class Token(BaseModel):
     access_token: str
     token_type: str
@@ -76,22 +71,40 @@ class Token(BaseModel):
 
 db_dependency = Annotated[Session, Depends(get_db)]
 
-@router.post("/")
-async def create_user(db: db_dependency, user_in: CreateUserRequest):
-    create_user_model = User(username=user_in.username,
-                              hashed_password=bcrypt_context.hash(user_in.password), role=user_in.role)
-    db.add(create_user_model)
-    await db.commit()
-    return {"id": create_user_model.id}
+
 class LoginRequest(BaseModel):
     username: str
     password: str
+
+
+def _set_auth_cookies(response: JSONResponse, access_token: str, refresh_token: str, access_max_age: int) -> None:
+    # ⛔ secure=False nur für die lokale Entwicklung, im Livebetrieb auf True stellen!
+    response.set_cookie(key="access_token", value=access_token, httponly=True, secure=False,
+                        samesite="Lax", max_age=access_max_age, path="/")
+    response.set_cookie(key="refresh_token", value=refresh_token, httponly=True, secure=False,
+                        samesite="Lax", max_age=60 * 60 * 24 * 7, path="/")
+
+
+async def _company_is_active(user: User, db) -> bool:
+    """Superadmin hängt an keiner Firma. Bei allen anderen muss die Firma aktiv sein."""
+    if user.role == roles.SUPERADMIN or user.fk_company is None:
+        return True
+    company = await db.get(Company, user.fk_company)
+    return company is not None and bool(company.is_active)
+
+
+async def _issue_refresh_token(user: User, db) -> str:
+    refresh_token = secrets.token_urlsafe(64)
+    expires_at = datetime.utcnow() + timedelta(days=7)
+    db.add(RefreshToken(user_id=user.id, token=refresh_token, expires_at=expires_at))
+    await db.commit()
+    return refresh_token
+
 
 @router.post("/token", response_model=Token)
 async def login_for_access_token(login_request: LoginRequest,
     db: db_dependency, request: Request
 ):
-    # Verwende login_request.username und login_request.password
     ip_address = request.client.host
     result = await db.execute(select(LoginAttempt).where(LoginAttempt.ip_address == ip_address))
     login_attempt = result.scalars().first()
@@ -99,7 +112,7 @@ async def login_for_access_token(login_request: LoginRequest,
     if login_attempt:
         if login_attempt.attempts >= MAX_LOGIN_ATTEMPTS and datetime.utcnow() - login_attempt.last_attempt < LOCKOUT_TIME:
             raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                                detail="Too many login attempts. Please try again later.")
+                                detail="Zu viele Anmeldeversuche. Bitte später erneut versuchen.")
 
     user = await authenticate_user(login_request.username, login_request.password, db)
     if not user:
@@ -111,48 +124,24 @@ async def login_for_access_token(login_request: LoginRequest,
             db.add(login_attempt)
 
         await db.commit()
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect username or password")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Benutzername oder Passwort falsch")
+
+    if not user.is_active:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Benutzer ist deaktiviert")
+    if not await _company_is_active(user, db):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Firma ist deaktiviert")
 
     if login_attempt:
         login_attempt.attempts = 0
         await db.commit()
 
-    token = create_access_token(user.username, user.id, timedelta(minutes=1))
-
-    refresh_token = secrets.token_urlsafe(64)
-    expires_at = datetime.utcnow() + timedelta(days=7)
-
-    # Store refresh token in DB
-    new_token = RefreshToken(user_id=user.id, token=refresh_token, expires_at=expires_at)
-    db.add(new_token)
-    await db.commit()
+    token = create_access_token(user, timedelta(minutes=1))
+    refresh_token = await _issue_refresh_token(user, db)
 
     response = JSONResponse(content={"message": "Login successful"})
-
-    # Access Token als HttpOnly-Cookie
-    response.set_cookie(
-        key="access_token",
-        value=token,
-        httponly=True,
-        secure=False,  # ⛔ Bei Entwicklung lokal False, im Livebetrieb auf True stellen!
-        samesite="Lax",
-        max_age=3600  # 5 Minuten
-        ,path = "/"
-    )
-
-    # Refresh Token als HttpOnly-Cookie (optional)
-    response.set_cookie(
-        key="refresh_token",
-        value=refresh_token,
-        httponly=True,
-        secure=False,
-        samesite="Lax",
-        max_age=60 * 60 * 24 * 7  # 7 Tage
-        , path="/"
-
-    )
-
+    _set_auth_cookies(response, token, refresh_token, access_max_age=3600)
     return response
+
 
 async def authenticate_user(username: str, password: str, db):
     stmt = select(User).filter(User.username == username)
@@ -165,14 +154,17 @@ async def authenticate_user(username: str, password: str, db):
     return user
 
 
-def create_access_token(username: str, user_id: int, expires_delta: timedelta):
-    encode = {'sub':username, 'id': user_id, 'iat': datetime.utcnow()}
+def create_access_token(user: User, expires_delta: timedelta):
+    encode = {
+        'sub': user.username,
+        'id': user.id,
+        'role': user.role,
+        'company': user.fk_company,
+        'iat': datetime.utcnow(),
+    }
     expire = datetime.utcnow() + expires_delta
     encode.update({'exp': expire, 'jti': str(uuid.uuid4())})
     return jwt.encode(encode, private_key, algorithm=ALGORITHM)
-
-
-from fastapi import Request
 
 
 async def get_current_user(request: Request, db: db_dependency):
@@ -185,7 +177,6 @@ async def get_current_user(request: Request, db: db_dependency):
         with open(PUBLIC_KEY_FILE, "rb") as f:
             public_key_pem = f.read()
 
-        # Entschlüsselung des Tokens
         payload = jwt.decode(token, public_key_pem, algorithms=[ALGORITHM])
 
         username: str = payload.get('sub')
@@ -194,172 +185,40 @@ async def get_current_user(request: Request, db: db_dependency):
         if username is None or user_id is None:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Could not validate user.')
 
-        # Überprüfe den Benutzer in der DB
+        # Rolle und Firma immer frisch aus der DB, nicht aus dem Token
         result = await db.execute(select(User).where(User.id == user_id))
         user = result.scalars().first()
 
         if user is None:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='User not found')
+        if not user.is_active or not await _company_is_active(user, db):
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='User deaktiviert')
 
         return user
     except jwt.PyJWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Could not validate user.')
 
 
-# app/routers/auth.py — neue Dependencies
-
 def require_superadmin(current_user: User = Depends(get_current_user)):
-    if current_user.role != "superadmin":
+    if current_user.role != roles.SUPERADMIN:
         raise HTTPException(status_code=403, detail="Nur Superadmin erlaubt")
     return current_user
 
 def require_admin(current_user: User = Depends(get_current_user)):
-    if current_user.role not in ["superadmin", "admin"]:
+    if not roles.is_admin(current_user.role):
         raise HTTPException(status_code=403, detail="Nur Admin erlaubt")
     return current_user
 
 def get_company_id(current_user: User = Depends(get_current_user)) -> int | None:
     """Superadmin hat keine company_id → sieht alles."""
-    if current_user.role == "superadmin":
+    if current_user.role == roles.SUPERADMIN:
         return None
     return current_user.fk_company
 
 def require_write(current_user: User = Depends(get_current_user)) -> User:
-    if current_user.role == "readonly":
+    if current_user.role == roles.READONLY:
         raise HTTPException(status_code=403, detail="Kein Schreibzugriff")
     return current_user
-
-@router.get("/me")
-async def user(user: Annotated[dict, Depends(get_current_user)], db: db_dependency):
-    if user is None:
-        raise HTTPException(status_code= status.HTTP_401_UNAUTHORIZED, detail='Authentication failed.')
-    return {"User": user}
-
-@router.get("/refresh_token")
-async def refresh_token(
-    db: db_dependency,
-    refresh_token: str = Cookie(),  # Cookie auslesen
-):
-    print("LEE",refresh_token)
-    if refresh_token is None:
-        raise HTTPException(status_code=401, detail="Refresh token missing")
-    print("TokenRE", refresh_token)
-
-    token_entry = await db.execute(select(RefreshToken).where(RefreshToken.token == refresh_token))
-    token_entry = token_entry.scalars().first()
-    print("verdammte", token_entry)
-    if not token_entry or token_entry.expires_at < datetime.utcnow():
-        raise HTTPException(status_code=401, detail="Invalid or expired refresh token")
-    print("verdammt")
-
-    user = await db.execute(select(User).where(User.id == token_entry.user_id))
-    user = user.scalars().first()
-
-    # Delete old refresh token
-    await db.delete(token_entry)
-    await db.commit()
-
-    # Generate new refresh token
-    new_refresh_token = secrets.token_urlsafe(64)
-    expires_at = datetime.utcnow() + timedelta(days=7)
-    new_token_entry = RefreshToken(user_id=user.id, token=new_refresh_token, expires_at=expires_at)
-    db.add(new_token_entry)
-    await db.commit()
-
-    # Generate access token
-    new_access_token = create_access_token(user.username, user.id, timedelta(minutes=1))
-
-    # Create response
-    response = JSONResponse(content={"message": "Token refreshed"})
-
-    # Set tokens as cookies on the actual JSONResponse object
-    response.set_cookie(
-        key="access_token",
-        value=new_access_token,
-        httponly=True,
-        secure=False,
-        samesite="Lax",
-        max_age=60
-        , path="/"
-
-    )
-    response.set_cookie(
-        key="refresh_token",
-        value=new_refresh_token,
-        httponly=True,
-        secure=False,
-        samesite="Lax",
-        max_age=60 * 60 * 24 * 7
-        , path="/"
-
-    )
-    print(response.headers.getlist('set-cookie'))
-    return response
-@router.get("/refresh_tokens")
-async def refresh_token(
-    db: db_dependency,
-    refresh_token: str = Cookie(),  # Cookie auslesen
-):
-    if refresh_token is None:
-        raise HTTPException(status_code=401, detail="Refresh token missing")
-    print("TokenRE", refresh_token)
-
-    token_entry = await db.execute(select(RefreshToken).where(RefreshToken.token == refresh_token))
-    token_entry = token_entry.scalars().first()
-
-    if not token_entry or token_entry.expires_at < datetime.utcnow():
-        raise HTTPException(status_code=401, detail="Invalid or expired refresh token")
-
-    user = await db.execute(select(User).where(User.id == token_entry.user_id))
-    user = user.scalars().first()
-
-    # Delete old refresh token
-    await db.delete(token_entry)
-    await db.commit()
-
-    # Generate new refresh token
-    new_refresh_token = secrets.token_urlsafe(64)
-    expires_at = datetime.utcnow() + timedelta(days=7)
-    new_token_entry = RefreshToken(user_id=user.id, token=new_refresh_token, expires_at=expires_at)
-    db.add(new_token_entry)
-    await db.commit()
-
-    # Generate access token
-    new_access_token = create_access_token(user.username, user.id, timedelta(minutes=1))
-
-    # Create response
-    response = JSONResponse(content={"message": "Token refreshed"})
-
-    # Set tokens as cookies on the actual JSONResponse object
-    response.set_cookie(
-        key="access_token",
-        value=new_access_token,
-        httponly=True,
-        secure=False,
-        samesite="Lax",
-        max_age=60,
-        path = "/"
-    )
-    response.set_cookie(
-        key="refresh_token",
-        value=new_refresh_token,
-        httponly=True,
-        secure=False,
-        samesite="Lax",
-        max_age=60 * 60 * 24 * 7,
-        path = "/"
-    )
-    print(response.headers.getlist('set-cookie'))
-    return response
-@router.post("/logout")
-async def logout(refresh_token: str, db: db_dependency):
-    token_entry = await db.execute(select(RefreshToken).where(RefreshToken.token == refresh_token))
-    token_entry = token_entry.scalars().first()
-    if token_entry:
-        await db.delete(token_entry)
-        await db.commit()
-
-    return {"message": "Logged out"}
 
 def require_roles(*allowed_roles: str):
     async def role_checker(user: User = Depends(get_current_user)):
@@ -369,47 +228,82 @@ def require_roles(*allowed_roles: str):
     return role_checker
 
 
-@router.get("/edit")
-async def editor_or_admin(user: User = Depends(require_roles("editor", "admin"))):
-    return {"message": f"Hallo {user.username}, du hast Bearbeitungsrechte!"}
+@router.get("/me")
+async def me(db: db_dependency, user: User = Depends(get_current_user)):
+    company = await db.get(Company, user.fk_company) if user.fk_company else None
+    return {
+        "id": user.id,
+        "username": user.username,
+        "role": user.role,
+        "fk_company": user.fk_company,
+        "company_name": company.name if company else None,
+    }
+
+
+@router.get("/refresh_token")
+@router.get("/refresh_tokens")
+async def refresh_token(
+    db: db_dependency,
+    refresh_token: str = Cookie(),
+):
+    if refresh_token is None:
+        raise HTTPException(status_code=401, detail="Refresh token missing")
+
+    token_entry = await db.execute(select(RefreshToken).where(RefreshToken.token == refresh_token))
+    token_entry = token_entry.scalars().first()
+    if not token_entry or token_entry.expires_at < datetime.utcnow():
+        raise HTTPException(status_code=401, detail="Invalid or expired refresh token")
+
+    user = await db.execute(select(User).where(User.id == token_entry.user_id))
+    user = user.scalars().first()
+
+    # Alten Refresh-Token immer verwerfen
+    await db.delete(token_entry)
+    await db.commit()
+
+    if user is None or not user.is_active or not await _company_is_active(user, db):
+        raise HTTPException(status_code=401, detail="User deaktiviert")
+
+    new_refresh_token = await _issue_refresh_token(user, db)
+    new_access_token = create_access_token(user, timedelta(minutes=1))
+
+    response = JSONResponse(content={"message": "Token refreshed"})
+    _set_auth_cookies(response, new_access_token, new_refresh_token, access_max_age=60)
+    return response
+
+
+@router.post("/logout")
+async def logout(db: db_dependency, refresh_token: str | None = Cookie(default=None)):
+    if refresh_token:
+        token_entry = await db.execute(select(RefreshToken).where(RefreshToken.token == refresh_token))
+        token_entry = token_entry.scalars().first()
+        if token_entry:
+            await db.delete(token_entry)
+            await db.commit()
+
+    response = JSONResponse(content={"message": "Logged out"})
+    response.delete_cookie("access_token", path="/")
+    response.delete_cookie("refresh_token", path="/")
+    return response
+
 
 @router.get("/admin", response_model=bool)
-async def has_edit_permission(user: User = Depends(get_current_user)):
-    return user.role in {"editor", "admin"}
+async def has_admin_permission(user: User = Depends(get_current_user)):
+    return roles.is_admin(user.role)
 
-@router.post("/create_user")
-async def create_user_for_company(user_in: CreateUserRequest, db: db_dependency,
-                                  current_user: User = Depends(get_current_user)):
-    if current_user.role != "admin":
-        raise HTTPException(status_code=403, detail="Only admins can create users.")
 
-    company = await db.execute(select(Company).where(Company.id == current_user.company_id))
-    company = company.scalars().first()
+class ChangePasswordRequest(BaseModel):
+    old_password: str
+    new_password: str
 
-    new_user = User(
-        username=user_in.username,
-        hashed_password=bcrypt_context.hash(user_in.password),
-        role=user_in.role,
-        company_id=company.id
-    )
-    db.add(new_user)
+
+@router.post("/change_password")
+async def change_password(data: ChangePasswordRequest, db: db_dependency,
+                          user: User = Depends(get_current_user)):
+    if not bcrypt_context.verify(data.old_password, user.hashed_password):
+        raise HTTPException(status_code=400, detail="Altes Passwort ist falsch")
+    if len(data.new_password) < 8:
+        raise HTTPException(status_code=400, detail="Neues Passwort muss mindestens 8 Zeichen haben")
+    user.hashed_password = bcrypt_context.hash(data.new_password)
     await db.commit()
-    return {"id": new_user.id}
-
-@router.get("/company_data")
-async def get_company_data(db: db_dependency, current_user: User = Depends(get_current_user)):
-    result = await db.execute(select(User).where(User.fk_company == current_user.fk_company))
-    data = result.scalars().all()
-    return data
-
-def get_company_id(current_user: User = Depends(get_current_user)) -> int | None:
-    """Superadmin hat keine company_id → sieht alles."""
-    if current_user.role == "superadmin":
-        return None
-    return current_user.fk_company
-
-
-def require_write(current_user: User = Depends(get_current_user)) -> User:
-    if current_user.role == "readonly":
-        raise HTTPException(status_code=403, detail="Kein Schreibzugriff")
-    return current_user
+    return {"detail": "Passwort geändert"}

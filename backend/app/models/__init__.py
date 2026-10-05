@@ -9,3 +9,4 @@ from .kmg import KMG
 from .modell import Modell
 from .textkat import TEXTKAT
 from .freikat import ModellText
+from .user import User

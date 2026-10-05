@@ -14,6 +14,8 @@ export async function fetchUserIsAdmin(): Promise<boolean> {
 type DecodedToken = {
     sub: string;
     id: number;
+    role?: string;
+    company?: number | null;
     exp?: number;
     iat?: number;
 };
@@ -34,9 +36,12 @@ export const authenticateUser = (event: RequestEvent) => {
                 return null;  // Token ist abgelaufen
             }
         }
+        // Nur für die Anzeige/Navigation – die echten Rechte prüft das Backend bei jedem Request
         return {
             sub: decoded.sub,
-            id: decoded.id
+            id: decoded.id,
+            role: decoded.role ?? 'user',
+            company: decoded.company ?? null
         };
     } catch (error) {
         console.error('Ungültiges Token:', error);
