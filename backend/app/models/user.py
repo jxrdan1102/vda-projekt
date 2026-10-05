@@ -20,6 +20,6 @@ class User(Base):
     anamu = relationship("ANAMU", back_populates="user")
     anakomp = relationship("ANAKOMP", back_populates="user")
     anakonst = relationship("ANAKONST", back_populates="user")
-
+    fk_company = Column(Integer, ForeignKey("companies.id"), nullable=True)
 
 

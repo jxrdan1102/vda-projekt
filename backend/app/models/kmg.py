@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Float, Integer, String
+from sqlalchemy import Column, Float, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
 
 from app.database.database import Base
@@ -16,5 +16,7 @@ class KMG(Base):
     kmg_uc = Column(Float)
     kmg_alpham = Column(Float)
     kmg_mpeml = Column(Float)
+    fk_user_id = Column(Integer, ForeignKey("users.id"))
 
     anamu = relationship("ANAMU", back_populates="kmg")
+    fk_company = Column(Integer, ForeignKey("companies.id"), nullable=True)

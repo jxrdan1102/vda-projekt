@@ -11,14 +11,18 @@ from jinja2 import Environment, FileSystemLoader
 from weasyprint import HTML   # <-- hier
 from datetime import date
 import pathlib
+from app.routers.admin import router as admin_router
+from app.routers.imports import router as import_router
 
 app = FastAPI()
+app.include_router(admin_router)
 app.include_router(items.router)
 app.include_router(components.router)
 app.include_router(modells.router)
 app.include_router(ana_mu.router)
 app.include_router(auth.router)
 app.include_router(KMG.router)
+app.include_router(import_router)
 
 table = Table(
     "C:\\Program Files (x86)\\Kistner Messtechnik\\QUEEN VDA5 GUM\\MUDB\\FREIKAT.DB"

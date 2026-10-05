@@ -26,7 +26,7 @@ class ANAMU(Base):
     anakomp = relationship("ANAKOMP", back_populates="anamu")
     anakonst = relationship("ANAKONST", back_populates="anamu")
     user = relationship("User", back_populates="anamu")
-
+    fk_company = Column(Integer, ForeignKey("companies.id"), nullable=True)
 
 
 class ANAKONST(Base):
@@ -41,7 +41,7 @@ class ANAKONST(Base):
 
     user = relationship("User", back_populates="anakonst")
     anamu = relationship("ANAMU", back_populates="anakonst")
-
+    fk_company = Column(Integer, ForeignKey("companies.id"), nullable=True)
 class ANAKOMP(Base):
     __tablename__ = "anakomp"
 
@@ -63,3 +63,4 @@ class ANAKOMP(Base):
     user = relationship("User", back_populates="anakomp")
     komponente = relationship("Component", back_populates="anakomp")
     anamu = relationship("ANAMU", back_populates="anakomp")
+    fk_company = Column(Integer, ForeignKey("companies.id"), nullable=True)

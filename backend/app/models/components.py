@@ -26,3 +26,4 @@ class Component(Base):
     user = relationship("User", back_populates="components")
     modell = relationship("Modell", back_populates="components")
     anakomp = relationship("ANAKOMP", back_populates="komponente")
+    fk_company = Column(Integer, ForeignKey("companies.id"), nullable=True)

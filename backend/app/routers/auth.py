@@ -378,3 +378,14 @@ async def get_company_data(db: db_dependency, current_user: User = Depends(get_c
     data = result.scalars().all()
     return data
 
+def get_company_id(current_user: User = Depends(get_current_user)) -> int | None:
+    """Superadmin hat keine company_id → sieht alles."""
+    if current_user.role == "superadmin":
+        return None
+    return current_user.fk_company
+
+
+def require_write(current_user: User = Depends(get_current_user)) -> User:
+    if current_user.role == "readonly":
+        raise HTTPException(status_code=403, detail="Kein Schreibzugriff")
+    return current_user

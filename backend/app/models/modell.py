@@ -52,8 +52,9 @@ class Modell(Base):
 
     formel = Column(String(512))
     formeldesc = Column(String(512))
-
+    old_import_id = Column(Integer, nullable=True) 
     fk_user_id = Column(Integer, ForeignKey("users.id"))
     owner = relationship("User", back_populates="modells")
     components = relationship("Component", back_populates="modell")
     ana_mu = relationship("ANAMU", back_populates="modell")
+    fk_company = Column(Integer, ForeignKey("companies.id"), nullable=True)

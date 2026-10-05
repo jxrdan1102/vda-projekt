@@ -2,7 +2,7 @@ from fastapi import HTTPException
 from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
-
+from sqlalchemy import select
 from app.models.ANAMU import ANAMU, ANAKOMP, ANAKONST
 from app.models.components import Component
 from app.models.modell import Modell
@@ -13,271 +13,265 @@ from app.services.component_service.EverythinForComponents.TMU_Modell import TMU
 
 AnamuCRUD = BaseCRUD(ANAMU)
 AnakompCRUD = BaseCRUD(ANAKOMP)
-AnakonstCRUD = BaseCRUD(ANAKONST)
+AnakorstCRUD = BaseCRUD(ANAKONST)
 
 
-async def get_anamu_by_id(db: AsyncSession, id: int, user_id: int):
+async def get_all_anamus(db: AsyncSession, user_id: int, company_id: int | None = None):
+    stmt = select(ANAMU).options(selectinload(ANAMU.modell))
+    if company_id is not None:
+        stmt = stmt.where(ANAMU.fk_company == company_id)
+    else:
+        stmt = stmt.where(ANAMU.fk_user_id == user_id)
+    result = await db.execute(stmt)
+    return result.scalars().all()
+
+
+async def get_anamu_by_id(db: AsyncSession, id: int, user_id: int, company_id: int | None = None):
     stmt = (
         select(ANAMU)
-        .where(ANAMU.id == id, ANAMU.fk_user_id == user_id)
         .options(
-            selectinload(ANAMU.modell),
             selectinload(ANAMU.anakomp).selectinload(ANAKOMP.komponente),
+            selectinload(ANAMU.modell),
             selectinload(ANAMU.anakonst),
             selectinload(ANAMU.kmg),
         )
+        .where(ANAMU.id == id)
     )
+    if company_id is not None:
+        stmt = stmt.where(ANAMU.fk_company == company_id)
+    else:
+        stmt = stmt.where(ANAMU.fk_user_id == user_id)
     result = await db.execute(stmt)
     anamu = result.scalar_one_or_none()
-    if anamu:
-        patch_konstanten_values(anamu)
+    if not anamu:
+        raise HTTPException(status_code=404, detail="Analyseprojekt nicht gefunden")
     return anamu
 
-CONSTNUM_KMG_MAPPING = {
-    102: "kmg_a",
-    103: "kmg_k",
-    104: "kmg_uc",
-    141: "kmg_lt",
-    105: "kmg_alpham",
-    161: "kmg_mpeml",
-}
-def patch_konstanten_values(anamu: ANAMU) -> ANAMU:
-    if not anamu.kmg:
-        return anamu
-
-    for konst in anamu.anakonst:
-        attr_name = CONSTNUM_KMG_MAPPING.get(konst.constnum)
-        if attr_name:
-            kmg_value = getattr(anamu.kmg, attr_name, None)
-            if kmg_value is not None:
-                konst.constval = kmg_value
-    return anamu
-
-async def create_anamu_with_dependencies(db: AsyncSession, anamu: AnamuCreateR, user_id: int):
-    # AnAMU anlegen
-    data = anamu.model_dump()
-    data["fk_user_id"] = user_id
-    created_anamu = await AnamuCRUD.create(db, data)
-
-    # Abgeleitete Daten erzeugen
-    await add_anakomps(db, created_anamu.id, created_anamu.fk_modell, user_id)
-    await add_anakonsts(db, created_anamu.id, created_anamu.fk_modell, user_id)
-    return created_anamu
-
-
-
-def build_anakomp(component: Component, fk_anamu: int, fk_user_id: int) -> ANAKOMP:
-    return ANAKOMP(
-        fk_anamu=fk_anamu,
-        fk_mod_components=component.id,
-        terml0=component.terml0,
-        terml1=component.terml1,
-        verteilung=component.verteilung,
-        wertart=component.wertart,
-        freigrad=component.freigrad,
-        frei_n_1=component.frei_n_1,
-        fk_user_id=fk_user_id
-    )
-
-
-async def add_anakomps(db: AsyncSession, fk_anamu: int, fk_modell: int , user_id: int) -> list[ANAKOMP]:
-    stmt = select(Component).where(Component.fk_modell == fk_modell)
+async def get_anakomp(db: AsyncSession, id: int, user_id: int, company_id: int | None = None):
+    stmt = select(ANAKOMP).where(ANAKOMP.id == id)
+    if company_id is not None:
+        stmt = stmt.where(ANAKOMP.fk_company == company_id)
+    else:
+        stmt = stmt.where(ANAKOMP.fk_user_id == user_id)
     result = await db.execute(stmt)
-    components = result.scalars().all()
+    obj = result.scalar_one_or_none()
+    if not obj:
+        raise HTTPException(status_code=404, detail="Anakomp nicht gefunden")
+    return obj
 
-    #if not components:
-     #   raise HTTPException(status_code=404, detail="Keine Komponenten im Modell gefunden")
 
-    anakomps = [build_anakomp(comp, fk_anamu, user_id) for comp in components]
+async def get_anakonst(db: AsyncSession, id: int, user_id: int, company_id: int | None = None):
+    stmt = select(ANAKONST).where(ANAKONST.id == id)
+    if company_id is not None:
+        stmt = stmt.where(ANAKONST.fk_company == company_id)
+    else:
+        stmt = stmt.where(ANAKONST.fk_user_id == user_id)
+    result = await db.execute(stmt)
+    obj = result.scalar_one_or_none()
+    if not obj:
+        raise HTTPException(status_code=404, detail="Anakonst nicht gefunden")
+    return obj
 
-    db.add_all(anakomps)
+async def create_anamu_with_dependencies(db: AsyncSession, anamu: AnamuCreateR, user_id: int, company_id: int | None = None):
+    new_anamu = ANAMU(
+        **anamu.model_dump(),
+        fk_user_id=user_id,
+        fk_company=company_id,
+    )
+    db.add(new_anamu)
     await db.commit()
-    return anakomps
-
-from sqlalchemy import select
-
-
-async def update_anamu(db: AsyncSession, id: int, data: dict, user_id: int):
-    if data.get('tolfaktor') == 1:
-        for constnum in [2, 3, 4]:
-            stmt = select(ANAKONST).where(ANAKONST.fk_anamu == id,ANAKONST.constnum == constnum)
-            result = await db.execute(stmt)
-            existing = result.scalar_one_or_none()
-            if existing is None:
-                db.add(ANAKONST(fk_anamu = id,constnum = constnum,constval = None,remark= '',fk_user_id = user_id))
-        await db.commit()
-    return await AnamuCRUD.update(db, id, data, user_id)
+    await db.refresh(new_anamu)
+    return new_anamu
 
 
-async def get_anakomp(db: AsyncSession, id: int, user_id: int):
+async def update_anamu(db: AsyncSession, id: int, data: dict, user_id: int, company_id: int | None = None):
+    stmt = select(ANAMU).where(ANAMU.id == id)
+    if company_id is not None:
+        stmt = stmt.where(ANAMU.fk_company == company_id)
+    else:
+        stmt = stmt.where(ANAMU.fk_user_id == user_id)
+    result = await db.execute(stmt)
+    existing = result.scalar_one_or_none()
+    if not existing:
+        raise HTTPException(status_code=404, detail="Analyseprojekt nicht gefunden")
+    for key, value in data.items():
+        setattr(existing, key, value)
+    await db.commit()
+    return existing
+
+
+async def update_anakompr(db: AsyncSession, id: int, data: dict, user_id: int, company_id: int | None = None):
+    stmt = select(ANAKOMP).where(ANAKOMP.id == id)
+    if company_id is not None:
+        stmt = stmt.where(ANAKOMP.fk_company == company_id)
+    else:
+        stmt = stmt.where(ANAKOMP.fk_user_id == user_id)
+    result = await db.execute(stmt)
+    existing = result.scalar_one_or_none()
+    if not existing:
+        raise HTTPException(status_code=404, detail="Komponente nicht gefunden")
+    for key, value in data.items():
+        setattr(existing, key, value)
+    await db.commit()
+    return existing
+
+
+async def update_anakonstr(db: AsyncSession, id: int, data: dict, user_id: int, company_id: int | None = None):
+    stmt = select(ANAKONST).where(ANAKONST.id == id)
+    if company_id is not None:
+        stmt = stmt.where(ANAKONST.fk_company == company_id)
+    else:
+        stmt = stmt.where(ANAKONST.fk_user_id == user_id)
+    result = await db.execute(stmt)
+    existing = result.scalar_one_or_none()
+    if not existing:
+        raise HTTPException(status_code=404, detail="Konstante nicht gefunden")
+    for key, value in data.items():
+        setattr(existing, key, value)
+    await db.commit()
+    return existing
+
+
+async def delete_anamu(db: AsyncSession, id: int, user_id: int, company_id: int | None = None):
+    stmt = select(ANAMU).where(ANAMU.id == id)
+    if company_id is not None:
+        stmt = stmt.where(ANAMU.fk_company == company_id)
+    else:
+        stmt = stmt.where(ANAMU.fk_user_id == user_id)
+    result = await db.execute(stmt)
+    anamu = result.scalar_one_or_none()
+    if not anamu:
+        raise HTTPException(status_code=404, detail="Analyseprojekt nicht gefunden")
+    await db.delete(anamu)
+    await db.commit()
+
+
+async def duplicate_anamu(db: AsyncSession, id: int, user_id: int, company_id: int | None, new_name: str):
     stmt = (
-        select(ANAKOMP)
-        .where(ANAKOMP.id == id, ANAKOMP.fk_user_id == user_id)
-        .options(selectinload(ANAKOMP.komponente))  # <- das hier
+        select(ANAMU)
+        .options(
+            selectinload(ANAMU.anakomp),
+            selectinload(ANAMU.anakonst),
+        )
+        .where(ANAMU.id == id)
     )
+    if company_id is not None:
+        stmt = stmt.where(ANAMU.fk_company == company_id)
+    else:
+        stmt = stmt.where(ANAMU.fk_user_id == user_id)
     result = await db.execute(stmt)
-    anakomp = result.scalar_one_or_none()
-    return anakomp
+    original = result.scalar_one_or_none()
+    if not original:
+        raise HTTPException(status_code=404, detail="Analyseprojekt nicht gefunden")
 
-async def get_anakonst(db: AsyncSession, id: int, user_id: int):
-    return await AnakonstCRUD.get_by_id(db, id, user_id)
+    new_anamu = ANAMU(
+        name=new_name,
+        fk_modell=original.fk_modell,
+        aenderungszustand=original.aenderungszustand,
+        identnr=original.identnr,
+        partno=original.partno,
+        remark=original.remark,
+        tolfaktor=original.tolfaktor,
+        tsk_aufgabe=original.tsk_aufgabe,
+        fk_kmg=original.fk_kmg,
+        fk_user_id=user_id,
+        fk_company=company_id,
+    )
+    db.add(new_anamu)
+    await db.flush()
 
-async def add_anakonsts(db: AsyncSession, fk_anamu: int, fk_modell: int, user_id) -> list[ANAKONST]:
-    # Modell validieren
-    stmt = select(Modell).where(Modell.id == fk_modell)
-    result = await db.execute(stmt)
-    modell = result.scalar_one_or_none()
-    print (" hoffentlich ",modell.Element1)
-    if modell is None:
-        raise HTTPException(status_code=404, detail="Modell nicht gefunden")
+    for komp in original.anakomp:
+        new_komp = ANAKOMP(
+            fk_anamu=new_anamu.id,
+            fk_mod_components=komp.fk_mod_components,
+            remark=komp.remark,
+            terml0=komp.terml0,
+            terml1=komp.terml1,
+            wertart=komp.wertart,
+            freigrad=komp.freigrad,
+            frei_n_1=komp.frei_n_1,
+            verteilung=komp.verteilung,
+            anzahl_messungen=komp.anzahl_messungen,
+            messpunkt_anzahl=komp.messpunkt_anzahl,
+            fk_user_id=user_id,
+            fk_company=company_id,
+        )
+        db.add(new_komp)
 
-    stmt = select(Component.kompid, Component.lfdnr).where(Component.fk_modell == fk_modell)
-    result = await db.execute(stmt)
-    components = result.all()
+    for konst in original.anakonst:
+        new_konst = ANAKONST(
+            fk_anamu=new_anamu.id,
+            constnum=konst.constnum,
+            constval=konst.constval,
+            remark=konst.remark,
+            fk_user_id=user_id,
+            fk_company=company_id,
+        )
+        db.add(new_konst)
 
-    if not components:
-        return []
-
-    schema = TMU_ModellSchema(id=modell.id, aufgabe=modell.aufgabe, AufgabeModell=modell.aufgabe_modell, Element1=modell.Element1, Element2=modell.Element2, i_geometrie_me=modell.geo_me, i_geometrie_mo= modell.geo_mo, i_geometrie_en= modell.geo_bn, merkmal=modell.merkmal, element=modell.element, Bezug1=modell.Bezug1, Bezug2=modell.Bezug2 )
-    tmodell = TMU_Modell(schema)
-
-    for komp in components:
-        tmodell.addComponent(komp.kompid, komp.lfdnr)
-
-    constants = tmodell.const_needed
-    if not constants:
-        raise HTTPException(status_code=400, detail="Keine Konstanten benötigt laut TMU-Modell")
-
-    anakonsts = [ANAKONST(fk_anamu=fk_anamu, constnum=c.value, constval=None, remark=0, fk_user_id=user_id) for c in constants]
-
-    db.add_all(anakonsts)
     await db.commit()
-    return anakonsts
+    await db.refresh(new_anamu)
+    return new_anamu
 
 
-async def update_anakompr(db: AsyncSession, id: int, data: dict, user_id: int):
-    return await AnakompCRUD.update(db, id, data, user_id)
+async def get_anakonst_data(projekt):
+    from app.services.component_service.EverythinForComponents.TMU_ConstList import TKompConstants, parameter_mapping
+    result = []
+    for konst in projekt.anakonst:
+        const_enum = None
+        for k in TKompConstants:
+            if k.value == konst.constnum:
+                const_enum = k
+                break
+        if const_enum and const_enum in parameter_mapping:
+            mapping = parameter_mapping[const_enum]
+            result.append({
+                "name": mapping.get("label", const_enum.name),
+                "wert": konst.constval,
+                "einheit": mapping.get("einheit", ""),
+            })
+        else:
+            result.append({
+                "name": f"Konstante {konst.constnum}",
+                "wert": konst.constval,
+                "einheit": "",
+            })
+    return result
 
 
-async def update_anakonstr(db: AsyncSession, id: int, data: dict, user_id: int):
-    return await AnakonstCRUD.update(db, id, data, user_id)
-
-
-def map_component_data(tcomponent, source):
-    tcomponent.setData({
-        'KennwertArt': source.wertart,
-        'Freiheitsgrad': source.freigrad,
-        'FreiN_minus_1': source.frei_n_1,
-        'TermL0': source.terml0,
-        'TermL1': source.terml1,
-        'Verteilung': source.verteilung
-    })
-    tcomponent.messpunkt_anzahl = source.messpunkt_anzahl
-    tcomponent.anzahl_messungen = source.anzahl_messungen
-
-
-async def calc_uncertainty(db: AsyncSession, id: int, user_id: int):
-    anamu = await get_anamu_by_id(db, id, user_id)
+async def calc_uncertainty(db: AsyncSession, id: int, user_id: int, company_id: int | None = None):
+    anamu = await get_anamu_by_id(db, id, user_id, company_id)
     if not anamu:
         raise HTTPException(status_code=404, detail="ANAMU not found")
-
-    modell = await get_modell_by_id(db, anamu.fk_modell, user_id)
+    modell = await get_modell_by_id(db, anamu.fk_modell, company_id)
     if not modell:
         raise HTTPException(status_code=404, detail="Modell not found")
-
     tschema = TMU_ModellSchema.model_validate(modell)
     tmodell = TMU_Modell(tschema)
-
-
-
     components_map = {m.lfdnr: m for m in modell.components}
     anakomps_map = {a.fk_mod_components: a for a in anamu.anakomp}
-
-
     for component in modell.components:
         tmodell.addComponent(component.kompid, component.lfdnr)
-
     for tcomponent in tmodell:
         mcomponent = components_map.get(tcomponent.lfdnr)
         if mcomponent:
             tcomponent.id = mcomponent.id
             map_component_data(tcomponent, mcomponent)
             tcomponent.setData({'Flags': mcomponent.kflags})
-
         acomp = anakomps_map.get(tcomponent.id)
         if acomp:
             map_component_data(tcomponent, acomp)
-
     await tmodell.setConstValue(anamu.id, db)
     if modell.aufgabe_modell == 3:
-        print("KMG Konstanten")
         await tmodell.setKMGConstValue(anamu.fk_kmg, db)
     if anamu.tolfaktor == 1:
         tmodell.mit_berechnung_toleranzfaktor = True
-
-    print ("hier",tmodell.const_list)
     return tmodell.MUPruefverfahren_U()
 
-async def delete_anamu(db: AsyncSession, id: int, user_id: int):
-    await AnamuCRUD.get_by_id(db, id, user_id)  # Safety check
-    await db.execute(delete(ANAKOMP).where(ANAKOMP.fk_anamu == id))
-    await db.execute(delete(ANAKONST).where(ANAKONST.fk_anamu == id))
-    return await AnamuCRUD.delete(db, id, user_id)
 
-
-async def duplicate_anamu(db: AsyncSession, id: int, user_id: int, new_name: str):
-    # Hole bestehendes AnAMU
-    old_anamu = await get_anamu_by_id(db, id, user_id)
-    if not old_anamu:
-        raise HTTPException(status_code=404, detail="Analyseprojekt nicht gefunden")
-
-    new_data = {
-        key: value
-        for key, value in old_anamu.__dict__.items()
-        if key not in ("id", "name", "_sa_instance_state", "anakomp", "anakonst")
-    }
-
-    # Überschreiben bzw. ergänzen
-    new_data["name"] = new_name
-    new_data["fk_user_id"] = user_id
-
-    new_anamu = await AnamuCRUD.create(db, new_data)
-
-    # Komponenten und Konstanten kopieren
-    anakomp_objs = [
-        ANAKOMP(
-            fk_anamu=new_anamu.id,
-            fk_mod_components=ak.fk_mod_components,
-            terml0=ak.terml0,
-            terml1=ak.terml1,
-            verteilung=ak.verteilung,
-            wertart=ak.wertart,
-            freigrad=ak.freigrad,
-            frei_n_1=ak.frei_n_1
-        ) for ak in old_anamu.anakomp
-    ]
-
-    anakonst_objs = [
-        ANAKONST(
-            fk_anamu=new_anamu.id,
-            constnum=ac.constnum,
-            constval=ac.constval,
-            remark=ac.remark
-        ) for ac in old_anamu.anakonst
-    ]
-
-    db.add_all(anakomp_objs + anakonst_objs)
-    await db.commit()
-
-    return {"detail": f"Analyseprojekt '{old_anamu.name}' wurde als '{new_name}' dupliziert", "id": new_anamu.id}
-
-async def get_all_anamus(db: AsyncSession, user_id: int):
-    stmt = (
-        select(ANAMU)
-        .where(ANAMU.fk_user_id == user_id)
-        .options(
-            selectinload(ANAMU.modell),
-        )
-    )
-    result = await db.execute(stmt)
-    return result.scalars().all()
+def map_component_data(tcomponent, source):
+    for attr in ['terml0', 'terml1', 'wertart', 'freigrad', 'frei_n_1', 'verteilung',
+                 'messpunkt_anzahl', 'anzahl_messungen', 'modltxtid', 'remark']:
+        val = getattr(source, attr, None)
+        if val is not None:
+            tcomponent.setData({attr: val})
