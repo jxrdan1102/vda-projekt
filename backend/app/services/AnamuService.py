@@ -3,6 +3,7 @@ from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from sqlalchemy import select
+from sqlalchemy import select
 from app.models.ANAMU import ANAMU, ANAKOMP, ANAKONST
 from app.models.components import Component
 from app.models.modell import Modell

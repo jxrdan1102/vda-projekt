@@ -14,10 +14,11 @@ from app.services.component_service.EverythinForComponents.TMU_ConstList import 
 
 class DuplicateRequest(BaseModel):
     name: str
+    fk_company: int | None = None
 
 class ModellGetAllR(BaseModel):
     id: int
-    name: str
+    name: str | None = None
     description: str | None = None
     aufgabe_modell: int | None = None
     aufgabe: int | None = None
@@ -29,7 +30,7 @@ class ModellGetAllR(BaseModel):
     tsk_tiefennmessung: int | None = None
     tsk_hoehenmessung: int | None = None
     tsk_stufenmessung: int | None = None
-
+    fk_company: int | None = None
     class Config:
         from_attributes = True
 
@@ -37,7 +38,7 @@ class ModellBase(BaseModel):
     id: int
     aufgabe: int
     is_builtin: bool
-
+    fk_company: int | None = None
     class Config:
         from_attributes = True
 
@@ -48,6 +49,7 @@ class ModellCreateR(BaseModel):
     gegenstand: int | None = 0
     einstellmass: int | None = 0
     methode: int | None = 0
+    fk_company: int | None = None
 
     class Config:
         from_attributes = True
@@ -106,6 +108,7 @@ class ModellUpdateR(BaseModel):
     formel: str | None = None
     formeldesc: str | None = None
     is_builtin: int | None = None
+    fk_company: int | None = None
     class Config:
         from_attributes = True
 
@@ -131,7 +134,7 @@ class ModellCreate(BaseModel):
     tsk_stufenmessung: int | None = None
     formel: str | None = None
     formeldesc: str | None = None
-
+    fk_company: int | None = None
     components: list[ComponentRefCreate] | None = None  # Beziehung zur Component-Klasse
 
     class Config:
@@ -241,7 +244,7 @@ class ModellGetIdR(BaseModel):
     formeldesc: str | None = None
     aufgabe_modell: int
     is_builtin: int
-
+    fk_company: int | None = None
     components: list[ComponentGetR] | None = None
 
     class Config:

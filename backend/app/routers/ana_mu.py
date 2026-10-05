@@ -55,8 +55,9 @@ async def update_anakompr(id: int, anakomp: AnakompUpdateR, db: AsyncSession = D
     await AnamuService.update_anakompr(db, id, anakomp.model_dump(exclude_unset=True), current_user.id, company_id)
     return {"detail": "Komponente wurde erfolgreich geändert"}
 
-
 @router.post("/anakonst/{id}/r")
+async def update_anakonstr(id: int, anakonst: AnakonstUpdateR, db: AsyncSession = Depends(get_db), current_user: User = Depends(require_write), company_id: int | None = Depends(get_company_id)):
+    await AnamuService.update_anakonstr(db, id, anakonst.model_dump(exclude_unset=True), current_user.id, company_id)
 async def update_anakonstr(id: int, anakonst: AnakonstUpdateR, db: AsyncSession = Depends(get_db), current_user: User = Depends(require_write), company_id: int | None = Depends(get_company_id)):
     await AnamuService.update_anakonstr(db, id, anakonst.model_dump(exclude_unset=True), current_user.id, company_id)
     return {"detail": "Konstante wurde erfolgreich geändert"}
@@ -282,7 +283,7 @@ async def get_anakonst_data(projekt):
     return result
 
 @router.get("/{id}/report")
-async def generate_report(id: int, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user), start_date: str = None, end_date: str = None, extended: bool = False):
+async def generate_report(id: int, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user), company_id: int | None = Depends(get_company_id), start_date: str = None, end_date: str = None, extended: bool = False):
     result = await db.execute(
         select(ANAMU)
         .options(
@@ -298,7 +299,7 @@ async def generate_report(id: int, db: AsyncSession = Depends(get_db), current_u
         raise HTTPException(status_code=404, detail="Analyseprojekt nicht gefunden")
 
     # ── Zentrales TMU_Modell EINMAL bauen ──
-    modell_db = await get_modell_by_id(db, projekt.fk_modell, current_user.id)
+    modell_db = await get_modell_by_id(db, projekt.fk_modell, company_id)
     tschema = TMU_ModellSchema.model_validate(modell_db)
     tmodell = TMU_Modell(tschema)
 

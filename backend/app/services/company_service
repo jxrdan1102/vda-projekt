@@ -1,0 +1,14 @@
+﻿from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.models.user import User
+
+
+async def get_company_user_ids(db: AsyncSession, user: User) -> list[int]:
+    """Gibt alle User-IDs der gleichen Firma zurück. Superadmin sieht alle."""
+    if user.role == "superadmin":
+        result = await db.execute(select(User.id))
+    else:
+        result = await db.execute(
+            select(User.id).where(User.fk_company == user.fk_company)
+        )
+    return [row[0] for row in result.fetchall()]

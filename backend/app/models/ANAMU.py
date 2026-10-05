@@ -21,6 +21,7 @@ class ANAMU(Base):
     fk_kmg = Column(Integer, ForeignKey("kmgs.id"))
     fk_user_id = Column(Integer, ForeignKey("users.id"))
 
+    fk_company = Column(Integer, ForeignKey("companies.id"), nullable=True)
     kmg = relationship("KMG", back_populates="anamu")
     modell = relationship("Modell", back_populates="ana_mu")
     anakomp = relationship("ANAKOMP", back_populates="anamu")

@@ -49,11 +49,12 @@ class Modell(Base):
     taster2 = Column(Integer)
     abstand = Column(Integer)
     is_builtin = Column(Boolean, nullable=False, default=False)
-
+    old_import_id = Column(Integer, nullable=True)
     formel = Column(String(512))
     formeldesc = Column(String(512))
     old_import_id = Column(Integer, nullable=True) 
     fk_user_id = Column(Integer, ForeignKey("users.id"))
+    fk_company = Column(Integer, ForeignKey("companies.id"), nullable=True)
     owner = relationship("User", back_populates="modells")
     components = relationship("Component", back_populates="modell")
     ana_mu = relationship("ANAMU", back_populates="modell")

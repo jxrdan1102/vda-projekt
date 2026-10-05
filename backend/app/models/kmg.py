@@ -18,5 +18,7 @@ class KMG(Base):
     kmg_mpeml = Column(Float)
     fk_user_id = Column(Integer, ForeignKey("users.id"))
 
+    fk_user_id = Column(Integer, ForeignKey("users.id"))
+    fk_company = Column(Integer, ForeignKey("companies.id"), nullable=True)
     anamu = relationship("ANAMU", back_populates="kmg")
     fk_company = Column(Integer, ForeignKey("companies.id"), nullable=True)
