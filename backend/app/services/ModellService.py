@@ -10,6 +10,19 @@ from app.services.BaseCRUD import BaseCRUD
 ModellCRUD = BaseCRUD(Modell)
 ComponentCRUD = BaseCRUD(Component)
 
+# Felder, die über die normale Bearbeitung nicht gesetzt werden dürfen
+PROTECTED_FIELDS = ("is_builtin", "fk_company", "fk_user_id")
+
+
+async def ensure_modell_writable(db: AsyncSession, modell_id: int) -> None:
+    """Eingebaute Modelle (is_builtin) sind schreibgeschützt – samt ihren Komponenten."""
+    modell = await db.get(Modell, modell_id)
+    if modell is not None and modell.is_builtin:
+        raise HTTPException(
+            status_code=403,
+            detail="Dieses Modell ist schreibgeschützt und kann nicht geändert werden.",
+        )
+
 
 async def get_all_modells(db: AsyncSession, company_id: int | None):
     return await ModellCRUD.get_all_by_company(db, company_id)
@@ -28,16 +41,21 @@ async def get_modell_by_id(db: AsyncSession, id: int, company_id: int | None = N
 
 
 async def create_modell(db: AsyncSession, data: dict, user_id: int, company_id: int | None):
+    data.pop("is_builtin", None)  # eingebaute Modelle kommen nur über den Import
     data["fk_user_id"] = user_id
     data["fk_company"] = company_id
     return await ModellCRUD.create(db, data)
 
 
 async def update_modell(db: AsyncSession, id: int, data: dict, company_id: int | None = None):
+    await ensure_modell_writable(db, id)
+    data = {k: v for k, v in data.items() if k not in PROTECTED_FIELDS}
     return await ModellCRUD.update(db, id, data, company_id)
 
 
 async def add_component(db: AsyncSession, id: int, data: dict, user_id: int, company_id: int | None):
+    await ModellCRUD.get_by_id(db, id, company_id)
+    await ensure_modell_writable(db, id)
     data["fk_user_id"] = user_id
     data["fk_company"] = company_id
     data["fk_modell"] = id
@@ -51,6 +69,7 @@ async def add_component(db: AsyncSession, id: int, data: dict, user_id: int, com
 
 async def delete_modell_with_components(db: AsyncSession, id: int, company_id: int | None = None):
     await ModellCRUD.get_by_id(db, id, company_id)
+    await ensure_modell_writable(db, id)
     await db.execute(delete(Component).where(Component.fk_modell == id))
     return await ModellCRUD.delete(db, id, company_id)
 

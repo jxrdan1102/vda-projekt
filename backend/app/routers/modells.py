@@ -20,6 +20,10 @@ from fastapi import HTTPException
 router = APIRouter(prefix="/modells", tags=["modells"])
 
 
+def _not_found():
+    raise HTTPException(status_code=404, detail="Modell nicht gefunden")
+
+
 @router.get("/r", response_model=list[ModellGetAllR])
 async def get_modellsr(
     db: AsyncSession = Depends(get_db),
@@ -56,6 +60,8 @@ async def update_modellr(
     current_user: User = Depends(require_write),
     company_id: int | None = Depends(get_company_id)
 ):
+    await ModellService.get_modell_by_id(db, id, company_id) or _not_found()
+    await ModellService.ensure_modell_writable(db, id)
     print(modell.model_dump(exclude_unset=True))
     usage_count = await db.scalar(
         select(func.count()).where(ANAMU.fk_modell == id)
