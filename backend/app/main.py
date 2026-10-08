@@ -1,6 +1,6 @@
 import csv
 from fastapi import FastAPI, Response
-from pypxlib import Table
+#from pypxlib import Table
 from starlette.middleware.cors import CORSMiddleware
 
 import os
@@ -28,22 +28,22 @@ app.include_router(auth.router)
 app.include_router(KMG.router)
 app.include_router(import_router)
 
-table = Table(
-    "C:\\Program Files (x86)\\Kistner Messtechnik\\QUEEN VDA5 GUM\\MUDB\\ANAKOMP.DB"
-)
+# table = Table(
+#     "C:\\Program Files (x86)\\Kistner Messtechnik\\QUEEN VDA5 GUM\\MUDB\\ANAKOMP.DB"
+# )
 
-fieldnames = list(table.fields.keys())
-csv_file = "C:\\Users\\Jason\\Desktop\\testssss.csv"
-# CSV-Datei erstellen und Daten schreiben
-with open(csv_file, mode="w+", newline="", encoding="utf-8") as f:
-    writer = csv.writer(f, delimiter=";")  # Semikolon als Trenner
+# fieldnames = list(table.fields.keys())
+# csv_file = "C:\\Users\\Jason\\Desktop\\testssss.csv"
+# # CSV-Datei erstellen und Daten schreiben
+# with open(csv_file, mode="w+", newline="", encoding="utf-8") as f:
+#     writer = csv.writer(f, delimiter=";")  # Semikolon als Trenner
 
-    writer.writerow(fieldnames)  # Spaltenüberschriften schreiben (Fix!)
+#     writer.writerow(fieldnames)  # Spaltenüberschriften schreiben (Fix!)
 
-    for row in table:
-        writer.writerow(
-            [getattr(row, field) for field in fieldnames]
-        )  # Werte als Liste speichern
+#     for row in table:
+#         writer.writerow(
+#             [getattr(row, field) for field in fieldnames]
+#         )  # Werte als Liste speichern
 """
 """
 origins = [
@@ -69,7 +69,7 @@ async def startup():
         async with SessionLocal() as db:
             await ensure_superadmin(db, sa_user, sa_pw)
     value = 257
-    export_ts_mapping(parameter_mapping)
+    export_ts_mapping(parameter_mapping, "../frontend/src/lib/tcParameterMapping.ts")
     """
     def csv_to_python_dict(input_file: str, output_file: str):
         with open(input_file, mode="r", encoding="utf-8-sig") as f:

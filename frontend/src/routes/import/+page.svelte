@@ -16,7 +16,7 @@
         const formData = new FormData();
         formData.append('file', modellFile);
         try {
-            const res = await apiFetch('http://localhost:9999/import/modell-xml', {
+            const res = await apiFetch('/backend/import/modell-xml', {
                 method: 'POST',
                 body: formData,
             });
@@ -38,7 +38,7 @@
         const formData = new FormData();
         formData.append('file', anamuFile);
         try {
-            const res = await apiFetch('http://localhost:9999/import/anamu-xml', {
+            const res = await apiFetch('/backend/import/anamu-xml', {
                 method: 'POST',
                 body: formData,
             });

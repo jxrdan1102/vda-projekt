@@ -1,4 +1,4 @@
-import {type Handle, redirect} from '@sveltejs/kit';
+import {type Handle, type HandleFetch, redirect} from '@sveltejs/kit';
 import {sequence} from '@sveltejs/kit/hooks';
 import {authenticateUser} from '$lib/server/auth';
 import type {SerializeOptions} from "cookie";
@@ -70,6 +70,8 @@ export const handleAuth: Handle = async ({ event, resolve }) => {
 // 2. Protection-Handle: Routen schützen und Admin-Check
 export const handleProtect: Handle = async ({ event, resolve }) => {
 
+    if (event.url.pathname.startsWith('/backend/')) return resolve(event);
+
     if (event.url.pathname.startsWith('/') && !event.locals.user && !event.url.pathname.includes("login")) {
         const from = encodeURIComponent(event.url.pathname + event.url.search);
         throw redirect(303, `/login?from=${from}`);
@@ -90,3 +92,12 @@ export const handleProtect: Handle = async ({ event, resolve }) => {
 };
 
 export const handle = sequence(handleAuth, handleProtect);
+
+// Aufrufe aus +page.server.ts an das Backend: Login-Cookies immer mitschicken.
+export const handleFetch: HandleFetch = async ({ event, request, fetch }) => {
+    if (request.url.startsWith('http://localhost:9999/')) {
+        const cookie = event.cookies.getAll().map((c) => `${c.name}=${c.value}`).join('; ');
+        if (cookie) request.headers.set('cookie', cookie);
+    }
+    return fetch(request);
+};

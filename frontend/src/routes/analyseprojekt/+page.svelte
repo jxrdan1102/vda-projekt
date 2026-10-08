@@ -31,7 +31,7 @@
         if (!confirmed) return;
 
         try {
-            const res = await fetch(`http://localhost:9999/anamu/${projektId}`, {
+            const res = await fetch(`/backend/anamu/${projektId}`, {
                 method: 'DELETE',
                 credentials: 'include'
             });
@@ -69,7 +69,7 @@
     async function confirmDuplicate() {
         if (!duplicateProjektId) return;
 
-        const res = await fetch(`http://localhost:9999/anamu/${duplicateProjektId}/duplicate`, {
+        const res = await fetch(`/backend/anamu/${duplicateProjektId}/duplicate`, {
             method: "POST",
             credentials: 'include',
             headers: {"Content-Type": "application/json"},

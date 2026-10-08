@@ -23,7 +23,7 @@
     async function handleAuswaehlen(id: number) {
         const payload: Record<string, any> = { fk_kmg: id };
 
-        const res = await fetch(`http://localhost:9999/anamu/${analyseprojektId}/r`, {
+        const res = await fetch(`/backend/anamu/${analyseprojektId}/r`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',

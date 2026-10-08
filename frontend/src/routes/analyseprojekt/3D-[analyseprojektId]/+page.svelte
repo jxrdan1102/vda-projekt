@@ -64,7 +64,7 @@ async function openReport(extended: boolean = false) {
     const start = '2024-01-01';
     const end   = '2024-12-31';
     const response = await fetch(
-        `http://localhost:9999/anamu/${analyseprojektId}/report?start_date=${start}&end_date=${end}&extended=${extended}`,
+        `/backend/anamu/${analyseprojektId}/report?start_date=${start}&end_date=${end}&extended=${extended}`,
         { method: 'GET', credentials: 'include', headers: { 'Content-Type': 'application/json' } }
     );
     const blob = await response.blob();

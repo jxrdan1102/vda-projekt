@@ -1,10 +1,13 @@
 import logging
-
+import os
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-DATABASE_URL = "mysql+aiomysql://fastapi_user:JoRu0430@localhost/vda_fastapi_db"
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "mysql+aiomysql://fastapi_user:JoRu0430@localhost/vda_fastapi_db",
+)
 
 engine = create_async_engine(
     DATABASE_URL,

@@ -32,7 +32,7 @@
         if (!confirmed) return;
 
         try {
-            const res = await fetch(`http://localhost:9999/modells/${modellId}`, {
+            const res = await fetch(`/backend/modells/${modellId}`, {
                 method: 'DELETE',
                 credentials: 'include'
             });
@@ -59,7 +59,7 @@
     async function confirmDuplicate() {
         if (!duplicateModelId) return;
 
-        const res = await fetch(`http://localhost:9999/modells/${duplicateModelId}/duplicate`, {
+        const res = await fetch(`/backend/modells/${duplicateModelId}/duplicate`, {
             method: "POST",
             credentials: 'include',
             headers: {"Content-Type": "application/json"},

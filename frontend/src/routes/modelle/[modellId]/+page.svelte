@@ -77,7 +77,7 @@
     }
 
     async function createCopy() {
-        const copyRes = await fetch(`http://localhost:9999/modells/${data.modellId}/copy`, {
+        const copyRes = await fetch(`/backend/modells/${data.modellId}/copy`, {
             method: 'POST',
             credentials: 'include'
         });
@@ -109,7 +109,7 @@
             if (payload[k] === undefined || payload[k] === null) delete payload[k];
         });
 
-        await fetch(`http://localhost:9999/modells/${newId}/r`, {
+        await fetch(`/backend/modells/${newId}/r`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
@@ -181,7 +181,7 @@ onMount(() => {
     const confirmed = confirm("Möchtest du diese Komponente wirklich löschen?");
     if (!confirmed) return;
     try {
-        const res = await fetch(`http://localhost:9999/components/${compId}`, {
+        const res = await fetch(`/backend/components/${compId}`, {
             method: 'DELETE',
             credentials: 'include'
         });

@@ -18,7 +18,7 @@
         errorMessage = '';
         loading = true;
         try {
-            const response = await fetch('http://localhost:9999/auth/token', {
+            const response = await fetch('/backend/auth/token', {
                 method: 'POST',
                 credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },

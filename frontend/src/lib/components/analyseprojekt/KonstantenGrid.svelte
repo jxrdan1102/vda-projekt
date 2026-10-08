@@ -1,7 +1,6 @@
 <script lang="ts">
     import { tick } from 'svelte';
-    import { tcMapping } from 'C:\\Users\\Jason\\vda-projekt\\backend\\tcParameterMapping';
-
+    import { tcMapping } from '$lib/tcParameterMapping';
     // ---------------------------------------------------------------
     // Props
     // ---------------------------------------------------------------
