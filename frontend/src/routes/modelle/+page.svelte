@@ -76,8 +76,8 @@
     }
 
     function goToModell(id: number, prozess: number) {
-        if (prozess === 3) goto(`http://localhost:5173/modelle/3D-${id}`)
-        else goto(`http://localhost:5173/modelle/${id}`)
+        if (prozess === 3) goto(`/modelle/3D-${id}`)
+        else goto(`/modelle/${id}`)
     }
 
     let showForm = false;

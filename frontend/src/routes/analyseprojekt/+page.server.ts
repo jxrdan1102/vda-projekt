@@ -43,8 +43,8 @@ export const actions: Actions = {
         let projekt = await res.json();
         console.log("Hierrrr",aufgabeModell);
         if (aufgabeModell == 3) {
-            throw redirect(303, `http://localhost:5173/analyseprojekt/3D-${projekt.id}`);
+            throw redirect(303, `/analyseprojekt/3D-${projekt.id}`);
         }
-        throw redirect(303, `http://localhost:5173/analyseprojekt/${projekt.id}`);
+        throw redirect(303, `/analyseprojekt/${projekt.id}`);
     }
 };

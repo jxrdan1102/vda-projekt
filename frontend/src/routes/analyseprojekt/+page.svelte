@@ -97,8 +97,8 @@
     });
 
     function goToProjekt(id: number, prozess: number) {
-        if (prozess === 3) goto(`http://localhost:5173/analyseprojekt/3D-${id}`)
-        else goto(`http://localhost:5173/analyseprojekt/${id}`)
+        if (prozess === 3) goto(`/analyseprojekt/3D-${id}`)
+        else goto(`/analyseprojekt/${id}`)
     }
 
     let showForm = false;
