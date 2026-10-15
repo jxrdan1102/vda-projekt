@@ -8,7 +8,7 @@ async function refreshToken(): Promise<boolean> {
     if (isRefreshing && refreshPromise) return refreshPromise;
     
     isRefreshing = true;
-    refreshPromise = fetch('http://localhost:9999/auth/refresh_token', {
+    refreshPromise = fetch('/backend/auth/refresh_token', {
         method: 'GET',
         credentials: 'include',
     }).then(res => {
