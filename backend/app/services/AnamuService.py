@@ -21,8 +21,6 @@ async def get_all_anamus(db: AsyncSession, user_id: int, company_id: int | None 
     stmt = select(ANAMU).options(selectinload(ANAMU.modell))
     if company_id is not None:
         stmt = stmt.where(ANAMU.fk_company == company_id)
-    else:
-        stmt = stmt.where(ANAMU.fk_user_id == user_id)
     result = await db.execute(stmt)
     return result.scalars().all()
 
@@ -40,8 +38,6 @@ async def get_anamu_by_id(db: AsyncSession, id: int, user_id: int, company_id: i
     )
     if company_id is not None:
         stmt = stmt.where(ANAMU.fk_company == company_id)
-    else:
-        stmt = stmt.where(ANAMU.fk_user_id == user_id)
     result = await db.execute(stmt)
     anamu = result.scalar_one_or_none()
     if not anamu:
@@ -52,8 +48,6 @@ async def get_anakomp(db: AsyncSession, id: int, user_id: int, company_id: int |
     stmt = select(ANAKOMP).where(ANAKOMP.id == id)
     if company_id is not None:
         stmt = stmt.where(ANAKOMP.fk_company == company_id)
-    else:
-        stmt = stmt.where(ANAKOMP.fk_user_id == user_id)
     result = await db.execute(stmt)
     obj = result.scalar_one_or_none()
     if not obj:
@@ -65,8 +59,6 @@ async def get_anakonst(db: AsyncSession, id: int, user_id: int, company_id: int 
     stmt = select(ANAKONST).where(ANAKONST.id == id)
     if company_id is not None:
         stmt = stmt.where(ANAKONST.fk_company == company_id)
-    else:
-        stmt = stmt.where(ANAKONST.fk_user_id == user_id)
     result = await db.execute(stmt)
     obj = result.scalar_one_or_none()
     if not obj:
@@ -89,8 +81,6 @@ async def update_anamu(db: AsyncSession, id: int, data: dict, user_id: int, comp
     stmt = select(ANAMU).where(ANAMU.id == id)
     if company_id is not None:
         stmt = stmt.where(ANAMU.fk_company == company_id)
-    else:
-        stmt = stmt.where(ANAMU.fk_user_id == user_id)
     result = await db.execute(stmt)
     existing = result.scalar_one_or_none()
     if not existing:
@@ -105,8 +95,6 @@ async def update_anakompr(db: AsyncSession, id: int, data: dict, user_id: int, c
     stmt = select(ANAKOMP).where(ANAKOMP.id == id)
     if company_id is not None:
         stmt = stmt.where(ANAKOMP.fk_company == company_id)
-    else:
-        stmt = stmt.where(ANAKOMP.fk_user_id == user_id)
     result = await db.execute(stmt)
     existing = result.scalar_one_or_none()
     if not existing:
@@ -121,8 +109,6 @@ async def update_anakonstr(db: AsyncSession, id: int, data: dict, user_id: int, 
     stmt = select(ANAKONST).where(ANAKONST.id == id)
     if company_id is not None:
         stmt = stmt.where(ANAKONST.fk_company == company_id)
-    else:
-        stmt = stmt.where(ANAKONST.fk_user_id == user_id)
     result = await db.execute(stmt)
     existing = result.scalar_one_or_none()
     if not existing:
@@ -137,8 +123,6 @@ async def delete_anamu(db: AsyncSession, id: int, user_id: int, company_id: int 
     stmt = select(ANAMU).where(ANAMU.id == id)
     if company_id is not None:
         stmt = stmt.where(ANAMU.fk_company == company_id)
-    else:
-        stmt = stmt.where(ANAMU.fk_user_id == user_id)
     result = await db.execute(stmt)
     anamu = result.scalar_one_or_none()
     if not anamu:
@@ -158,8 +142,6 @@ async def duplicate_anamu(db: AsyncSession, id: int, user_id: int, company_id: i
     )
     if company_id is not None:
         stmt = stmt.where(ANAMU.fk_company == company_id)
-    else:
-        stmt = stmt.where(ANAMU.fk_user_id == user_id)
     result = await db.execute(stmt)
     original = result.scalar_one_or_none()
     if not original:
@@ -176,7 +158,7 @@ async def duplicate_anamu(db: AsyncSession, id: int, user_id: int, company_id: i
         tsk_aufgabe=original.tsk_aufgabe,
         fk_kmg=original.fk_kmg,
         fk_user_id=user_id,
-        fk_company=company_id,
+        fk_company=company_id if company_id is not None else original.fk_company,
     )
     db.add(new_anamu)
     await db.flush()
@@ -195,7 +177,7 @@ async def duplicate_anamu(db: AsyncSession, id: int, user_id: int, company_id: i
             anzahl_messungen=komp.anzahl_messungen,
             messpunkt_anzahl=komp.messpunkt_anzahl,
             fk_user_id=user_id,
-            fk_company=company_id,
+            fk_company=company_id if company_id is not None else original.fk_company,
         )
         db.add(new_komp)
 
@@ -206,7 +188,7 @@ async def duplicate_anamu(db: AsyncSession, id: int, user_id: int, company_id: i
             constval=konst.constval,
             remark=konst.remark,
             fk_user_id=user_id,
-            fk_company=company_id,
+            fk_company=company_id if company_id is not None else original.fk_company,
         )
         db.add(new_konst)
 
@@ -271,8 +253,15 @@ async def calc_uncertainty(db: AsyncSession, id: int, user_id: int, company_id: 
 
 
 def map_component_data(tcomponent, source):
-    for attr in ['terml0', 'terml1', 'wertart', 'freigrad', 'frei_n_1', 'verteilung',
-                 'messpunkt_anzahl', 'anzahl_messungen', 'modltxtid', 'remark']:
-        val = getattr(source, attr, None)
-        if val is not None:
-            tcomponent.setData({attr: val})
+    tcomponent.setData({
+        'KennwertArt': source.wertart,
+        'Freiheitsgrad': source.freigrad,
+        'FreiN_minus_1': source.frei_n_1,
+        'TermL0': source.terml0,
+        'TermL1': source.terml1,
+        'Verteilung': source.verteilung,
+    })
+    if getattr(source, 'messpunkt_anzahl', None) is not None:
+        tcomponent.messpunkt_anzahl = source.messpunkt_anzahl
+    if getattr(source, 'anzahl_messungen', None) is not None:
+        tcomponent.anzahl_messungen = source.anzahl_messungen

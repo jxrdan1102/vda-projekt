@@ -213,6 +213,8 @@ def get_company_id(current_user: User = Depends(get_current_user)) -> int | None
     """Superadmin hat keine company_id → sieht alles."""
     if current_user.role == roles.SUPERADMIN:
         return None
+    if current_user.fk_company is None:
+        raise HTTPException(status_code=403, detail="Kein Firmen-Zugang – bitte einer Firma zuordnen")
     return current_user.fk_company
 
 def require_write(current_user: User = Depends(get_current_user)) -> User:
