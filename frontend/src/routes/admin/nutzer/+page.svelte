@@ -10,11 +10,13 @@
     const assignableRoles = $derived(
         data.isSuperadmin ? ['user', 'readonly', 'admin', 'superadmin'] : ['user', 'readonly']
     );
+    // Superadmin legt nur Developer-Konten oder den ersten Admin einer Firma an
+    const createRoles = $derived(data.isSuperadmin ? ['admin', 'superadmin'] : ['user', 'readonly']);
 
     // Firmenfilter steht in der URL (?firma=ID), damit Links aus der Firmenliste funktionieren
     const companyFilter = $derived(page.url.searchParams.get('firma') ?? '');
     let search = $state('');
-    let newUserRole = $state('user');
+    let newUserRole = $state(data.isSuperadmin ? 'admin' : 'user');
     let passwordFor = $state<number | null>(null);
 
     const users = $derived(
@@ -189,7 +191,7 @@
         </label>
         <label class="flex flex-col">Rolle
             <select name="role" bind:value={newUserRole} class={sel}>
-                {#each assignableRoles as r (r)}
+                {#each createRoles as r (r)}
                     <option value={r}>{ROLE_LABELS[r]}</option>
                 {/each}
             </select>

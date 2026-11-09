@@ -7,6 +7,7 @@ from app.models import KMG
 from app.models.user import User
 from app.routers.auth import get_current_user, get_company_id, require_write
 from app.schemas.kmg import KMGCreate, KMGResponse, KMGUpdate
+from app.services.scope import apply_scope
 
 router = APIRouter(prefix="/kmgs", tags=["KMGs"])
 
@@ -14,11 +15,11 @@ router = APIRouter(prefix="/kmgs", tags=["KMGs"])
 @router.get("", response_model=list[KMGResponse])
 async def get_all_kmgs(
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
     company_id: int | None = Depends(get_company_id)
 ):
     stmt = select(KMG)
-    if company_id is not None:
-        stmt = stmt.where(KMG.fk_company == company_id)
+    stmt = apply_scope(stmt, KMG, company_id, current_user.id)
     result = await db.execute(stmt)
     return result.scalars().all()
 
@@ -27,11 +28,11 @@ async def get_all_kmgs(
 async def get_kmg(
     kmg_id: int,
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
     company_id: int | None = Depends(get_company_id)
 ):
     stmt = select(KMG).where(KMG.id == kmg_id)
-    if company_id is not None:
-        stmt = stmt.where(KMG.fk_company == company_id)
+    stmt = apply_scope(stmt, KMG, company_id, current_user.id)
     result = await db.execute(stmt)
     kmg = result.scalar_one_or_none()
     if not kmg:
@@ -62,8 +63,7 @@ async def update_kmg(
     company_id: int | None = Depends(get_company_id)
 ):
     stmt = select(KMG).where(KMG.id == kmg_id)
-    if company_id is not None:
-        stmt = stmt.where(KMG.fk_company == company_id)
+    stmt = apply_scope(stmt, KMG, company_id, current_user.id)
     result = await db.execute(stmt)
     kmg = result.scalar_one_or_none()
     if not kmg:
@@ -83,8 +83,7 @@ async def delete_kmg(
     company_id: int | None = Depends(get_company_id)
 ):
     stmt = select(KMG).where(KMG.id == kmg_id)
-    if company_id is not None:
-        stmt = stmt.where(KMG.fk_company == company_id)
+    stmt = apply_scope(stmt, KMG, company_id, current_user.id)
     result = await db.execute(stmt)
     kmg = result.scalar_one_or_none()
     if not kmg:

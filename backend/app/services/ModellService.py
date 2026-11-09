@@ -6,6 +6,7 @@ from sqlalchemy.orm import selectinload
 from app.models.components import Component
 from app.models.modell import Modell
 from app.services.BaseCRUD import BaseCRUD
+from app.services.scope import apply_scope
 
 ModellCRUD = BaseCRUD(Modell)
 ComponentCRUD = BaseCRUD(Component)
@@ -24,18 +25,17 @@ async def ensure_modell_writable(db: AsyncSession, modell_id: int) -> None:
         )
 
 
-async def get_all_modells(db: AsyncSession, company_id: int | None):
-    return await ModellCRUD.get_all_by_company(db, company_id)
+async def get_all_modells(db: AsyncSession, company_id: int | None, user_id: int | None = None):
+    return await ModellCRUD.get_all_by_company(db, company_id, user_id)
 
 
-async def get_modell_by_id(db: AsyncSession, id: int, company_id: int | None = None):
+async def get_modell_by_id(db: AsyncSession, id: int, company_id: int | None = None, user_id: int | None = None):
     stmt = (
         select(Modell)
         .where(Modell.id == id)
         .options(selectinload(Modell.components))
     )
-    if company_id is not None:
-        stmt = stmt.where(Modell.fk_company == company_id)
+    stmt = apply_scope(stmt, Modell, company_id, user_id)
     result = await db.execute(stmt)
     return result.scalar_one_or_none()
 
@@ -47,14 +47,14 @@ async def create_modell(db: AsyncSession, data: dict, user_id: int, company_id: 
     return await ModellCRUD.create(db, data)
 
 
-async def update_modell(db: AsyncSession, id: int, data: dict, company_id: int | None = None):
+async def update_modell(db: AsyncSession, id: int, data: dict, company_id: int | None = None, user_id: int | None = None):
     await ensure_modell_writable(db, id)
     data = {k: v for k, v in data.items() if k not in PROTECTED_FIELDS}
-    return await ModellCRUD.update(db, id, data, company_id)
+    return await ModellCRUD.update(db, id, data, company_id, user_id)
 
 
 async def add_component(db: AsyncSession, id: int, data: dict, user_id: int, company_id: int | None):
-    await ModellCRUD.get_by_id(db, id, company_id)
+    await ModellCRUD.get_by_id(db, id, company_id, user_id)
     await ensure_modell_writable(db, id)
     data["fk_user_id"] = user_id
     data["fk_company"] = company_id
@@ -67,11 +67,11 @@ async def add_component(db: AsyncSession, id: int, data: dict, user_id: int, com
     return await ComponentCRUD.create(db, data)
 
 
-async def delete_modell_with_components(db: AsyncSession, id: int, company_id: int | None = None):
-    await ModellCRUD.get_by_id(db, id, company_id)
+async def delete_modell_with_components(db: AsyncSession, id: int, company_id: int | None = None, user_id: int | None = None):
+    await ModellCRUD.get_by_id(db, id, company_id, user_id)
     await ensure_modell_writable(db, id)
     await db.execute(delete(Component).where(Component.fk_modell == id))
-    return await ModellCRUD.delete(db, id, company_id)
+    return await ModellCRUD.delete(db, id, company_id, user_id)
 
 
 def clone_instance(instance, exclude: set[str] = None) -> dict:
@@ -89,8 +89,7 @@ async def duplicate_modell(db: AsyncSession, id: int, user_id: int, company_id: 
         .where(Modell.id == id)
         .options(selectinload(Modell.components))
     )
-    if company_id is not None:
-        stmt = stmt.where(Modell.fk_company == company_id)
+    stmt = apply_scope(stmt, Modell, company_id, user_id)
     result = await db.execute(stmt)
     original = result.scalar_one_or_none()
 
@@ -101,6 +100,7 @@ async def duplicate_modell(db: AsyncSession, id: int, user_id: int, company_id: 
     base_data["name"] = new_name
     base_data["fk_user_id"] = user_id
     base_data["fk_company"] = company_id
+    base_data["is_builtin"] = False  # eine Kopie ist immer bearbeitbar
 
     new_modell = Modell(**base_data)
     db.add(new_modell)

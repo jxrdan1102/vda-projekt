@@ -143,6 +143,13 @@ async def _ensure_not_last_superadmin(db: AsyncSession, target: User) -> None:
         raise HTTPException(status_code=400, detail="Der letzte aktive Superadmin kann nicht entfernt werden")
 
 
+async def _ensure_company_has_no_users(db: AsyncSession, company_id: int) -> None:
+    """Der Superadmin legt pro Firma nur den ersten Nutzer (Firmen-Admin) an, den Rest der Firmen-Admin."""
+    count = (await db.execute(select(func.count(User.id)).where(User.fk_company == company_id))).scalar_one()
+    if count:
+        raise HTTPException(status_code=409, detail="Diese Firma hat bereits Nutzer – weitere Nutzer legt der Firmen-Admin an")
+
+
 async def _resolve_company_for_new_user(db: AsyncSession, actor: User, role: str, fk_company: int | None) -> int | None:
     if role not in roles.assignable_roles(actor.role):
         raise HTTPException(status_code=403, detail=f"Rolle '{role}' darf nicht vergeben werden")
@@ -158,6 +165,9 @@ async def _resolve_company_for_new_user(db: AsyncSession, actor: User, role: str
     if fk_company is None:
         raise HTTPException(status_code=400, detail="Bitte eine Firma angeben")
     await _get_company_or_404(db, fk_company)
+    await _ensure_company_has_no_users(db, fk_company)
+    if role != roles.ADMIN:
+        raise HTTPException(status_code=400, detail="Der erste Nutzer einer Firma muss ein Firmen-Admin sein")
     return fk_company
 
 
@@ -238,6 +248,7 @@ async def delete_company(company_id: int, db: AsyncSession = Depends(get_db)):
 @router.post("/companies/{company_id}/admin", response_model=UserOut, dependencies=[Depends(require_superadmin)])
 async def create_company_admin(company_id: int, data: UserCreate, db: AsyncSession = Depends(get_db)):
     company = await _get_company_or_404(db, company_id)
+    await _ensure_company_has_no_users(db, company.id)
     _check_password(data.password)
     await _check_username_free(db, data.username)
 

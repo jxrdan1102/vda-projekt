@@ -293,13 +293,15 @@ async def generate_report(id: int, db: AsyncSession = Depends(get_db), current_u
             selectinload(ANAMU.anakonst)
         )
         .where(ANAMU.id == id)
+        .where(ANAMU.fk_company == company_id if company_id is not None else ANAMU.fk_user_id == current_user.id)
     )
     projekt = result.scalar_one_or_none()
     if not projekt:
         raise HTTPException(status_code=404, detail="Analyseprojekt nicht gefunden")
 
     # ── Zentrales TMU_Modell EINMAL bauen ──
-    modell_db = await get_modell_by_id(db, projekt.fk_modell, company_id)
+    # Zugriff auf das Projekt ist geprüft – dessen Modell darf immer geladen werden
+    modell_db = await get_modell_by_id(db, projekt.fk_modell)
     tschema = TMU_ModellSchema.model_validate(modell_db)
     tmodell = TMU_Modell(tschema)
 

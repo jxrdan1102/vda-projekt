@@ -27,18 +27,20 @@ def _not_found():
 @router.get("/r", response_model=list[ModellGetAllR])
 async def get_modellsr(
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
     company_id: int | None = Depends(get_company_id)
 ):
-    return await ModellService.get_all_modells(db, company_id)
+    return await ModellService.get_all_modells(db, company_id, current_user.id)
 
 
 @router.get("/{id}/r", response_model=ModellGetIdR)
 async def get_modell_by_idr(
     id: int,
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
     company_id: int | None = Depends(get_company_id)
 ):
-    return await ModellService.get_modell_by_id(db, id, company_id)
+    return await ModellService.get_modell_by_id(db, id, company_id, current_user.id) or _not_found()
 
 
 @router.post("/r")
@@ -60,7 +62,7 @@ async def update_modellr(
     current_user: User = Depends(require_write),
     company_id: int | None = Depends(get_company_id)
 ):
-    await ModellService.get_modell_by_id(db, id, company_id) or _not_found()
+    await ModellService.get_modell_by_id(db, id, company_id, current_user.id) or _not_found()
     await ModellService.ensure_modell_writable(db, id)
     print(modell.model_dump(exclude_unset=True))
     usage_count = await db.scalar(
@@ -78,7 +80,7 @@ async def update_modellr(
                 }
             }
         )
-    await ModellService.update_modell(db, id, modell.model_dump(exclude_unset=True), company_id)
+    await ModellService.update_modell(db, id, modell.model_dump(exclude_unset=True), company_id, current_user.id)
     if modell.aufgabe_modell == 3:
         stmt = delete(Component).where(Component.fk_modell == id)
         await db.execute(stmt)
@@ -97,13 +99,12 @@ async def copy_modell(
     current_user: User = Depends(require_write),
     company_id: int | None = Depends(get_company_id)
 ):
-    original = await db.get(Modell, id)
-    if not original:
-        raise HTTPException(status_code=404, detail="Modell nicht gefunden")
+    original = await ModellService.get_modell_by_id(db, id, company_id, current_user.id) or _not_found()
     data = {c.name: getattr(original, c.name) for c in Modell.__table__.columns if c.name != "id"}
     data["name"] = f"{original.name} (Kopie)"
     data["fk_user_id"] = current_user.id
     data["fk_company"] = company_id
+    data["is_builtin"] = False  # eine Kopie ist immer bearbeitbar
     new_modell = Modell(**data)
     db.add(new_modell)
     await db.flush()
@@ -140,7 +141,7 @@ async def delete_modell_by_id(
     current_user: User = Depends(require_write),
     company_id: int | None = Depends(get_company_id)
 ):
-    await ModellService.delete_modell_with_components(db, id, company_id)
+    await ModellService.delete_modell_with_components(db, id, company_id, current_user.id)
     print("testiei")
     return {"detail": f"Modell mit ID {id} wurde gelöscht"}
 

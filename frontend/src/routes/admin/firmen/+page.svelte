@@ -65,7 +65,7 @@
                     </td>
                     <td class="px-4 py-2">
                         <div class="flex justify-end gap-2">
-                            <a href="/admin/nutzer?firma={c.id}#neu" class="{btn} bg-gray-200 hover:bg-gray-300">+ Nutzer</a>
+                            <a href="/admin/nutzer?firma={c.id}#neu" class="{btn} bg-gray-200 hover:bg-gray-300">+ Admin</a>
                             <button class="{btn} bg-gray-200 hover:bg-gray-300" onclick={() => (editing = c.id)}>Umbenennen</button>
                             <form method="POST" action="?/update" use:enhance>
                                 <input type="hidden" name="id" value={c.id} />

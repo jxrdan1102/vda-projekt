@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.database import get_db
 from app.models.user import User
-from app.routers.auth import get_company_id, require_write
+from app.routers.auth import get_company_id, get_current_user, require_write
 from app.schemas.component import ComponentBack, ComponentGet, ComponentRefUpdate
 from app.services import ComponentService
 from app.services.component_service.component_factory import ComponentFactory
@@ -24,9 +24,10 @@ def get_components():
 async def get_component_db(
     id: int,
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
     company_id: int | None = Depends(get_company_id),
 ):
-    return await ComponentService.get_component_by_id(db, id, company_id)
+    return await ComponentService.get_component_by_id(db, id, company_id, current_user.id)
 
 
 @router.post("/{id}")
@@ -38,7 +39,7 @@ async def update_comp(
     company_id: int | None = Depends(get_company_id),
 ):
     update_data = comp_update.model_dump(exclude_unset=True)
-    return await ComponentService.update_component(db, id, update_data, company_id)
+    return await ComponentService.update_component(db, id, update_data, company_id, current_user.id)
 
 @router.delete("/{id}")
 async def delete_comp(
@@ -47,4 +48,4 @@ async def delete_comp(
     current_user: User = Depends(require_write),
     company_id: int | None = Depends(get_company_id),
 ):
-    return await ComponentService.delete_component(db, id, company_id)
+    return await ComponentService.delete_component(db, id, company_id, current_user.id)
