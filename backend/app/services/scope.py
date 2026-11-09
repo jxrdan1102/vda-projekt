@@ -1,8 +1,8 @@
 """Wer sieht welche Daten?
 
 - Firmen-Nutzer (company_id gesetzt): alle Daten seiner Firma.
-- Superadmin (company_id None): nur seine eigenen Daten (fk_user_id),
-  dazu die eingebauten Modelle samt Komponenten – die braucht jeder.
+- Superadmin (company_id None): nur seine eigenen Daten (fk_user_id).
+- Eingebaute Modelle samt Komponenten sieht jeder (nur lesen/kopieren).
 """
 from sqlalchemy import or_, select
 
@@ -13,10 +13,11 @@ from app.models.modell import Modell
 def scope_filter(model, company_id: int | None, user_id: int | None):
     """Bedingung für .where(), oder None wenn nicht gefiltert wird."""
     if company_id is not None:
-        return model.fk_company == company_id
-    if user_id is None:
+        cond = model.fk_company == company_id
+    elif user_id is not None:
+        cond = model.fk_user_id == user_id
+    else:
         return None
-    cond = model.fk_user_id == user_id
     if model is Modell:
         cond = or_(cond, Modell.is_builtin.is_(True))
     elif model is Component:
