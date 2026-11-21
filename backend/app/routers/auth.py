@@ -11,7 +11,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Cookie
 from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 from starlette import status
 from starlette.responses import JSONResponse
@@ -60,6 +60,10 @@ SECRET_KEY = 'soll noch in EdDSA gemacht werden'
 ALGORITHM = 'EdDSA'
 MAX_LOGIN_ATTEMPTS = 5  # Maximale Anmeldeversuche
 LOCKOUT_TIME = timedelta(minutes=15)  # Sperrzeit bei zu vielen Fehlversuchen
+ACCESS_TOKEN_LIFETIME = timedelta(minutes=30)
+# Ein benutzter Refresh-Token bleibt noch kurz gültig: Eine Seite schickt oft mehrere
+# Anfragen gleichzeitig, und jede davon will den abgelaufenen Access-Token erneuern.
+REFRESH_TOKEN_GRACE = timedelta(seconds=60)
 
 bcrypt_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 oauth2_bearer = OAuth2PasswordBearer(tokenUrl="/auth/token")
@@ -77,7 +81,8 @@ class LoginRequest(BaseModel):
     password: str
 
 
-def _set_auth_cookies(response: JSONResponse, access_token: str, refresh_token: str, access_max_age: int) -> None:
+def _set_auth_cookies(response: JSONResponse, access_token: str, refresh_token: str) -> None:
+    access_max_age = int(ACCESS_TOKEN_LIFETIME.total_seconds())
     # ⛔ secure=False nur für die lokale Entwicklung, im Livebetrieb auf True stellen!
     response.set_cookie(key="access_token", value=access_token, httponly=True, secure=False,
                         samesite="Lax", max_age=access_max_age, path="/")
@@ -95,7 +100,10 @@ async def _company_is_active(user: User, db) -> bool:
 
 async def _issue_refresh_token(user: User, db) -> str:
     refresh_token = secrets.token_urlsafe(64)
-    expires_at = datetime.utcnow() + timedelta(days=7)
+    now = datetime.utcnow()
+    expires_at = now + timedelta(days=7)
+    # abgelaufene Tokens dieses Nutzers aufräumen
+    await db.execute(delete(RefreshToken).where(RefreshToken.user_id == user.id, RefreshToken.expires_at < now))
     db.add(RefreshToken(user_id=user.id, token=refresh_token, expires_at=expires_at))
     await db.commit()
     return refresh_token
@@ -135,11 +143,11 @@ async def login_for_access_token(login_request: LoginRequest,
         login_attempt.attempts = 0
         await db.commit()
 
-    token = create_access_token(user, timedelta(minutes=1))
+    token = create_access_token(user, ACCESS_TOKEN_LIFETIME)
     refresh_token = await _issue_refresh_token(user, db)
 
     response = JSONResponse(content={"message": "Login successful"})
-    _set_auth_cookies(response, token, refresh_token, access_max_age=3600)
+    _set_auth_cookies(response, token, refresh_token)
     return response
 
 
@@ -259,18 +267,22 @@ async def refresh_token(
     user = await db.execute(select(User).where(User.id == token_entry.user_id))
     user = user.scalars().first()
 
-    # Alten Refresh-Token immer verwerfen
-    await db.delete(token_entry)
-    await db.commit()
-
     if user is None or not user.is_active or not await _company_is_active(user, db):
+        await db.delete(token_entry)
+        await db.commit()
         raise HTTPException(status_code=401, detail="User deaktiviert")
 
+    # Alten Refresh-Token nicht sofort löschen, sondern nur noch kurz gelten lassen,
+    # damit gleichzeitige Anfragen derselben Seite nicht ausgeloggt werden.
+    grace_until = datetime.utcnow() + REFRESH_TOKEN_GRACE
+    if token_entry.expires_at > grace_until:
+        token_entry.expires_at = grace_until
+
     new_refresh_token = await _issue_refresh_token(user, db)
-    new_access_token = create_access_token(user, timedelta(minutes=1))
+    new_access_token = create_access_token(user, ACCESS_TOKEN_LIFETIME)
 
     response = JSONResponse(content={"message": "Token refreshed"})
-    _set_auth_cookies(response, new_access_token, new_refresh_token, access_max_age=60)
+    _set_auth_cookies(response, new_access_token, new_refresh_token)
     return response
 
 
