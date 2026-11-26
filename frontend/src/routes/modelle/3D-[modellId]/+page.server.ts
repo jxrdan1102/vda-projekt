@@ -16,7 +16,6 @@ export const load: PageServerLoad = async ({ params, fetch, setHeaders }) => {
     });
     if (!response.ok) error(response.status === 404 ? 404 : response.status, 'Modell nicht gefunden');
     const responseBody = await response.json();
-    console.log(responseBody);
     return {
         title: 'Messgerät:',
         modell: responseBody,
@@ -69,10 +68,8 @@ export const actions: Actions = {
 
         const aufgabe_modell = parseOptionalInt('aufgabe_modell');
         if (aufgabe_modell !== undefined) payload.aufgabe_modell = aufgabe_modell;
-console.log("aufgabe_modell:: ", aufgabe_modell);
         const aufgabe = parseOptionalInt('aufgabe');
         if (aufgabe !== undefined) payload.aufgabe = aufgabe;
-        console.log("aufgabe", aufgabe);
 
         const bezug1 = parseOptionalString('Bezug1');
         if (bezug1 !== undefined) payload.Bezug1 = bezug1;
@@ -97,7 +94,6 @@ console.log("aufgabe_modell:: ", aufgabe_modell);
 
         const formeldesc = parseOptionalString('formeldesc');
         if (formeldesc !== undefined) payload.formeldesc = formeldesc;
-        console.log("Taster 1: ",parseOptionalInt("taster"));
         const optionalIntFields = [
             'taster', 'merkmal', 'element',
             'punktmusterB1', 'tasterschaft1', 'tasterschaft2', 'artdesmasses',
@@ -115,7 +111,6 @@ console.log("aufgabe_modell:: ", aufgabe_modell);
         const actionType = formData.get('action');
 
 
-        console.log("Senden",payload);
         // Update an Backend senden
         const res = await fetch(`http://localhost:9999/modells/${modellId}/r`, {
             method: 'POST',

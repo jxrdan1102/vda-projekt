@@ -10,7 +10,6 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
     });
     if (!response.ok) error(response.status === 404 ? 404 : response.status, 'Analyseprojekt nicht gefunden');
     const responseBody = await response.json();
-    console.log(responseBody);
     return {
         title: 'Analyseprojekt:',
         analyseprojekt: responseBody
@@ -61,7 +60,6 @@ export const actions: Actions = {
         const tolfaktor = parseCheckbox(formData, 'tolfaktor');
         if (tolfaktor !== undefined) payload.tolfaktor = tolfaktor;
 
-        console.log(payload);
         // Update an Backend senden
         const res = await fetch(`http://localhost:9999/anamu/${analyseprojektId}/r`, {
             method: 'POST',
@@ -76,7 +74,6 @@ export const actions: Actions = {
             });
         }
         const result = await res.json();
-        console.log(result);
         return {
             success: true,
             message: result.detail
@@ -95,7 +92,6 @@ export const actions: Actions = {
         if (!res.ok) {
             return fail(500, { error: 'Berechnung fehlgeschlagen.' });
         }
-        console.log(result);
         return { unsicherheit: result};
     }
 };

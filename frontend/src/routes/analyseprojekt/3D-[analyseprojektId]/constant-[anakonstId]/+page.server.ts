@@ -9,7 +9,6 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
         throw new Error(`Fehler beim Laden der Komponente mit ID ${anakonstId}`);
     }
     const constant = await res.json();
-    console.log(constant)
     return { constant };
 };
 
@@ -34,7 +33,6 @@ export const actions: Actions = {
         const payload: Record<string, any> = {};
 
         payload.constval = parseOptionalFloat('constval');
-        console.log(payload);
         const res = await fetch(`http://localhost:9999/anamu/anakonst/${anakonstId}/r`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

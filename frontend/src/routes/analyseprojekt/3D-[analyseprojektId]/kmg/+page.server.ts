@@ -8,7 +8,6 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
         throw new Error(`Fehler beim Laden des KMGs`);
     }
     const kmg = await res.json();
-    console.log(kmg)
     return { kmg };
 };
 
@@ -44,7 +43,6 @@ export const actions: Actions = {
         payload.kmg_alpham = parseOptionalFloat('kmg_alpham');
         payload.kmg_mpeml = parseOptionalFloat('kmg_mpeml');
 
-        console.log("Formular-Daten", payload);  // Überprüfe die extrahierten Daten
 
 // Rest des Codes bleibt gleich...
 

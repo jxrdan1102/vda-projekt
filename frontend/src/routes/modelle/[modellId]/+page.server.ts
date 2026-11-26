@@ -14,7 +14,6 @@ export const load: PageServerLoad = async ({ params, fetch, setHeaders }) => {
     });
     if (!response.ok) error(response.status === 404 ? 404 : response.status, 'Modell nicht gefunden');
     const responseBody = await response.json();
-    console.log(responseBody);
     return {
         title: 'Messgerät:',
         modell: responseBody,
@@ -25,7 +24,6 @@ export const load: PageServerLoad = async ({ params, fetch, setHeaders }) => {
 
 export const actions: Actions = {
     default: async ({ params, request, fetch }) => {
-                console.log('ACTION WURDE AUFGERUFEN'); // ← ganz oben
         const { modellId } = params;
         const formData = await request.formData();
 
@@ -93,7 +91,6 @@ export const actions: Actions = {
 
 if (!res.ok) {
     const err = await res.json();
-    console.log('Backend error raw:', JSON.stringify(err)); // ← temporär
     
     const detail = err.detail;
     

@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { onSaveShortcut } from '$lib/shortcuts';
     import { askConfirm } from '$lib/notify';
     import {goto, preloadData, pushState} from "$app/navigation";
     import {page} from '$app/stores';
@@ -278,7 +279,6 @@ async function createCopy() {
 
         const href = `/modelle/3D-${modellId}/component-${compId}`;
         const result = await preloadData(href);
-    console.log('preload result:', result.data); // texts drin?
         if (result.type === 'loaded' && result.status === 200) {
             pushState(href, { componentInfo: result.data });
         } else {
@@ -483,7 +483,6 @@ function showToast(message: string, type: 'success' | 'error' = 'success') {
             taster1,
             taster2
         };
-        console.log("OnChange funktioniert", payload);
         const res = await fetch(`/backend/modells/${modellId}/alterModell`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -493,11 +492,8 @@ function showToast(message: string, type: 'success' | 'error' = 'success') {
 
         data.modell.components = await res.json()
         // wenn die Response JSON ist
-        console.log('Response Body:', data);
         if (!res.ok) {
             console.error('Fehler beim Speichern', await res.text());
-        } else {
-            console.log('Modell gespeichert', payload);
         }
     }
 let showSaveMenu = false;
@@ -614,7 +610,11 @@ async function handleSubmit(actionValue: string) {
     formEl.submit();
 }
 </script>
-<svelte:window on:click={(e) => {
+<svelte:window
+    on:keydown={(e) => onSaveShortcut(e, () => {
+    if ($page.data.user?.role !== 'readonly' && !data.modell.is_builtin && !isSaving) handleSubmit('save');
+})}
+    on:click={(e) => {
     if (showSaveMenu && !(e.target as HTMLElement).closest('.relative')) {
         showSaveMenu = false;
     }
@@ -656,7 +656,7 @@ async function handleSubmit(actionValue: string) {
 
 <h1 class="text-base font-semibold border-b pb-2">{prozesstitel}: {prozessMapping[data.modell.aufgabe]}
     <div data-write class="float-right flex">
-        <button type="submit" name="action" value="save" disabled={data.modell.is_builtin}
+        <button type="submit" name="action" value="save" title="Speichern (Strg+S)" disabled={data.modell.is_builtin}
             on:click={() => handleSubmit('save')} class="disabled:opacity-40 disabled:cursor-not-allowed bg-gray-600 text-white text-sm px-3 py-1 rounded-l hover:bg-gray-700">
             Speichern
         </button>

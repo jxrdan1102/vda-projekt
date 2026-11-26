@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { onSaveShortcut } from '$lib/shortcuts';
     import { askConfirm } from '$lib/notify';
     import {goto,invalidate, preloadData, pushState} from "$app/navigation";
     import {page} from '$app/stores';
@@ -294,7 +295,11 @@ beforeNavigate(({ cancel, to }) => {
 
 
 </script>
-<svelte:window on:click={(e) => {
+<svelte:window
+    on:keydown={(e) => onSaveShortcut(e, () => {
+    if ($page.data.user?.role !== 'readonly' && !data.modell.is_builtin && !isSaving) handleSubmit('save');
+})}
+    on:click={(e) => {
     if (showSaveMenu && !(e.target as HTMLElement).closest('.relative')) {
         showSaveMenu = false;
     }
@@ -305,7 +310,7 @@ beforeNavigate(({ cancel, to }) => {
 
 <h1 class="text-base font-semibold border-b pb-2">{prozesstitel}
     <div data-write class="float-right flex">
-        <button type="submit" name="action" value="save"
+        <button type="submit" name="action" value="save" title="Speichern (Strg+S)"
         disabled={data.modell.is_builtin}
             on:click={() => handleSubmit('save')} class="disabled:opacity-40 disabled:cursor-not-allowed bg-gray-600 text-white text-sm px-3 py-1 rounded-l hover:bg-gray-700">
             Speichern

@@ -48,7 +48,6 @@ export const actions: Actions = {
         payload.messpunkt_anzahl = parseOptionalInt('messpunkt_anzahl');
         payload.kflags = parseOptionalInt('kflags');
         payload.modltxtid = parseOptionalInt('modltxtid')
-        console.log("Honig",payload);
 
         const res = await fetch(`http://localhost:9999/modells/${modellId}/addComponent`, {
             method: 'POST',

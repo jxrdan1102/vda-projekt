@@ -2,7 +2,6 @@
 import {json} from '@sveltejs/kit';
 
 export const GET = async ({ fetch, cookies }) => {
-    console.log("API angekommen");
     const res = await fetch('http://localhost:9999/modells/r', {
         credentials: 'include',
         headers: {

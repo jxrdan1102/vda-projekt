@@ -13,7 +13,8 @@ engine = create_async_engine(
     DATABASE_URL,
     pool_pre_ping=True,
     pool_recycle=3600,
-    echo=True,
+    # SQL-Ausgabe im Log nur zur Fehlersuche: Umgebungsvariable SQL_ECHO=1 setzen
+    echo=os.getenv("SQL_ECHO") == "1",
 )
 
 SessionLocal = sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)

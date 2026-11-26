@@ -10,7 +10,6 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
     }
 
     const component = await res.json();
-    console.log(component);
     return { component };
 };
 
@@ -44,7 +43,6 @@ export const actions: Actions = {
         if (!berechnen) {
             payload.terml0 = 0;
         }
-        console.log(payload);
         const res = await fetch(`http://localhost:9999/anamu/anakomp/${anakompId}/r`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

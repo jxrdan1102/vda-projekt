@@ -39,7 +39,6 @@
         fk_kmg = id;
         selectedKMG = kmg.find(k => k.id === id) ?? null;
         await invalidate(`/api/analyseprojekt/${analyseprojektId}`);
-        console.log("Jule")
         window.location.href = `/analyseprojekt/3D-${analyseprojektId}`;
 
     }
@@ -76,7 +75,7 @@
     <div class="w-1/3 border-r bg-gray-50 p-4 overflow-y-auto space-y-2">
         <div class="flex justify-between items-center mb-4">
             <h2 class="text-lg font-semibold text-gray-800">KMGs</h2>
-            <button data-write on:click={startNewKMG} class="bg-indigo-600 text-white text-xs px-3 py-1.5 rounded-md shadow-sm hover:bg-indigo-500 transition">+ Neu</button>
+            <button data-write on:click={startNewKMG} class="bg-[#1f3b5e] text-white text-xs px-3 py-1.5 rounded-md shadow-sm hover:bg-[#2a4d7a] transition">+ Neu</button>
         </div>
         {#each kmg as item (item.id)}
             <div class:currentlySelected={item.id === fk_kmg} class="relative border rounded-lg p-3 bg-white hover:bg-gray-50 cursor-pointer transition shadow-sm" class:selected={selectedKMG?.id === item.id}>
@@ -91,7 +90,7 @@
                 </svg>
 
                 <div class="mt-2 flex justify-end gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" on:click={() => handleAuswaehlen(item.id)} stroke-width="1.5" stroke="currentColor" class="absolute bottom-2 right-2 size-4 hover:text-green-500">
+                    <svg data-write xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" on:click={() => handleAuswaehlen(item.id)} stroke-width="1.5" stroke="currentColor" class="absolute bottom-2 right-2 size-4 hover:text-green-500">
                         <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                     </svg>
                 </div>
@@ -114,61 +113,63 @@
                 {#if isCreatingNew}
                     <div class="flex flex-col gap-1">
                         <label class="text-sm text-gray-600">KMG Ident</label>
-                        <input type="text" bind:value={kmg_ident} name="kmg_ident" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" required />
+                        <input type="text" bind:value={kmg_ident} name="kmg_ident" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1f3b5e]/40 focus:border-[#1f3b5e]" required />
                     </div>
                 {/if}
 
                 <div class="col-span-2 flex flex-col gap-1">
                     <label class="text-sm text-gray-600">Bezeichnung</label>
-                    <input type="text" bind:value={kmg_bez} name="kmg_bez" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                    <input type="text" bind:value={kmg_bez} name="kmg_bez" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1f3b5e]/40 focus:border-[#1f3b5e]" />
                 </div>
 
                 <div class="flex flex-col gap-1">
                     <label class="text-sm text-gray-600">A [µm]</label>
-                    <input type="number" bind:value={kmg_a} name="kmg_a" step="any" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                    <input type="number" bind:value={kmg_a} name="kmg_a" step="any" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1f3b5e]/40 focus:border-[#1f3b5e]" />
                 </div>
 
                 <div class="flex flex-col gap-1">
                     <label class="text-sm text-gray-600">K [µm/m]</label>
-                    <input type="number" bind:value={kmg_k} name="kmg_k" step="any" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                    <input type="number" bind:value={kmg_k} name="kmg_k" step="any" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1f3b5e]/40 focus:border-[#1f3b5e]" />
                 </div>
 
                 <div class="flex flex-col gap-1">
                     <label class="text-sm text-gray-600">LT [mm]</label>
-                    <input type="number" bind:value={kmg_lt} name="kmg_lt" step="any" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                    <input type="number" bind:value={kmg_lt} name="kmg_lt" step="any" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1f3b5e]/40 focus:border-[#1f3b5e]" />
                 </div>
 
                 <div class="flex flex-col gap-1">
                     <label class="text-sm text-gray-600">U(C) [µm]</label>
-                    <input type="number" bind:value={kmg_uc} name="kmg_uc" step="any" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                    <input type="number" bind:value={kmg_uc} name="kmg_uc" step="any" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1f3b5e]/40 focus:border-[#1f3b5e]" />
                 </div>
 
                 <div class="flex flex-col gap-1">
                     <label class="text-sm text-gray-600">Alpha M [10⁻⁶/K]</label>
-                    <input type="number" bind:value={kmg_alpham} name="kmg_alpham" step="any" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                    <input type="number" bind:value={kmg_alpham} name="kmg_alpham" step="any" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1f3b5e]/40 focus:border-[#1f3b5e]" />
                 </div>
 
                 <div class="flex flex-col gap-1">
                     <label class="text-sm text-gray-600">MPE(ML) [µm]</label>
-                    <input type="number" bind:value={kmg_mpeml} name="kmg_mpeml" step="any" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                    <input type="number" bind:value={kmg_mpeml} name="kmg_mpeml" step="any" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1f3b5e]/40 focus:border-[#1f3b5e]" />
                 </div>
             </div>
 
             <div class="flex justify-end pt-4">
-                <button data-write type="submit" class="bg-indigo-600 text-white px-5 py-2 rounded-md text-sm font-medium hover:bg-indigo-500 transition">Speichern</button>
+                <button data-write type="submit" class="bg-[#1f3b5e] text-white px-5 py-2 rounded-md text-sm font-medium hover:bg-[#2a4d7a] transition">Speichern</button>
             </div>
         </form>
     </div>
 </div>
 
 <style>
+    /* gerade angeklickt (wird rechts bearbeitet) */
     .selected {
-        background-color: #eef2ff;
-        border-color: #6366f1;
+        background-color: #eef2f7;
+        border-color: #2a4d7a;
     }
 
+    /* dem Analyseprojekt zugeordnetes KMG (Firmenblau) */
     .currentlySelected {
-        background-color: #c3d0ff;  /* kräftigeres Blau */
-        border-color: #4f57e0;      /* etwas dunkleres kräftiges Blau */
+        background-color: #d5deea;
+        border-color: #1f3b5e;
     }
 </style>

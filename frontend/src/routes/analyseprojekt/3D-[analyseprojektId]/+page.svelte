@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { onSaveShortcut } from '$lib/shortcuts';
     // ─────────────────────────────────────────────
     // Imports
     // ─────────────────────────────────────────────
@@ -144,6 +145,10 @@ async function handleSubmit(actionValue: string) {
     formEl.submit();
 }
 </script>
+<!-- Strg+S = Speichern -->
+<svelte:window on:keydown={(e) => onSaveShortcut(e, () => {
+    if ($page.data.user?.role !== 'readonly' && !isSaving) handleSubmit('speichern');
+})} />
 <section class="space-y-4 text-sm font-sans text-gray-800 m-auto pt-5">
     <form method="POST" action="?/speichern">
         <AnalyseprojektHeader
@@ -165,7 +170,7 @@ async function handleSubmit(actionValue: string) {
                     Berechnen
                 </button>
                 <button
- data-write                    type="button" on:click={() => handleSubmit('speichern')}
+ data-write                    type="button" title="Speichern (Strg+S)" on:click={() => handleSubmit('speichern')}
                     class="bg-gray-600 mr-2 text-white text-sm px-3 py-1 rounded hover:bg-gray-700 float-right"
                 >
                     Speichern

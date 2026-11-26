@@ -47,7 +47,6 @@ export const actions: Actions = {
 
         payload.fk_modell = parseOptionalInt('fk_modell');
 
-        console.log(payload);
         // Update an Backend senden
         const res = await fetch(`http://localhost:9999/anamu/${analyseprojektId}/r`, {
             method: 'POST',
@@ -62,7 +61,6 @@ export const actions: Actions = {
             });
         }
         const result = await res.json();
-        console.log(result);
         return {
             success: true,
             message: result.detail
@@ -81,7 +79,6 @@ export const actions: Actions = {
         if (!res.ok) {
             return fail(500, { error: 'Berechnung fehlgeschlagen.' });
         }
-        console.log(result);
         return { unsicherheit: result};
     }
 };

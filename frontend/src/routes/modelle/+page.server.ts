@@ -7,7 +7,6 @@ export const load: PageServerLoad = async ({ fetch }) => {
         credentials: 'include'  // ← WICHTIG
     });
     const responseBody = await response.json();
-    console.log(responseBody);
     return {
         title: 'Modelle',
         modelle: responseBody

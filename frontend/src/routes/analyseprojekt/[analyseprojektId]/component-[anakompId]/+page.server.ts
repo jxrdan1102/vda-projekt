@@ -10,7 +10,6 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
     }
 
     const component = await res.json();
-    console.log(component);
     return { component };
 };
 
@@ -41,7 +40,6 @@ export const actions: Actions = {
         payload.frei_n_1 = parseOptionalInt('frei_n_1');
         payload.verteilung = parseOptionalInt('verteilung');
         payload.remark = formData.get('remark')?.toString();
-        console.log(payload);
         const res = await fetch(`http://localhost:9999/anamu/anakomp/${anakompId}/r`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

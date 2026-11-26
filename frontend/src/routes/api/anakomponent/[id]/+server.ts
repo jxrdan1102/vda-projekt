@@ -6,7 +6,6 @@ export const POST: RequestHandler = async ({ request, params, cookies, locals })
 
     // Beispiel: Session/Token aus hooks.server.ts via locals oder Cookies holen
     const token = cookies.get('access_token'); // oder locals.userToken o.ä.
-    console.log('Token:', token);
     const cookieHeader = cookies.get('access_token') ? `access_token=${cookies.get('access_token')}` : '';
     const response = await fetch(`http://localhost:9999/anamu/anakomp/${id}/r`, {
         method: 'POST',

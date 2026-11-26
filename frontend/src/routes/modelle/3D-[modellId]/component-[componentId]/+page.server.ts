@@ -52,7 +52,6 @@ export const actions: Actions = {
         payload.kflags = parseOptionalInt('kflags');
         payload.modltxtid = formData.get('modltxtid')?.toString();
 
-        console.log("payload",payload)
         const res = await fetch(`http://localhost:9999/components/${componentId}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

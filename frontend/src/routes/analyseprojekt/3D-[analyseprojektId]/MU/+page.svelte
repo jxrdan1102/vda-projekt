@@ -31,7 +31,7 @@
                     {
                         label: "Unsicherheitsbeitrag",
                         data: komponenten.map(([_, ub]) => ub ?? 0),
-                        backgroundColor: "#6366F1", // Indigo-500
+                        backgroundColor: "#1f3b5e", // Firmenblau
                         borderRadius: 4,
                         barThickness: 24
                     }
@@ -84,18 +84,18 @@
     <ReportButton analyseprojektId={page.params.analyseprojektId} />
 </div>
 
-<div class="bg-indigo-50 rounded-lg p-5 border border-indigo-200 shadow-sm mt-6 text-gray-800 text-sm font-medium max-w-2xl mx-auto">
+<div class="bg-[#eef2f7] rounded-lg p-5 border border-[#c9d4e2] shadow-sm mt-6 text-gray-800 text-sm font-medium max-w-2xl mx-auto">
     <div class="flex flex-col sm:flex-row sm:space-x-8 space-y-3 sm:space-y-0">
         <div class="flex flex-col">
-            <span class="text-indigo-700 font-semibold mb-1">Projektname</span>
-            <span class="text-indigo-900 truncate">{analyseprojekt.name}</span>
+            <span class="text-[#1f3b5e] font-semibold mb-1">Projektname</span>
+            <span class="text-gray-900 truncate">{analyseprojekt.name}</span>
         </div>
-        <div class="flex flex-col border-t border-indigo-200 pt-3 sm:pt-0 sm:border-t-0 sm:border-l sm:pl-8">
-            <span class="text-indigo-700 font-semibold mb-1">Änderungsstand</span>
+        <div class="flex flex-col border-t border-[#c9d4e2] pt-3 sm:pt-0 sm:border-t-0 sm:border-l sm:pl-8">
+            <span class="text-[#1f3b5e] font-semibold mb-1">Änderungsstand</span>
             <span>{analyseprojekt.aenderungszustand}</span>
         </div>
-        <div class="flex flex-col border-t border-indigo-200 pt-3 sm:pt-0 sm:border-t-0 sm:border-l sm:pl-8">
-            <span class="text-indigo-700 font-semibold mb-1">Modell</span>
+        <div class="flex flex-col border-t border-[#c9d4e2] pt-3 sm:pt-0 sm:border-t-0 sm:border-l sm:pl-8">
+            <span class="text-[#1f3b5e] font-semibold mb-1">Modell</span>
             <span>{analyseprojekt.modell.name}</span>
         </div>
     </div>
@@ -104,13 +104,13 @@
 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6 max-w-2xl mx-auto">
     <div class="bg-white rounded-lg p-3 border shadow-sm">
         <p class="text-gray-500 text-xs">Erweiterte Messunsicherheit (µm)</p>
-        <p class="text-indigo-600 font-semibold text-lg">
+        <p class="text-[#1f3b5e] font-semibold text-lg">
             {zahl(messunsicherheit.Unsicherheit, 3)}
         </p>
     </div>
     <div class="bg-white rounded-lg p-3 border shadow-sm">
         <p class="text-gray-500 text-xs">Erweiterungsfaktor k</p>
-        <p class="text-indigo-600 font-semibold text-lg">
+        <p class="text-[#1f3b5e] font-semibold text-lg">
             {zahl(messunsicherheit.Erweiterungsfaktor, 3)}
         </p>
     </div>

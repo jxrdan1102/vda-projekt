@@ -53,7 +53,6 @@ export const actions: Actions = {
         payload.verteilung = parseOptionalInt('verteilung');
         payload.kflags = parseOptionalInt('kflags');
         payload.modltxtid = parseOptionalInt('modltxtid');
-        console.log(payload);
 
         const res = await fetch(`http://localhost:9999/modells/${modellId}/addComponent`, {
             method: 'POST',

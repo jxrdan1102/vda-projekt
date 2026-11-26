@@ -24,7 +24,6 @@ export const actions: Actions = {
             fk_modell: parseInt(formData.get('modell') as string),
             aenderungszustand: formData.get('aenderungszustand') ? formData.get('aenderungszustand') as string : null
         };
-        console.log(payload);
         const res = await fetch('http://localhost:9999/anamu/r', {
             method: 'POST',
             headers: {
@@ -41,7 +40,6 @@ export const actions: Actions = {
             });
         }
         let projekt = await res.json();
-        console.log("Hierrrr",aufgabeModell);
         if (aufgabeModell == 3) {
             throw redirect(303, `/analyseprojekt/3D-${projekt.id}`);
         }
