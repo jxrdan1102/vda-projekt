@@ -31,6 +31,7 @@ class ModellGetAllR(BaseModel):
     tsk_hoehenmessung: int | None = None
     tsk_stufenmessung: int | None = None
     fk_company: int | None = None
+    is_builtin: bool | None = None
     class Config:
         from_attributes = True
 

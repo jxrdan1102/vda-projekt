@@ -1,14 +1,10 @@
 <script lang="ts">
     import { enhance } from '$app/forms';
+    import { confirmForm } from '$lib/notify';
     let { data, form } = $props();
 
     let editing = $state<number | null>(null);
 
-    function confirmSubmit(message: string) {
-        return (e: SubmitEvent) => {
-            if (!confirm(message)) e.preventDefault();
-        };
-    }
 
     const input = 'border border-gray-300 rounded px-2 py-1 text-sm';
     const btn = 'px-3 py-1 rounded text-sm';
@@ -72,7 +68,7 @@
                                 <input type="hidden" name="is_active" value={String(!c.is_active)} />
                                 <button class="{btn} bg-gray-200 hover:bg-gray-300">{c.is_active ? 'Deaktivieren' : 'Aktivieren'}</button>
                             </form>
-                            <form method="POST" action="?/delete" use:enhance onsubmit={confirmSubmit(`Firma "${c.name}" wirklich löschen?`)}>
+                            <form method="POST" action="?/delete" use:enhance onsubmit={confirmForm(`Firma "${c.name}" wirklich löschen?`)}>
                                 <input type="hidden" name="id" value={c.id} />
                                 <button class="{btn} bg-red-600 text-white hover:bg-red-700">Löschen</button>
                             </form>

@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { askConfirm } from '$lib/notify';
     import {goto, preloadData, pushState} from "$app/navigation";
     import {page} from '$app/stores';
     import Modal from "$lib/components/Modal.svelte";
@@ -201,7 +202,7 @@ async function createCopy() {
         credentials: 'include'
     });
     if (!copyRes.ok) {
-        alert('Fehler beim Erstellen der Kopie');
+        showToast('Fehler beim Erstellen der Kopie', 'error');
         return;
     }
     const copyJson = await copyRes.json();
@@ -249,7 +250,7 @@ async function createCopy() {
     });
 
     if (!saveRes.ok) {
-        alert('Kopie erstellt, aber Änderungen konnten nicht gespeichert werden');
+        showToast('Kopie erstellt, aber Änderungen konnten nicht gespeichert werden', 'error');
     }
 
     showConflictDialog = false;
@@ -317,7 +318,7 @@ onMount(() => {
     }
 });
     async function deleteComponent(compId: number) {
-    const confirmed = confirm("Möchtest du diese Komponente wirklich löschen?");
+    const confirmed = await askConfirm("Möchtest du diese Komponente wirklich löschen?");
     if (!confirmed) return;
     try {
         const res = await fetch(`/backend/components/${compId}`, {

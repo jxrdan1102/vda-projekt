@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { askConfirm } from '$lib/notify';
     import {goto,invalidate, preloadData, pushState} from "$app/navigation";
     import {page} from '$app/stores';
     import { browser } from '$app/environment';
@@ -82,7 +83,7 @@
             credentials: 'include'
         });
         if (!copyRes.ok) {
-            alert('Fehler beim Erstellen der Kopie');
+            showToast('Fehler beim Erstellen der Kopie', 'error');
             return;
         }
         const copyJson = await copyRes.json();
@@ -178,7 +179,7 @@ onMount(() => {
     }
 });
     async function deleteComponent(compId: number) {
-    const confirmed = confirm("Möchtest du diese Komponente wirklich löschen?");
+    const confirmed = await askConfirm("Möchtest du diese Komponente wirklich löschen?");
     if (!confirmed) return;
     try {
         const res = await fetch(`/backend/components/${compId}`, {

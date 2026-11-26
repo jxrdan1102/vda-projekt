@@ -25,6 +25,7 @@ class AnamuBase(BaseModel):
     aenderungszustand: str
     identnr: int | None = None
     creation: datetime | None = None
+    modify: datetime | None = None
 
     class Config:
         from_attributes = True

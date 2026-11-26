@@ -1,5 +1,6 @@
 <script lang="ts">
     import { enhance } from '$app/forms';
+    import { confirmForm } from '$lib/notify';
     import { goto } from '$app/navigation';
     import { page } from '$app/state';
     import { ROLE_LABELS, type AdminUser } from '$lib/roles';
@@ -39,11 +40,6 @@
         return data.isSuperadmin || u.role === 'user' || u.role === 'readonly';
     }
 
-    function confirmSubmit(message: string) {
-        return (e: SubmitEvent) => {
-            if (!confirm(message)) e.preventDefault();
-        };
-    }
 
     // Selects direkt beim Ändern absenden
     function submitOnChange(e: Event) {
@@ -163,7 +159,7 @@
                                     <input type="hidden" name="is_active" value={String(!u.is_active)} />
                                     <button class="{btn} bg-gray-200 hover:bg-gray-300">{u.is_active ? 'Deaktivieren' : 'Aktivieren'}</button>
                                 </form>
-                                <form method="POST" action="?/delete" use:enhance onsubmit={confirmSubmit(`Nutzer "${u.username}" wirklich löschen?`)}>
+                                <form method="POST" action="?/delete" use:enhance onsubmit={confirmForm(`Nutzer "${u.username}" wirklich löschen?`)}>
                                     <input type="hidden" name="id" value={u.id} />
                                     <button class="{btn} bg-red-600 text-white hover:bg-red-700">Löschen</button>
                                 </form>

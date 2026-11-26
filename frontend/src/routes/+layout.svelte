@@ -2,11 +2,51 @@
     import '../app.css';
     import { page } from '$app/state';
     import { ROLE_LABELS, isAdminRole } from '$lib/roles';
+    import Notifications from '$lib/components/Notifications.svelte';
 
     let { children, data } = $props();
 
     let menuOpen = $state(false);
     const isAdmin = $derived(isAdminRole(data.user?.role));
+    const canWrite = $derived(data.user && data.user.role !== 'readonly');
+
+    const APP_NAME = 'Kistner Metrologie';
+
+    // Titel im Browser-Tab, z. B. "Analyseprojekt – Welle 3 · Kistner Metrologie"
+    function pageLabel(r: string): string {
+        if (r.startsWith('/admin/firmen')) return 'Firmen';
+        if (r.startsWith('/admin/nutzer')) return 'Nutzer';
+        if (r.startsWith('/admin')) return 'Verwaltung';
+        if (r.startsWith('/konto')) return 'Mein Konto';
+        if (r.startsWith('/login')) return 'Anmelden';
+        if (r.startsWith('/import')) return 'Import';
+        if (r.startsWith('/dashboard')) return 'Übersicht';
+        if (r.endsWith('/MU')) return 'Messunsicherheit';
+        if (r.endsWith('/kmg')) return 'KMG';
+        if (r.includes('/component-')) return 'Komponente';
+        if (r.includes('/constant-')) return 'Konstante';
+        if (r.endsWith('/addComponent')) return 'Komponente hinzufügen';
+        if (r === '/modelle/add') return 'Neues Modell';
+        if (r === '/analyseprojekt/add') return 'Neues Analyseprojekt';
+        if (r.startsWith('/modelle/')) return 'Modell';
+        if (r.startsWith('/modelle')) return 'Modelle';
+        if (r.startsWith('/analyseprojekt/')) return 'Analyseprojekt';
+        if (r.startsWith('/analyseprojekt')) return 'Analyseprojekte';
+        return '';
+    }
+    const pageTitle = $derived.by(() => {
+        const label = pageLabel(page.route.id ?? '');
+        const d = page.data as Record<string, any>;
+        const name = d?.analyseprojekt?.name ?? d?.modell?.name;
+        const main = [label, name].filter(Boolean).join(' – ');
+        return main ? `${main} · ${APP_NAME}` : APP_NAME;
+    });
+
+    // aktiven Menüpunkt hervorheben
+    const navClass = (href: string) =>
+        page.url.pathname.startsWith(href)
+            ? 'text-white border-b-2 border-blue-300 pb-0.5'
+            : 'text-white/90 hover:text-blue-300 transition';
 
     // Menü bei Seitenwechsel schließen
     $effect(() => {
@@ -23,16 +63,25 @@
     }
 </script>
 
+<svelte:head>
+    <title>{pageTitle}</title>
+</svelte:head>
+
+<Notifications />
+
 <nav class="text-white px-6 py-4 shadow-md" style="background-color: #1f3b5e;">
     <div class="max-w-8xl mx-auto flex justify-between items-center">
-        <div class="text-2xl font-semibold tracking-wide">Kistner Metrologie</div>
+        <a href="/dashboard" class="text-2xl font-semibold tracking-wide">Kistner Metrologie</a>
         {#if data.user}
             <ul class="flex space-x-6 text-sm font-medium items-center">
-                <li><a href="/dashboard" class="hover:text-blue-300 transition">Dashboard</a></li>
-                <li><a href="/modelle" class="hover:text-blue-300 transition">Modelle</a></li>
-                <li><a href="/analyseprojekt" class="hover:text-blue-300 transition">Analyseprojekte</a></li>
+                <li><a href="/dashboard" class={navClass('/dashboard')}>Übersicht</a></li>
+                <li><a href="/modelle" class={navClass('/modelle')}>Modelle</a></li>
+                <li><a href="/analyseprojekt" class={navClass('/analyseprojekt')}>Analyseprojekte</a></li>
+                {#if canWrite}
+                    <li><a href="/import" class={navClass('/import')}>Import</a></li>
+                {/if}
                 {#if isAdmin}
-                    <li><a href="/admin" class="hover:text-blue-300 transition">Verwaltung</a></li>
+                    <li><a href="/admin" class={navClass('/admin')}>Verwaltung</a></li>
                 {/if}
 
                 <!-- Benutzer-Menü -->

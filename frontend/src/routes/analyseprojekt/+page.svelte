@@ -1,7 +1,8 @@
 <script lang="ts">
+    import { askConfirm, toast } from '$lib/notify';
     import NewModelPage from './add/+page.svelte';
     import {page} from '$app/stores';
-    import {goto, preloadData, pushState} from '$app/navigation';
+    import {goto, invalidateAll, preloadData, pushState} from '$app/navigation';
     import Modal from "$lib/components/Modal.svelte";
     import { onMount } from 'svelte';
     export let data;
@@ -27,7 +28,7 @@
     }
 
     async function deleteProjekt(projektId: number) {
-        const confirmed = confirm("Möchtest du dieses Modell wirklich löschen?");
+        const confirmed = await askConfirm("Möchtest du dieses Analyseprojekt wirklich löschen?");
         if (!confirmed) return;
 
         try {
@@ -39,9 +40,10 @@
             if (!res.ok) throw new Error('Fehler beim Löschen des Modells');
 
             data.analyseprojekt = data.analyseprojekt.filter((c: any) => c.id !== projektId);
+            toast.success('Analyseprojekt gelöscht');
         } catch (err) {
             console.error(err);
-            alert('Löschen fehlgeschlagen');
+            toast.error('Löschen fehlgeschlagen');
         }
     }
 
@@ -78,10 +80,11 @@
 
         if (res.ok) {
             const result = await res.json();
-            console.log("Duplikat erstellt:", result);
             showDuplicateModal = false;
+            toast.success(`Kopie „${result.name ?? duplicateName}“ erstellt`);
+            await invalidateAll();
         } else {
-            alert("Fehler beim Duplizieren");
+            toast.error("Fehler beim Duplizieren");
         }
     }
 

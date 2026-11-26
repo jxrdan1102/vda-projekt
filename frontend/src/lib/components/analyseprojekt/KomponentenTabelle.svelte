@@ -1,5 +1,6 @@
 <script lang="ts">
     import { tick } from 'svelte';
+    import { toast } from '$lib/notify';
     import { createEventDispatcher } from 'svelte';
     import { COMPONENTS, Components } from '$lib/Mapping';
     import type { ColumnDef } from './types';
@@ -97,7 +98,7 @@
         });
 
         if (!response.ok) {
-            alert('Fehler beim Speichern');
+            toast.error('Fehler beim Speichern');
             return;
         }
 
@@ -118,6 +119,7 @@
             columns.some(col => isDirty(comp, col.field))
         );
 
+        let failed = 0;
         for (const comp of dirtyComps) {
             const payload: Record<string, any> = {};
             
@@ -152,15 +154,17 @@
                         comp[col.field + 'Temp'] = payload[col.field];
                     });
                 } else {
-                    console.error(`Fehler beim Speichern von Komponente ${comp.id}`);
+                    failed++;
                 }
             } catch (err) {
                 console.error(err);
+                failed++;
             }
         }
 
         komponenten = [...komponenten];
-        alert('Alle Änderungen gespeichert!');
+        if (failed) toast.error(`${failed} Änderung(en) konnten nicht gespeichert werden`);
+        else toast.success('Alle Änderungen gespeichert');
         dispatch('savedAll');
     }
 
@@ -196,7 +200,7 @@
                 credentials: 'include',
                 body: JSON.stringify({ berechnen: newValue }),
             });
-            if (!response.ok) alert('Fehler beim Speichern der Änderung');
+            if (!response.ok) toast.error('Fehler beim Speichern der Änderung');
         } catch (error) {
             console.error('Speicherfehler:', error);
         }
