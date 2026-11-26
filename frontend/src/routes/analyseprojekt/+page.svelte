@@ -356,6 +356,15 @@ $: selectedModellName = filterModellId
                     </div>
                 </div>
             </div>
+        {:else}
+            <div class="px-4 py-10 text-center text-sm text-gray-500">
+                {#if data.analyseprojekt.length === 0}
+                    Noch keine Analyseprojekte vorhanden.
+                    <button class="ml-1 text-blue-600 hover:underline" on:click={() => { loadModels(); showForm = true; }}>Erstes Projekt anlegen</button>
+                {:else}
+                    Kein Analyseprojekt passt zu den gewählten Filtern.
+                {/if}
+            </div>
         {/each}
     </div>
 </div>

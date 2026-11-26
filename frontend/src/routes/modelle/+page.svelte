@@ -305,6 +305,15 @@ $: if (filterProzess) filterAufgabe = '';
                     </div>
                 </div>
             </div>
+        {:else}
+            <div class="px-4 py-10 text-center text-sm text-gray-500">
+                {#if data.modelle.length === 0}
+                    Noch keine Modelle vorhanden.
+                    <button class="ml-1 text-blue-600 hover:underline" on:click={() => (showForm = true)}>Erstes Modell anlegen</button>
+                {:else}
+                    Kein Modell passt zu den gewählten Filtern.
+                {/if}
+            </div>
         {/each}
     </div>
 </div>

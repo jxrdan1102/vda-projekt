@@ -1,5 +1,5 @@
 import type {Actions, PageServerLoad} from './$types';
-import {fail,redirect} from "@sveltejs/kit";
+import {fail, redirect, error} from '@sveltejs/kit';
 
 export const load: PageServerLoad = async ({ params, fetch, setHeaders }) => {
     const { modellId } = params;
@@ -14,6 +14,7 @@ export const load: PageServerLoad = async ({ params, fetch, setHeaders }) => {
         method: 'GET',
         credentials: 'include'  // ← WICHTIG
     });
+    if (!response.ok) error(response.status === 404 ? 404 : response.status, 'Modell nicht gefunden');
     const responseBody = await response.json();
     console.log(responseBody);
     return {

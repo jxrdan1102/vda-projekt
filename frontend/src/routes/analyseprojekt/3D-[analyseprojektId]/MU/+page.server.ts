@@ -1,3 +1,4 @@
+import { error } from '@sveltejs/kit';
 import type {PageServerLoad} from './$types';
 
 export const load: PageServerLoad = async ({ params, fetch }) => {
@@ -9,7 +10,7 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
     });
 
     if (!response.ok) {
-        throw new Error('Fehler beim Abrufen der Messunsicherheit');
+        error(response.status === 404 ? 404 : 500, 'Die Messunsicherheit konnte nicht berechnet werden');
     }
 
     const responseBody = await response.json();

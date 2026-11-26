@@ -1,5 +1,5 @@
 import type {Actions, PageServerLoad} from './$types';
-import {fail} from "@sveltejs/kit";
+import {fail, error} from '@sveltejs/kit';
 
 export const load: PageServerLoad = async ({ params, fetch }) => {
     const { analyseprojektId } = params;
@@ -8,6 +8,7 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
         method: 'GET',
         credentials: 'include'  // ← WICHTIG
     });
+    if (!response.ok) error(response.status === 404 ? 404 : response.status, 'Analyseprojekt nicht gefunden');
     const responseBody = await response.json();
     console.log(responseBody);
     return {

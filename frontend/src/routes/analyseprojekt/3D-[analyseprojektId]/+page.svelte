@@ -60,16 +60,33 @@
     // ─────────────────────────────────────────────
     let showReportMenu = false;
 
+let reportLoading = false;
+
 async function openReport(extended: boolean = false) {
-    const start = '2024-01-01';
-    const end   = '2024-12-31';
-    const response = await fetch(
-        `/backend/anamu/${analyseprojektId}/report?start_date=${start}&end_date=${end}&extended=${extended}`,
-        { method: 'GET', credentials: 'include', headers: { 'Content-Type': 'application/json' } }
-    );
-    const blob = await response.blob();
-    window.open(window.URL.createObjectURL(blob));
+    if (reportLoading) return;
     showReportMenu = false;
+    reportLoading = true;
+    // Fenster sofort öffnen (sonst blockiert der Browser das Pop-up nach dem Warten)
+    const win = window.open('', '_blank');
+    win?.document.write('<p style="font-family:sans-serif;padding:2rem;color:#555">PDF-Bericht wird erstellt …</p>');
+    try {
+        const start = '2024-01-01';
+        const end   = '2024-12-31';
+        const response = await fetch(
+            `/backend/anamu/${analyseprojektId}/report?start_date=${start}&end_date=${end}&extended=${extended}`,
+            { method: 'GET', credentials: 'include' }
+        );
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const url = window.URL.createObjectURL(await response.blob());
+        if (win) win.location.href = url;
+        else window.open(url);
+    } catch (err) {
+        console.error(err);
+        win?.close();
+        showToast('PDF-Bericht konnte nicht erstellt werden', 'error');
+    } finally {
+        reportLoading = false;
+    }
 }
     export let form: {
     success?: boolean;
@@ -195,9 +212,15 @@ async function handleSubmit(actionValue: string) {
         <button
             type="button"
             on:click={() => openReport(false)}
-            class="bg-gray-600 text-white text-sm px-3 py-1 rounded-l hover:bg-gray-700"
+            disabled={reportLoading}
+            class="bg-gray-600 text-white text-sm px-3 py-1 rounded-l hover:bg-gray-700 disabled:opacity-70 disabled:cursor-wait inline-flex items-center gap-2"
         >
-            Report öffnen
+            {#if reportLoading}
+                <span class="inline-block w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin" aria-hidden="true"></span>
+                PDF wird erstellt …
+            {:else}
+                Report öffnen
+            {/if}
         </button>
         <button
             type="button"

@@ -1,6 +1,6 @@
 <script lang="ts">
     import '../app.css';
-    import { page } from '$app/state';
+    import { page, navigating } from '$app/state';
     import { ROLE_LABELS, isAdminRole } from '$lib/roles';
     import Notifications from '$lib/components/Notifications.svelte';
 
@@ -42,6 +42,20 @@
         return main ? `${main} · ${APP_NAME}` : APP_NAME;
     });
 
+    // Ladeanzeige: nur wenn ein Seitenwechsel länger als 300 ms dauert (z. B. Berechnung)
+    let showLoading = $state(false);
+    $effect(() => {
+        if (!navigating.to) {
+            showLoading = false;
+            return;
+        }
+        const t = setTimeout(() => (showLoading = true), 300);
+        return () => clearTimeout(t);
+    });
+    const loadingText = $derived(
+        navigating.to?.route.id?.endsWith('/MU') ? 'Messunsicherheit wird berechnet …' : 'Wird geladen …'
+    );
+
     // aktiven Menüpunkt hervorheben
     const navClass = (href: string) =>
         page.url.pathname.startsWith(href)
@@ -68,6 +82,16 @@
 </svelte:head>
 
 <Notifications />
+
+{#if showLoading}
+    <div class="fixed top-0 left-0 right-0 z-[80] h-1 overflow-hidden bg-blue-100" role="progressbar" aria-label={loadingText}>
+        <div class="h-full w-1/3 bg-blue-500 loading-bar"></div>
+    </div>
+    <div class="fixed bottom-4 left-1/2 -translate-x-1/2 z-[80] flex items-center gap-2 rounded-full bg-[#1f3b5e] px-4 py-2 text-sm text-white shadow-lg">
+        <span class="inline-block w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin" aria-hidden="true"></span>
+        {loadingText}
+    </div>
+{/if}
 
 <nav class="text-white px-6 py-4 shadow-md" style="background-color: #1f3b5e;">
     <div class="max-w-8xl mx-auto flex justify-between items-center">
@@ -125,3 +149,13 @@
 <main class="min-h-screen px-6 pb-6" style="background-color: #f0f0f0;">
     {@render children()}
 </main>
+
+<style>
+    .loading-bar {
+        animation: loading-slide 1.1s ease-in-out infinite;
+    }
+    @keyframes loading-slide {
+        from { transform: translateX(-100%); }
+        to { transform: translateX(300%); }
+    }
+</style>
