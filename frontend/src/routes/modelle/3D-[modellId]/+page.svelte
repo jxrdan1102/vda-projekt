@@ -490,117 +490,39 @@ function showToast(message: string, type: 'success' | 'error' = 'success') {
             body: JSON.stringify(payload)
         });
 
-        data.modell.components = await res.json()
-        // wenn die Response JSON ist
+        // Berechnet nur die passende Komponentenliste (Vorschau) – gespeichert wird erst mit "Speichern"
         if (!res.ok) {
-            console.error('Fehler beim Speichern', await res.text());
+            showToast('Komponenten konnten nicht ermittelt werden', 'error');
+            return;
         }
+        data.modell.components = await res.json();
     }
 let showSaveMenu = false;
 
-import { hasUnsavedChanges } from '$lib/stores/unsaved';
-import { beforeNavigate } from '$app/navigation';
+import { confirmLeave, fingerprint } from '$lib/stores/unsaved';
 
 let showUnsavedDialog = false;
 let pendingNavigation: (() => void) | null = null;
 
 let isSaving = false;
 
-let originalData = {
-    name: data.modell?.name ?? '',
-    aufgabe: data.modell?.aufgabe != null ? data.modell.aufgabe.toString() : null,
-    Element1: data.modell?.Element1 ?? null,
-    Element2: data.modell?.Element2 ?? null,
-    Bezug1: data.modell?.Bezug1 ?? null,
-    Bezug2: data.modell?.Bezug2 ?? null,
-    abstand: data.modell?.abstand != null ? data.modell.abstand.toString() : null,
-    taster: data.modell?.taster != null ? data.modell.taster.toString() : null,
-    merkmal: data.modell?.merkmal != null ? data.modell.merkmal.toString() : null,
-    element: data.modell?.element != null ? data.modell.element.toString() : null,
-    punktmuster: data.modell?.punktmuster != null ? data.modell.punktmuster.toString() : null,
-    punktmusterB1: data.modell?.punktmusterB1 != null ? data.modell.punktmusterB1.toString() : null,
-    punktmusterR1: data.modell?.punktmusterR1 != null ? data.modell.punktmusterR1.toString() : null,
-    punktmusterR2: data.modell?.punktmusterR2 != null ? data.modell.punktmusterR2.toString() : null,
-    tasterschaft1: data.modell?.tasterschaft1 != null ? data.modell.tasterschaft1.toString() : null,
-    tasterschaft2: data.modell?.tasterschaft2 != null ? data.modell.tasterschaft2.toString() : null,
-    taster1: data.modell?.taster1 != null ? data.modell.taster1.toString() : null,
-    taster2: data.modell?.taster2 != null ? data.modell.taster2.toString() : null,
-    winkelE1: data.modell?.winkelE1 != null ? data.modell.winkelE1.toString() : null,
-    winkelE2: data.modell?.winkelE2 != null ? data.modell.winkelE2.toString() : null,
-    description: data.modell?.description ?? '',
-    formel: data.modell?.formel ?? '',
-    formeldesc: data.modell?.formeldesc ?? '',
-};
-let originalComponents = JSON.stringify(data.modell?.components ?? []);
+// Stand beim Öffnen – damit wird beim Verlassen verglichen.
+// Komponenten zählen nicht: die werden beim Anlegen/Löschen sofort gespeichert.
+const modellFelder = () => [name, aufgabe, Element1, Element2, Bezug1, Bezug2, abstand, taster, merkmal, element, artdesmasses,
+    punktmuster, punktmusterB1, punktmusterR1, punktmusterR2, tasterschaft1, tasterschaft2, taster1, taster2,
+    winkelE1, winkelE2, description, formel, formeldesc];
+const ausgangsstand = fingerprint(modellFelder());
 
-hasUnsavedChanges.set(false);
-
-$: hasUnsavedChanges.set(
-    name !== originalData.name ||
-    (aufgabe?.toString() ?? null) !== originalData.aufgabe ||
-    Element1 !== originalData.Element1 ||
-    Element2 !== originalData.Element2 ||
-    Bezug1 !== originalData.Bezug1 ||
-    Bezug2 !== originalData.Bezug2 ||
-    (abstand?.toString() ?? null) !== originalData.abstand ||
-    (taster?.toString() ?? null) !== originalData.taster ||
-    (merkmal?.toString() ?? null) !== originalData.merkmal ||
-    (element?.toString() ?? null) !== originalData.element ||
-    (punktmuster?.toString() ?? null) !== originalData.punktmuster ||
-    (punktmusterB1?.toString() ?? null) !== originalData.punktmusterB1 ||
-    (punktmusterR1?.toString() ?? null) !== originalData.punktmusterR1 ||
-    (punktmusterR2?.toString() ?? null) !== originalData.punktmusterR2 ||
-    (tasterschaft1?.toString() ?? null) !== originalData.tasterschaft1 ||
-    (tasterschaft2?.toString() ?? null) !== originalData.tasterschaft2 ||
-    (taster1?.toString() ?? null) !== originalData.taster1 ||
-    (taster2?.toString() ?? null) !== originalData.taster2 ||
-    (winkelE1?.toString() ?? null) !== originalData.winkelE1 ||
-    (winkelE2?.toString() ?? null) !== originalData.winkelE2 ||
-    description !== originalData.description ||
-    formel !== originalData.formel ||
-    formeldesc !== originalData.formeldesc ||
-    JSON.stringify(data.modell?.components ?? []) !== originalComponents
+confirmLeave(
+    () => !isSaving && $page.data.user?.role !== 'readonly' && editable && fingerprint(modellFelder()) !== ausgangsstand,
+    (weiter) => {
+        showUnsavedDialog = true;
+        pendingNavigation = weiter;
+    }
 );
 
-$: if (form?.success) {
-    originalData = {
-        name,
-        aufgabe: aufgabe?.toString() ?? null,
-        Element1, Element2, Bezug1, Bezug2,
-        abstand: abstand?.toString() ?? null,
-        taster: taster?.toString() ?? null,
-        merkmal: merkmal?.toString() ?? null,
-        element: element?.toString() ?? null,
-        punktmuster: punktmuster?.toString() ?? null,
-        punktmusterB1: punktmusterB1?.toString() ?? null,
-        punktmusterR1: punktmusterR1?.toString() ?? null,
-        punktmusterR2: punktmusterR2?.toString() ?? null,
-        tasterschaft1: tasterschaft1?.toString() ?? null,
-        tasterschaft2: tasterschaft2?.toString() ?? null,
-        taster1: taster1?.toString() ?? null,
-        taster2: taster2?.toString() ?? null,
-        winkelE1: winkelE1?.toString() ?? null,
-        winkelE2: winkelE2?.toString() ?? null,
-        description, formel, formeldesc,
-    };
-    originalComponents = JSON.stringify(data.modell?.components ?? []);
-    hasUnsavedChanges.set(false);
-}
-
-beforeNavigate(({ cancel, to }) => {
-    if (isSaving) return;
-    if ($hasUnsavedChanges) {
-        cancel();
-        showUnsavedDialog = true;
-        pendingNavigation = () => {
-            hasUnsavedChanges.set(false);
-            if (to?.url) window.location.href = to.url.href;
-        };
-    }
-});
 async function handleSubmit(actionValue: string) {
     isSaving = true;
-    hasUnsavedChanges.set(false);
     const formEl = document.querySelector('form') as HTMLFormElement;
     const input = document.createElement('input');
     input.type = 'hidden';

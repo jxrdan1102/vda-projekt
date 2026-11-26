@@ -205,73 +205,29 @@ function showToast(message: string, type: 'success' | 'error' = 'success') {
     clearTimeout(toastTimeout);
     toastTimeout = setTimeout(() => toast = null, 3000);
 }
-import { hasUnsavedChanges } from '$lib/stores/unsaved';
-import { beforeNavigate } from '$app/navigation';
+import { confirmLeave, fingerprint } from '$lib/stores/unsaved';
 
 let showUnsavedDialog = false;
 let pendingNavigation: (() => void) | null = null;
 
-let originalData = {
-    name: data.modell?.name ?? '',
-    geo_me: data.modell?.geo_me != null ? data.modell.geo_me.toString() : null,
-    geo_mo: data.modell?.geo_mo != null ? data.modell.geo_mo.toString() : null,
-    geo_bn: data.modell?.geo_bn != null ? data.modell.geo_bn.toString() : null,
-    methode: data.modell?.methode != null ? data.modell.methode.toString() : null,
-    tsk_ausenmessung: data.modell?.tsk_ausenmessung ?? 0,
-    tsk_innenmessung: data.modell?.tsk_innenmessung ?? 0,
-    tsk_tiefenmessung: data.modell?.tsk_tiefenmessung ?? 0,
-    tsk_hoehenmessung: data.modell?.tsk_hoehenmessung ?? 0,
-    tsk_stufenmessung: data.modell?.tsk_stufenmessung ?? 0,
-    description: data.modell?.description ?? '',
-    formel: data.modell?.formel ?? '',
-    formeldesc: data.modell?.formeldesc ?? '',
-};
-let originalComponents = JSON.stringify(data.modell?.components ?? []);
+// Stand beim Öffnen – damit wird beim Verlassen verglichen.
+// Komponenten zählen nicht: die werden beim Anlegen/Löschen sofort gespeichert.
+const modellFelder = () => [name, geo_me, geo_mo, geo_bn, methode, tsk_ausenmessung, tsk_innenmessung, tsk_tiefenmessung,
+    tsk_hoehenmessung, tsk_stufenmessung, description, formel, formeldesc];
+const ausgangsstand = fingerprint(modellFelder());
 
-hasUnsavedChanges.set(false);
-
-$: hasUnsavedChanges.set(
-    name !== originalData.name ||
-    geo_me !== originalData.geo_me ||
-    geo_mo !== originalData.geo_mo ||
-    geo_bn !== originalData.geo_bn ||
-    methode !== originalData.methode ||
-    tsk_ausenmessung !== originalData.tsk_ausenmessung ||
-    tsk_innenmessung !== originalData.tsk_innenmessung ||
-    tsk_tiefenmessung !== originalData.tsk_tiefenmessung ||
-    tsk_hoehenmessung !== originalData.tsk_hoehenmessung ||
-    tsk_stufenmessung !== originalData.tsk_stufenmessung ||
-    description !== originalData.description ||
-    formel !== originalData.formel ||
-    formeldesc !== originalData.formeldesc ||
-    JSON.stringify(data.modell?.components ?? []) !== originalComponents
+confirmLeave(
+    () => !isSaving && $page.data.user?.role !== 'readonly' && editable && fingerprint(modellFelder()) !== ausgangsstand,
+    (weiter) => {
+        showUnsavedDialog = true;
+        pendingNavigation = weiter;
+    }
 );
-
-$: if (form?.success) {
-    originalData = {
-        name,
-        geo_me,
-        geo_mo,
-        geo_bn,
-        methode,
-        tsk_ausenmessung,
-        tsk_innenmessung,
-        tsk_tiefenmessung,
-        tsk_hoehenmessung,
-        tsk_stufenmessung,
-        description,
-        formel,
-        formeldesc,
-    };
-    originalComponents = JSON.stringify(data.modell?.components ?? []);
-    hasUnsavedChanges.set(false);
-}
 
 let isSaving = false;
 
 async function handleSubmit(actionValue: string) {
     isSaving = true;
-    hasUnsavedChanges.set(false);
     
     // Programmatisch das Form submitten
     const form = document.querySelector('form') as HTMLFormElement;
@@ -282,16 +238,6 @@ async function handleSubmit(actionValue: string) {
     form.appendChild(input);
     form.submit();
 }
-beforeNavigate(({ cancel, to }) => {
-    if ($hasUnsavedChanges) {
-        cancel();
-        showUnsavedDialog = true;
-        pendingNavigation = () => {
-            hasUnsavedChanges.set(false);
-            if (to?.url) window.location.href = to.url.href;
-        };
-    }
-});
 
 
 </script>

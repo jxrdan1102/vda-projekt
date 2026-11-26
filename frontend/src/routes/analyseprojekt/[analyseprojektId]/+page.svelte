@@ -13,8 +13,7 @@
     import { STANDARD_COLUMNS } from '$lib/components/analyseprojekt/types';
 
 
-    import { hasUnsavedChanges } from '$lib/stores/unsaved';
-    import { beforeNavigate } from '$app/navigation';
+    import { confirmLeave, fingerprint, hasPendingInlineEdits } from '$lib/stores/unsaved';
     import { browser } from '$app/environment';
     // ─────────────────────────────────────────────
     // Daten
@@ -64,59 +63,26 @@ let isSaving = false;
 let showUnsavedDialog = false;
 let pendingNavigation: (() => void) | null = null;
 
-let originalData = {
-    name: data.analyseprojekt?.name ?? '',
-    aenderungszustand: data.analyseprojekt?.aenderungszustand ?? '',
-    identnr: data.analyseprojekt?.identnr?.toString() ?? '',
-    partno: data.analyseprojekt?.partno ?? '',
-    remark: data.analyseprojekt?.remark ?? '',
-    tolfaktor: data.analyseprojekt?.tolfaktor ? 1 : 0,
-};
-let originalAnakomp = JSON.stringify(data.analyseprojekt?.anakomp ?? []);
-let originalAnakonst = JSON.stringify(data.analyseprojekt?.anakonst ?? []);
+// Stand beim Öffnen – damit wird beim Verlassen verglichen
+const kopfFelder = () => [name, aenderungszustand, identnr, partno, remark, tolfaktor];
+const ausgangsstand = fingerprint(kopfFelder());
 
-hasUnsavedChanges.set(false);
-
-$: hasUnsavedChanges.set(
-    name !== originalData.name ||
-    aenderungszustand !== originalData.aenderungszustand ||
-    (identnr?.toString() ?? '') !== originalData.identnr ||
-    (partno ?? '') !== originalData.partno ||
-    (remark ?? '') !== originalData.remark ||
-    (tolfaktor ? 1 : 0) !== originalData.tolfaktor ||
-    JSON.stringify(data.analyseprojekt?.anakomp ?? []) !== originalAnakomp ||
-    JSON.stringify(data.analyseprojekt?.anakonst ?? []) !== originalAnakonst
-);
-
-$: if (form?.success) {
-    originalData = {
-        name,
-        aenderungszustand,
-        identnr: identnr?.toString() ?? '',
-        partno: partno ?? '',
-        remark: remark ?? '',
-        tolfaktor,
-    };
-    originalAnakomp = JSON.stringify(data.analyseprojekt?.anakomp ?? []);
-    originalAnakonst = JSON.stringify(data.analyseprojekt?.anakonst ?? []);
-    hasUnsavedChanges.set(false);
-}
-
-beforeNavigate(({ cancel, to }) => {
-    if (isSaving) return;
-    if ($hasUnsavedChanges) {
-        cancel();
+confirmLeave(
+    () =>
+        !isSaving &&
+        $page.data.user?.role !== 'readonly' &&
+        (fingerprint(kopfFelder()) !== ausgangsstand ||
+            // Komponenten/Konstanten werden einzeln gespeichert; offen ist nur, was getippt, aber nicht gespeichert wurde
+            hasPendingInlineEdits(analyseprojekt.anakomp) ||
+            hasPendingInlineEdits(analyseprojekt.anakonst)),
+    (weiter) => {
         showUnsavedDialog = true;
-        pendingNavigation = () => {
-            hasUnsavedChanges.set(false);
-            if (to?.url) goto(to.url.href);  // ← goto statt window.location.href
-        };
+        pendingNavigation = weiter;
     }
-});
+);
 
 async function handleSubmit(actionValue: string) {
     isSaving = true;
-    hasUnsavedChanges.set(false);
     const formEl = document.querySelector('form') as HTMLFormElement;
     const input = document.createElement('input');
     input.type = 'hidden';
