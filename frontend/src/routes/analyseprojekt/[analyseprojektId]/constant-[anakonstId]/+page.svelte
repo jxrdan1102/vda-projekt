@@ -16,7 +16,7 @@
 
     <input type="number" name="constval" bind:value={constval} step="any" class="w-full border rounded px-2 py-1" />
 
-    <button type="submit" class="bg-gray-800 text-white px-3 py-1 rounded hover:bg-gray-900 mt-2">
+    <button data-write type="submit" class="bg-gray-800 text-white px-3 py-1 rounded hover:bg-gray-900 mt-2">
         Speichern
     </button>
 </form>

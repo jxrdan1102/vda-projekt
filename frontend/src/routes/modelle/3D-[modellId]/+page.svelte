@@ -655,7 +655,7 @@ async function handleSubmit(actionValue: string) {
         <input type="number" name="aufgabe_modell" hidden bind:value={data.modell.aufgabe_modell} disabled={!editable} class={inputClass} />
 
 <h1 class="text-base font-semibold border-b pb-2">{prozesstitel}: {prozessMapping[data.modell.aufgabe]}
-    <div class="float-right flex">
+    <div data-write class="float-right flex">
         <button type="submit" name="action" value="save" disabled={data.modell.is_builtin}
             on:click={() => handleSubmit('save')} class="disabled:opacity-40 disabled:cursor-not-allowed bg-gray-600 text-white text-sm px-3 py-1 rounded-l hover:bg-gray-700">
             Speichern

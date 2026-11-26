@@ -14,6 +14,9 @@
         }
     }
 
+    // Cursor beim Öffnen direkt ins Benutzername-Feld setzen
+    const focusOnMount = (node: HTMLInputElement) => node.focus();
+
     const handleLogin = async () => {
         errorMessage = '';
         loading = true;
@@ -58,6 +61,8 @@
                         id="username"
                         type="text"
                         bind:value={username}
+                        use:focusOnMount
+                        autocomplete="username"
                         required
                         class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 shadow-sm focus:ring-blue-500 focus:border-blue-500"
                 />
@@ -69,6 +74,7 @@
                         id="password"
                         type="password"
                         bind:value={password}
+                        autocomplete="current-password"
                         required
                         class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 shadow-sm focus:ring-blue-500 focus:border-blue-500"
                 />
@@ -82,5 +88,9 @@
                 {#if loading}Wird gesendet...{:else}Anmelden{/if}
             </button>
         </form>
+
+        <p class="mt-6 text-center text-xs text-gray-500">
+            Passwort vergessen? Wende dich an deinen Firmen-Admin.
+        </p>
     </div>
 </div>

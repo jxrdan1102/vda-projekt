@@ -45,6 +45,7 @@ class AnamuGetIdR(BaseModel):
     name: str
     aenderungszustand: str
     identnr: int | None = None
+    partno: str | None = None
     remark: str | None = None
     modell: ModellForAnamuR
     anakomp: list[AnakompForAnamuR] | None = None
@@ -69,6 +70,7 @@ class AnamuUpdate(BaseModel):
     name: str | None = None
     aenderungszustand: str | None = None
     identnr: int | None = None
+    partno: str | None = None
     remark: str | None = None
     fk_kmg: int | None = None
     tolfaktor: int | None = None
@@ -95,7 +97,7 @@ class AnamuOut(BaseModel):
     class Config:
         from_attributes = True
 class AnamuCreate(AnamuBase):
-    partno: int
+    partno: str | None = None
     remark: int
     modify: datetime
     user: int

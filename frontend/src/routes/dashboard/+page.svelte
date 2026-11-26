@@ -78,7 +78,7 @@
         {:else}
             <p class="px-4 py-6 text-sm text-gray-500">
                 Noch keine Analyseprojekte.
-                <a href="/analyseprojekt?open=neu" class="text-blue-600 hover:underline">Erstes Projekt anlegen</a>
+                <a data-write href="/analyseprojekt?open=neu" class="text-blue-600 hover:underline">Erstes Projekt anlegen</a>
             </p>
         {/if}
     </section>

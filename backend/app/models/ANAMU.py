@@ -12,7 +12,7 @@ class ANAMU(Base):
     name = Column(String(255))
     aenderungszustand = Column(String(15))
     identnr = Column(Integer)
-    partno = Column(Integer)
+    partno = Column(String(64))
     remark = Column(String(255))
     creation = Column(DATETIME, server_default=func.now())
     modify = Column(DATETIME, server_default=func.now(), onupdate=func.now())

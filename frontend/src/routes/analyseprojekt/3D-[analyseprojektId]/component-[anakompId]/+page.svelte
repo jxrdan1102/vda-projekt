@@ -85,7 +85,7 @@
     </div>
 
     <div class="flex justify-end pt-2">
-        <button type="submit"
+        <button data-write type="submit"
                 class="bg-gray-800 text-white text-sm px-4 py-1 rounded hover:bg-gray-700">
             Speichern
         </button>

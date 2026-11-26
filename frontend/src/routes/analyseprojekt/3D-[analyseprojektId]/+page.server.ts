@@ -48,6 +48,9 @@ export const actions: Actions = {
         const identnr = parseOptionalString('identnr');
         if (identnr !== undefined) payload.identnr = identnr;
 
+        // Sachnummer darf auch geleert werden (leer → null)
+        if (formData.has('partno')) payload.partno = formData.get('partno')?.toString().trim() || null;
+
         const remark = parseOptionalString('remark');
         if (remark !== undefined) payload.remark = remark;
 

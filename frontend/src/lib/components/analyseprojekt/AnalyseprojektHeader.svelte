@@ -13,7 +13,10 @@
     export let aenderungszustand: string;
 
     /** Bindable: identnr-Feld */
-    export let identnr: number | null;
+    export let identnr: number | string | null;
+
+    /** Bindable: Sachnummer (partno) */
+    export let partno: string = '';
 
     /** Bindable: remark-Feld */
     export let remark: string;
@@ -101,8 +104,9 @@
             <label class="block text-gray-700 text-xs mb-1">Sachnummer</label>
             <input
                 type="text"
-                name="sachnummer"
-                value="Sachnummer"
+                name="partno"
+                bind:value={partno}
+                placeholder="z. B. A 123 456-01"
                 class="w-full h-6 border border-gray-400 px-2 text-sm py-2 bg-white"
             />
         </div>

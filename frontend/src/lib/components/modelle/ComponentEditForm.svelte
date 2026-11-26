@@ -175,7 +175,7 @@
         </div>
 
         <div class="flex justify-end pt-1 pb-1">
-            <button type="submit"
+            <button data-write type="submit"
                 class="text-white text-sm px-5 py-1.5 rounded"
                 style="background-color: #1f3b5e;"
             >

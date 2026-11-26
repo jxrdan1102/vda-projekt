@@ -196,7 +196,7 @@
                     </div>
 
                     {#if isDirty(konst) && !isKMG(konst.constnum)}
-                        <button 
+                        <button data-write 
                             type="button" 
                             on:click={() => saveConstVal(konst)}
                             class="text-blue-600 shrink-0 mb-[2px] hover:text-blue-800 transition-colors"

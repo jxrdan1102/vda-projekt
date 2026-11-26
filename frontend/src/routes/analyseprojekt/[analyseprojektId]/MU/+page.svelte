@@ -1,4 +1,7 @@
 <script>
+    import { page } from "$app/state";
+    import { zahl } from "$lib/format";
+    import ReportButton from "$lib/components/analyseprojekt/ReportButton.svelte";
     import {onMount} from "svelte";
     import Chart from "chart.js/auto";
     import ChartDataLabels from "chartjs-plugin-datalabels";
@@ -35,6 +38,7 @@
                 ]
             },
             options: {
+                locale: "de-DE",
                 indexAxis: "y",
                 responsive: true,
                 maintainAspectRatio: false,
@@ -43,7 +47,7 @@
                     datalabels: {
                         anchor: "end",
                         align: "right",
-                        formatter: (val) => val.toFixed(3),
+                        formatter: (val) => zahl(val, 3),
                         font: {
                             size: 11,
                             weight: "bold"
@@ -75,7 +79,10 @@
 </script>
 
 <!-- Abschnitt: Zusammenfassung -->
-<h2 class="text-lg font-semibold mb-2">Messunsicherheit – Übersicht</h2>
+<div class="flex items-center justify-between gap-4 mb-2">
+    <h2 class="text-lg font-semibold">Messunsicherheit – Übersicht</h2>
+    <ReportButton analyseprojektId={page.params.analyseprojektId} />
+</div>
 
 <div class="bg-indigo-50 rounded-lg p-5 border border-indigo-200 shadow-sm mt-6 text-gray-800 text-sm font-medium max-w-2xl mx-auto">
     <div class="flex flex-col sm:flex-row sm:space-x-8 space-y-3 sm:space-y-0">
@@ -98,13 +105,13 @@
     <div class="bg-white rounded-lg p-3 border shadow-sm">
         <p class="text-gray-500 text-xs">Erweiterte Messunsicherheit (µm)</p>
         <p class="text-indigo-600 font-semibold text-lg">
-            {messunsicherheit.Unsicherheit.toFixed(3)}
+            {zahl(messunsicherheit.Unsicherheit, 3)}
         </p>
     </div>
     <div class="bg-white rounded-lg p-3 border shadow-sm">
         <p class="text-gray-500 text-xs">Erweiterungsfaktor k</p>
         <p class="text-indigo-600 font-semibold text-lg">
-            {messunsicherheit.Erweiterungsfaktor.toFixed(3)}
+            {zahl(messunsicherheit.Erweiterungsfaktor, 3)}
         </p>
     </div>
 </div>

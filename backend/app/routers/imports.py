@@ -386,7 +386,7 @@ async def import_anamu_xml(
             name=get_field(first, "NAME"),
             aenderungszustand=get_field(first, "NMBR"),
             identnr=parse_int(get_field(first, "IDENTNR")),
-            partno=parse_int(get_field(first, "PARTNO")),
+            partno=str(v) if (v := parse_int(get_field(first, "PARTNO"))) else None,
             remark=get_field(first, "REMARK"),
             creation=parse_date(get_field(first, "CREAT")),
             modify=parse_date(get_field(first, "MODIF")),

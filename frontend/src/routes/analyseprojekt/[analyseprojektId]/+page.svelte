@@ -6,6 +6,7 @@
     import { page } from '$app/stores';
 
     import AnalyseprojektHeader from '$lib/components/analyseprojekt/AnalyseprojektHeader.svelte';
+    import ReportButton from '$lib/components/analyseprojekt/ReportButton.svelte';
     import KonstantenGrid      from '$lib/components/analyseprojekt/KonstantenGrid.svelte';
     import KomponentenTabelle  from '$lib/components/analyseprojekt/KomponentenTabelle.svelte';
     import { STANDARD_COLUMNS } from '$lib/components/analyseprojekt/types';
@@ -24,6 +25,7 @@
     let name              = analyseprojekt.name              ?? '';
     let aenderungszustand = analyseprojekt.aenderungszustand ?? '';
     let identnr           = analyseprojekt?.identnr?.toString() ?? '';
+    let partno            = analyseprojekt?.partno ?? '';
     let remark            = analyseprojekt.remark            ?? '';
     let tolfaktor         = analyseprojekt?.tolfaktor ? 1 : 0;
 
@@ -36,36 +38,6 @@
     // ─────────────────────────────────────────────
     // Report
     // ─────────────────────────────────────────────
-let showReportMenu = false;
-
-let reportLoading = false;
-
-async function openReport(extended: boolean = false) {
-    if (reportLoading) return;
-    showReportMenu = false;
-    reportLoading = true;
-    // Fenster sofort öffnen (sonst blockiert der Browser das Pop-up nach dem Warten)
-    const win = window.open('', '_blank');
-    win?.document.write('<p style="font-family:sans-serif;padding:2rem;color:#555">PDF-Bericht wird erstellt …</p>');
-    try {
-        const start = '2024-01-01';
-        const end   = '2024-12-31';
-        const response = await fetch(
-            `/backend/anamu/${analyseprojektId}/report?start_date=${start}&end_date=${end}&extended=${extended}`,
-            { method: 'GET', credentials: 'include' }
-        );
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const url = window.URL.createObjectURL(await response.blob());
-        if (win) win.location.href = url;
-        else window.open(url);
-    } catch (err) {
-        console.error(err);
-        win?.close();
-        showToast('PDF-Bericht konnte nicht erstellt werden', 'error');
-    } finally {
-        reportLoading = false;
-    }
-}
     export let form: {
     success?: boolean;
     message?: string;
@@ -95,6 +67,7 @@ let originalData = {
     name: data.analyseprojekt?.name ?? '',
     aenderungszustand: data.analyseprojekt?.aenderungszustand ?? '',
     identnr: data.analyseprojekt?.identnr?.toString() ?? '',
+    partno: data.analyseprojekt?.partno ?? '',
     remark: data.analyseprojekt?.remark ?? '',
     tolfaktor: data.analyseprojekt?.tolfaktor ? 1 : 0,
 };
@@ -107,6 +80,7 @@ $: hasUnsavedChanges.set(
     name !== originalData.name ||
     aenderungszustand !== originalData.aenderungszustand ||
     (identnr?.toString() ?? '') !== originalData.identnr ||
+    (partno ?? '') !== originalData.partno ||
     (remark ?? '') !== originalData.remark ||
     (tolfaktor ? 1 : 0) !== originalData.tolfaktor ||
     JSON.stringify(data.analyseprojekt?.anakomp ?? []) !== originalAnakomp ||
@@ -118,6 +92,7 @@ $: if (form?.success) {
         name,
         aenderungszustand,
         identnr: identnr?.toString() ?? '',
+        partno: partno ?? '',
         remark: remark ?? '',
         tolfaktor,
     };
@@ -164,11 +139,6 @@ $: {
     console.log('unsaved checks:', checks);
 }
 </script>
-<svelte:window on:click={(e) => {
-    if (showReportMenu && !(e.target as HTMLElement).closest('.report-dropdown')) {
-        showReportMenu = false;
-    }
-}}/>
 <section class="space-y-4 text-sm font-sans text-gray-800 m-auto pt-5">
 
     <form method="POST" action="?/speichern">
@@ -177,6 +147,7 @@ $: {
             bind:name
             bind:aenderungszustand
             bind:identnr
+            bind:partno
             bind:remark
             bind:tolfaktor
         >
@@ -190,46 +161,12 @@ $: {
                     Berechnen
                 </button>
                 <button
-                    type="button" on:click={() => handleSubmit('speichern')}
+ data-write                    type="button" on:click={() => handleSubmit('speichern')}
                     class="bg-gray-600 mr-2 text-white text-sm px-3 py-1 rounded hover:bg-gray-700 float-right"
                 >
                     Speichern
                 </button>
-                <div class="report-dropdown relative inline-block float-right mr-2">
-    <div class="flex">
-        <button
-            type="button"
-            on:click={() => openReport(false)}
-            disabled={reportLoading}
-            class="bg-gray-600 text-white text-sm px-3 py-1 rounded-l hover:bg-gray-700 disabled:opacity-70 disabled:cursor-wait inline-flex items-center gap-2"
-        >
-            {#if reportLoading}
-                <span class="inline-block w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin" aria-hidden="true"></span>
-                PDF wird erstellt …
-            {:else}
-                Report öffnen
-            {/if}
-        </button>
-        <button
-            type="button"
-            on:click={() => showReportMenu = !showReportMenu}
-            class="bg-gray-600 text-white text-sm px-2 py-1 rounded-r border-l border-gray-500 hover:bg-gray-700"
-        >
-            ▾
-        </button>
-        {#if showReportMenu}
-            <div class="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded shadow-lg z-50 w-44">
-                <button
-                    type="button"
-                    on:click={() => openReport(true)}
-                    class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                >
-                    Erweiterter Report
-                </button>
-            </div>
-        {/if}
-    </div>
-</div>
+                <ReportButton {analyseprojektId} class="float-right mr-2" />
             </svelte:fragment>
 
             <!-- fk_modell als hidden field (nur Standard-Variante) -->

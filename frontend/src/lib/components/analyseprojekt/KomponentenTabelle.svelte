@@ -256,7 +256,7 @@
         <span>Komponenten</span>
         {#if showSaveAll && editMode === 'inline'}
             <button
-                class="bg-gray-600 text-white text-sm px-3 py-1 rounded hover:bg-gray-700"
+ data-write                class="bg-gray-600 text-white text-sm px-3 py-1 rounded hover:bg-gray-700"
                 on:click={saveAllComponents}
             >
                 Alle speichern

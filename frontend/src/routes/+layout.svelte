@@ -9,6 +9,7 @@
     let menuOpen = $state(false);
     const isAdmin = $derived(isAdminRole(data.user?.role));
     const canWrite = $derived(data.user && data.user.role !== 'readonly');
+    const readOnly = $derived(data.user?.role === 'readonly');
 
     const APP_NAME = 'Kistner Metrologie';
 
@@ -162,7 +163,14 @@
         {/if}
     </div>
 </nav>
-<main class="min-h-screen px-6 pb-6" style="background-color: #f0f0f0;">
+<!-- "Nur lesen": alle Elemente mit data-write (Speichern, Löschen, + Neu …) werden ausgeblendet, siehe app.css -->
+<main class="min-h-screen px-6 pb-6" class:nur-lesen={readOnly} style="background-color: #f0f0f0;">
+    {#if readOnly}
+        <div class="pt-3 text-xs text-gray-600">
+            <span class="rounded bg-amber-100 border border-amber-300 px-2 py-0.5 text-amber-900">Nur-Lese-Zugriff</span>
+            Du kannst alles ansehen, aber nichts ändern.
+        </div>
+    {/if}
     {#if backLink}
         <div class="pt-3 -mb-1">
             <a href={backLink.href} class="inline-flex items-center gap-1 text-sm text-[#1f3b5e] hover:underline">
