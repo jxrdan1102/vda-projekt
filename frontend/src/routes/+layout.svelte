@@ -56,6 +56,22 @@
         navigating.to?.route.id?.endsWith('/MU') ? 'Messunsicherheit wird berechnet …' : 'Wird geladen …'
     );
 
+    // "← Zurück"-Link auf Unterseiten von Modellen und Analyseprojekten
+    const backLink = $derived.by(() => {
+        if (page.status >= 400) return null; // Fehlerseite hat eigene Knöpfe
+        const parts = page.url.pathname.split('/').filter(Boolean);
+        if (parts.length < 2 || !['modelle', 'analyseprojekt'].includes(parts[0])) return null;
+        const href = '/' + parts.slice(0, -1).join('/');
+        if (parts.length === 2) {
+            return parts[0] === 'modelle'
+                ? { href, label: 'Zurück zu den Modellen' }
+                : { href, label: 'Zurück zu den Analyseprojekten' };
+        }
+        return parts[0] === 'modelle'
+            ? { href, label: 'Zurück zum Modell' }
+            : { href, label: 'Zurück zum Analyseprojekt' };
+    });
+
     // aktiven Menüpunkt hervorheben
     const navClass = (href: string) =>
         page.url.pathname.startsWith(href)
@@ -147,6 +163,13 @@
     </div>
 </nav>
 <main class="min-h-screen px-6 pb-6" style="background-color: #f0f0f0;">
+    {#if backLink}
+        <div class="pt-3 -mb-1">
+            <a href={backLink.href} class="inline-flex items-center gap-1 text-sm text-[#1f3b5e] hover:underline">
+                <span aria-hidden="true">←</span> {backLink.label}
+            </a>
+        </div>
+    {/if}
     {@render children()}
 </main>
 
