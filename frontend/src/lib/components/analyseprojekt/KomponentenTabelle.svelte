@@ -35,6 +35,10 @@
     // Interner Zustand
     // ---------------------------------------------------------------
 
+    // Spalten, die man eintippt/auswählt und mit Enter bzw. "Alle speichern" speichert.
+    // Checkboxen ("berechnen") gehören nicht dazu – die speichern beim Anklicken sofort.
+    $: editCols = columns.filter(c => c.type !== 'checkbox');
+
     // Für editMode='inline': Temp-Kopien und editInputs-Map
     $: {
         if (editMode === 'inline') {
@@ -44,7 +48,7 @@
                     editInputs[comp.id] = {};
                 }
                 
-                columns.forEach(col => {
+                editCols.forEach(col => {
                     const tmpKey = col.field + 'Temp';
                     if (comp[tmpKey] === undefined) comp[tmpKey] = comp[col.field];
                     
@@ -80,7 +84,7 @@
 
         // In deiner save-Funktion vor dem Fetch:
         const payload: Record<string, any> = {};
-        columns.forEach(col => {
+        editCols.forEach(col => {
             let val = comp[col.field + 'Temp'];
             if (val === '' || val === null || val === undefined) {
                 payload[col.field] = null;
@@ -103,7 +107,7 @@
         }
 
         Object.assign(comp, payload);
-        columns.forEach(col => { comp[col.field + 'Temp'] = payload[col.field]; });
+        editCols.forEach(col => { comp[col.field + 'Temp'] = payload[col.field]; });
         komponenten = [...komponenten];
         activeField = null;
         dispatch('saved');
@@ -116,14 +120,14 @@
     async function saveAllComponents() {
         // Wir filtern die Komponenten, die mathematisch gesehen geändert wurden
         const dirtyComps = komponenten.filter(comp =>
-            columns.some(col => isDirty(comp, col.field))
+            editCols.some(col => isDirty(comp, col.field))
         );
 
         let failed = 0;
         for (const comp of dirtyComps) {
             const payload: Record<string, any> = {};
             
-            columns.forEach(col => {
+            editCols.forEach(col => {
                 let val = comp[col.field + 'Temp'];
                 
                 // 1. Wenn das Feld leer ist -> null
@@ -150,7 +154,7 @@
                     Object.assign(comp, payload);
                     
                     // WICHTIG: Auch die Temp-Werte wieder auf den neuen Stand bringen
-                    columns.forEach(col => {
+                    editCols.forEach(col => {
                         comp[col.field + 'Temp'] = payload[col.field];
                     });
                 } else {
